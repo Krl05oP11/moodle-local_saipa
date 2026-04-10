@@ -25,10 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'local_saipa';
-$plugin->version    = 2026032403;
+$plugin->version    = 2026040901;
 $plugin->requires   = 2024042200;   // Moodle 4.4 minimum
 $plugin->maturity   = MATURITY_BETA;
-$plugin->release    = '0.5.0';
+$plugin->release    = '0.5.1';
 $plugin->supported  = [404, 405];
 $plugin->dependencies = [
     'block_saipa' => 2026032401,

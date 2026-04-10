@@ -32,6 +32,18 @@ if ($hassiteconfig) {
 
     $ADMIN->add('localplugins', $settings);
 
+    // === Setup Wizard link ===
+    $setup_url = new moodle_url('/local/saipa/setup.php');
+    $settings->add(new admin_setting_heading(
+        'local_saipa_wizard_heading',
+        '🚀 Setup Wizard',
+        html_writer::tag('p',
+            'Use the wizard to configure the AI engine and Telegram bot step by step, with real-time connection tests. ' .
+            html_writer::link($setup_url, '▶ Launch Setup Wizard', ['class' => 'btn btn-sm btn-primary ms-2']),
+            ['style' => 'margin-top:6px;']
+        )
+    ));
+
     // === Installation Status page link ===
     $ADMIN->add('localplugins', new admin_externalpage(
         'local_saipa_status',
