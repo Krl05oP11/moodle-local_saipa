@@ -1,0 +1,104 @@
+{{!
+    @template local_saipa/teacher_dashboard
+
+    SAIPA Teacher Dashboard — student list + conversation viewer.
+    All data loaded via AMD (local_saipa/teacher_dashboard).
+
+    Context variables:
+    - courseid: int
+    - coursename: string
+    - wwwroot: string
+}}
+<div id="saipa-teacher-dashboard" data-courseid="{{courseid}}">
+
+    {{! ── Course summary metrics bar (loaded via AMD) ─────────────────────── }}
+    <div id="saipa-course-summary" class="mb-3">
+        <div class="row text-center" id="saipa-summary-cards" style="display:none;">
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_enrolled, local_saipa {{/str}}</div>
+                    <div id="ss-enrolled" class="font-weight-bold h5 mb-0">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_active, local_saipa {{/str}}</div>
+                    <div id="ss-active" class="font-weight-bold h5 mb-0">—</div>
+                    <div id="ss-adoption" class="text-muted" style="font-size:0.75rem;"></div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_msgs7d, local_saipa {{/str}}</div>
+                    <div id="ss-msgs7d" class="font-weight-bold h5 mb-0">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_risk, local_saipa {{/str}}</div>
+                    <div id="ss-risk" class="font-weight-bold h5 mb-0">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_alerts30d, local_saipa {{/str}}</div>
+                    <div id="ss-alerts" class="font-weight-bold h5 mb-0">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2">
+                <div class="card card-body py-2 px-1">
+                    <div class="text-muted small">{{#str}} summary_index, local_saipa {{/str}}</div>
+                    <div id="ss-index" class="font-weight-bold h5 mb-0">—</div>
+                </div>
+            </div>
+        </div>
+        <div id="saipa-summary-spinner" class="text-center py-1">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center">
+            <span class="mr-2" style="font-size:1.5rem;">&#128101;</span>
+            <h4 class="mb-0">{{#str}} teacher_students_heading, local_saipa {{/str}}</h4>
+        </div>
+        <div class="d-flex align-items-center">
+            <span id="saipa-risk-status" class="text-muted small mr-2"></span>
+            <button id="saipa-demo-btn" class="btn btn-outline-info btn-sm mr-1" type="button">
+                &#127922; {{#str}} risk_demo_button, local_saipa {{/str}}
+            </button>
+            <button id="saipa-risk-btn" class="btn btn-outline-secondary btn-sm" type="button">
+                &#128202; {{#str}} risk_button, local_saipa {{/str}}
+            </button>
+        </div>
+    </div>
+
+    {{! Student list panel }}
+    <div id="saipa-student-list-panel">
+        <div id="saipa-student-list-loading" class="text-muted py-3 text-center">
+            <div class="spinner-border spinner-border-sm mr-2" role="status"></div>
+            {{#str}} loading, core {{/str}}
+        </div>
+        <div id="saipa-student-list" class="list-group" style="display:none;"></div>
+    </div>
+
+    {{! Conversation panel (hidden until a student is selected) }}
+    <div id="saipa-conversation-panel" style="display:none;" class="mt-2">
+        <div class="d-flex align-items-center mb-3">
+            <button id="saipa-back-btn" class="btn btn-outline-secondary btn-sm mr-3" type="button">
+                &larr; {{#str}} teacher_back_to_list, local_saipa {{/str}}
+            </button>
+            <h5 id="saipa-conversation-heading" class="mb-0"></h5>
+        </div>
+        <div id="saipa-conversation-messages"
+             class="border rounded p-3"
+             style="height:520px; overflow-y:auto; background:#f8f9fa;">
+        </div>
+    </div>
+
+</div>
+{{#js}}
+require(['local_saipa/teacher_dashboard'], function(D) {
+    D.init({{courseid}});
+});
+{{/js}}

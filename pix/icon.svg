@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#0d6efd"/>
+  <!-- Graduation cap body -->
+  <polygon points="50,20 85,37 50,54 15,37" fill="#ffffff"/>
+  <!-- Cap top -->
+  <rect x="46" y="17" width="8" height="6" rx="2" fill="#ffffff"/>
+  <!-- Board hang -->
+  <line x1="85" y1="37" x2="85" y2="55" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="85" cy="57" r="4" fill="#ffc107"/>
+  <!-- Left side of gown -->
+  <path d="M33,48 Q28,70 32,80" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Right side of gown -->
+  <path d="M67,48 Q72,70 68,80" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Bottom of gown -->
+  <path d="M32,80 Q50,90 68,80" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- AI circuit node small dots -->
+  <circle cx="40" cy="65" r="3" fill="#ffc107"/>
+  <circle cx="50" cy="72" r="3" fill="#ffc107"/>
+  <circle cx="60" cy="65" r="3" fill="#ffc107"/>
+  <line x1="40" y1="65" x2="50" y2="72" stroke="#ffc107" stroke-width="1.5"/>
+  <line x1="50" y1="72" x2="60" y2="65" stroke="#ffc107" stroke-width="1.5"/>
+</svg>

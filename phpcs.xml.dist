@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="local_saipa">
+    <description>PHPCS ruleset for local_saipa. Based on Moodle standard with project-specific exclusions.</description>
+
+    <file>.</file>
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="p"/>
+
+    <!-- Use Moodle coding standard as base -->
+    <rule ref="moodle"/>
+
+    <!--
+        EXCLUSIONS — deliberate style choices for this codebase:
+
+        1. snake_case variables ($course_id, $session_id, etc.)
+           The project uses snake_case consistently throughout.
+           Renaming would introduce bugs in web service parameter names that
+           Moodle's external_api::validate_parameters() must match exactly.
+    -->
+    <rule ref="moodle.NamingConventions.ValidVariableName.VariableNameUnderscore">
+        <severity>0</severity>
+    </rule>
+
+    <!--
+        2. Lang file ordering: multi-section lang files use comment separators
+           which trigger ordering warnings. These sections are intentional.
+    -->
+    <rule ref="moodle.Files.LangFilesOrdering.IncorrectOrder">
+        <severity>0</severity>
+    </rule>
+    <rule ref="moodle.Files.LangFilesOrdering.UnexpectedComment">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Exclude generated/vendor directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/venv/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+</ruleset>

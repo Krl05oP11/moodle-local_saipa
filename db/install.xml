@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/saipa/db" VERSION="20260316" COMMENT="XMLDB file for Moodle local/saipa"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+  <TABLES>
+
+    <TABLE NAME="saipa_sessions" COMMENT="Chat sessions between a student and the SAIPA assistant">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"       TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"     TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="contextid"    TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated"  TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid"   TYPE="foreign" FIELDS="userid"   REFTABLE="user"   REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_userid_courseid" UNIQUE="false" FIELDS="userid, courseid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="saipa_messages" COMMENT="Individual messages within a SAIPA chat session">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="sessionid"   TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="role"        TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="user or assistant"/>
+        <FIELD NAME="content"     TYPE="text"             NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"      TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_sessionid" TYPE="foreign" FIELDS="sessionid" REFTABLE="saipa_sessions" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_sessionid_time" UNIQUE="false" FIELDS="sessionid, timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="saipa_risk_scores" COMMENT="Daily dropout risk scores per student per course">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"       TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"     TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="score"        TYPE="number" LENGTH="5"  DECIMALS="4" NOTNULL="true"/>
+        <FIELD NAME="risk_level"   TYPE="char"   LENGTH="10" NOTNULL="true" COMMENT="low, medium, high"/>
+        <FIELD NAME="factors"      TYPE="text"               NOTNULL="false" COMMENT="JSON object of contributing factors"/>
+        <FIELD NAME="timecomputed" TYPE="int"    LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid"   TYPE="foreign" FIELDS="userid"   REFTABLE="user"   REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_userid_courseid_time" UNIQUE="false" FIELDS="userid, courseid, timecomputed"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="saipa_phone_verify" COMMENT="WhatsApp phone number verification records">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"      TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="phone"       TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="otp"         TYPE="char" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="verified"    TYPE="int"  LENGTH="1"  NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timeexpires" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"   TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="uq_userid" TYPE="unique"  FIELDS="userid"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_notifications" COMMENT="Log of WhatsApp messages sent by SAIPA">
+      <FIELDS>
+        <FIELD NAME="id"              TYPE="int"  LENGTH="10"  NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"          TYPE="int"  LENGTH="10"  NOTNULL="true"/>
+        <FIELD NAME="template"        TYPE="char" LENGTH="100" NOTNULL="true"/>
+        <FIELD NAME="payload"         TYPE="text"              NOTNULL="false" COMMENT="JSON payload sent"/>
+        <FIELD NAME="status"          TYPE="char" LENGTH="20"  NOTNULL="true" COMMENT="sent, failed, pending"/>
+        <FIELD NAME="provider_msgid"  TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="timesent"        TYPE="int"  LENGTH="10"  NOTNULL="true"/>
+        <FIELD NAME="responded_at"    TYPE="int"  LENGTH="10"  NOTNULL="false" DEFAULT="0"
+               COMMENT="Unix timestamp when student responded to alert; 0 = not yet responded"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"   TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_feedback" COMMENT="Thumbs up/down feedback on assistant responses">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="messageid"   TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid"      TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="rating"      TYPE="int"  LENGTH="1"  NOTNULL="true" COMMENT="1=positive, -1=negative"/>
+        <FIELD NAME="comment"     TYPE="text"             NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"          TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_message"       TYPE="foreign" FIELDS="messageid" REFTABLE="saipa_messages" REFFIELDS="id"/>
+        <KEY NAME="uq_message_user"  TYPE="unique"  FIELDS="messageid, userid"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_course_index" COMMENT="RAG indexing state per course">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"  LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid"     TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="last_indexed" TYPE="int"  LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="chunk_count"  TYPE="int"  LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="status"       TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending"
+               COMMENT="pending, indexing, ready, error"/>
+        <FIELD NAME="timecreated"  TYPE="int"  LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int"  LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uq_courseid" TYPE="unique"  FIELDS="courseid"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_telegram_links" COMMENT="Telegram account links: one row per Moodle user">
+      <FIELDS>
+        <FIELD NAME="id"                TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"            TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="telegram_id"       TYPE="int"    LENGTH="18" NOTNULL="false"
+               COMMENT="Telegram chat_id, set after the user confirms the link"/>
+        <FIELD NAME="telegram_username" TYPE="char"   LENGTH="100" NOTNULL="false"
+               COMMENT="Telegram @username (without @), informational only"/>
+        <FIELD NAME="link_token"        TYPE="char"   LENGTH="128" NOTNULL="false"
+               COMMENT="HMAC-SHA256 pending link token (hex); cleared after confirmation"/>
+        <FIELD NAME="token_expires"     TYPE="int"    LENGTH="10" NOTNULL="false"
+               COMMENT="Unix timestamp when link_token expires (15 min window)"/>
+        <FIELD NAME="confirmed"         TYPE="int"    LENGTH="1"  NOTNULL="true" DEFAULT="0"
+               COMMENT="0 = pending link, 1 = account confirmed and active"/>
+        <FIELD NAME="timecreated"       TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified"      TYPE="int"    LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"   TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uq_userid" TYPE="unique"  FIELDS="userid"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_telegram_id" UNIQUE="true" FIELDS="telegram_id"/>
+        <INDEX NAME="idx_link_token"  UNIQUE="true" FIELDS="link_token"/>
+      </INDEXES>
+    </TABLE>
+
+
+    <TABLE NAME="saipa_course_settings" COMMENT="Per-course feature flags for advisor dashboard control">
+      <FIELDS>
+        <FIELD NAME="id"             TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid"       TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="saipa_enabled"  TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="chat_enabled"   TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="risk_enabled"   TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="alerts_enabled" TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="rag_enabled"    TYPE="int" LENGTH="1"  NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated"    TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified"   TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uq_courseid" TYPE="unique"  FIELDS="courseid"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_daily_stats" COMMENT="Pre-aggregated daily metrics per course for advisor dashboard performance">
+      <FIELDS>
+        <FIELD NAME="id"                    TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid"              TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="stat_date"             TYPE="int"    LENGTH="10" NOTNULL="true"
+               COMMENT="Unix timestamp of midnight UTC for that day"/>
+        <FIELD NAME="active_users"          TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="new_sessions"          TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="total_messages"        TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="user_messages"         TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="assistant_messages"    TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="positive_feedback"     TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="negative_feedback"     TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="alerts_sent"           TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="alerts_responded"      TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="students_high_risk"    TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="students_medium_risk"  TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="students_low_risk"     TYPE="int"    LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="avg_response_delay_min" TYPE="number" LENGTH="8" DECIMALS="2" NOTNULL="true" DEFAULT="0.00"/>
+        <FIELD NAME="timecreated"           TYPE="int"    LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"         TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uq_course_date"  TYPE="unique"  FIELDS="courseid, stat_date"/>
+        <KEY NAME="fk_courseid"     TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="saipa_risk_history" COMMENT="Append-only risk score log for longitudinal research and trend analysis">
+      <FIELDS>
+        <FIELD NAME="id"           TYPE="int"    LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid"       TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid"     TYPE="int"    LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="score"        TYPE="number" LENGTH="5"  DECIMALS="4" NOTNULL="true"/>
+        <FIELD NAME="risk_level"   TYPE="char"   LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecomputed" TYPE="int"    LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary"     TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_userid"   TYPE="foreign" FIELDS="userid"   REFTABLE="user"   REFFIELDS="id"/>
+        <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_userid_courseid_time" UNIQUE="false" FIELDS="userid, courseid, timecomputed"/>
+      </INDEXES>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>

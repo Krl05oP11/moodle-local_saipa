@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="#0d6efd"/>
+  <!-- Graduation cap (mortarboard) - flat diamond top -->
+  <polygon points="32,10 56,22 32,34 8,22" fill="#ffffff" opacity="0.95"/>
+  <!-- Cap center highlight -->
+  <polygon points="32,10 56,22 32,34 8,22" fill="none" stroke="#e8f0fe" stroke-width="0.5"/>
+  <!-- Tassel rope -->
+  <line x1="56" y1="22" x2="56" y2="38" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Tassel ball -->
+  <circle cx="56" cy="41" r="3.5" fill="#ffc107"/>
+  <!-- Gown body (abstract V shape) -->
+  <path d="M20,30 L16,50 Q32,58 48,50 L44,30 Q32,38 20,30 Z"
+        fill="#ffffff" opacity="0.85"/>
+  <!-- AI nodes -->
+  <circle cx="26" cy="43" r="2.5" fill="#0d6efd"/>
+  <circle cx="32" cy="49" r="2.5" fill="#0d6efd"/>
+  <circle cx="38" cy="43" r="2.5" fill="#0d6efd"/>
+  <line x1="26" y1="43" x2="32" y2="49" stroke="#0d6efd" stroke-width="1.5"/>
+  <line x1="32" y1="49" x2="38" y2="43" stroke="#0d6efd" stroke-width="1.5"/>
+  <line x1="26" y1="43" x2="38" y2="43" stroke="#0d6efd" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,8 @@
+# Moodle plugin — local_saipa
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+/vendor/
+/node_modules/
+amd/build/*.map
