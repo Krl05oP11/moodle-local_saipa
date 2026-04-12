@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,19 +51,19 @@ if ($action === 'health') {
     header('Content-Type: application/json');
     header('X-Content-Type-Options: nosniff');
 
-    $engine_url   = optional_param('engine_url',   '', PARAM_URL);
-    $engine_token = optional_param('engine_token', '', PARAM_RAW);
+    $engineurl   = optional_param('engine_url', '', PARAM_URL);
+    $enginetoken = optional_param('engine_token', '', PARAM_RAW);
 
-    if (empty($engine_url)) {
+    if (empty($engineurl)) {
         echo json_encode(['error' => 'Engine URL is required.']);
         die();
     }
 
-    $url     = rtrim($engine_url, '/') . '/health';
+    $url     = rtrim($engineurl, '/') . '/health';
     $headers = [
         'Content-Type: application/json',
         'Accept: application/json',
-        'Authorization: Bearer ' . $engine_token,
+        'Authorization: Bearer ' . $enginetoken,
     ];
     $ch = curl_init();
     curl_setopt_array($ch, [
@@ -83,7 +83,7 @@ if ($action === 'health') {
         die();
     }
     if ($http !== 200) {
-        echo json_encode(['error' => "Engine returned HTTP $http. Check the URL and token."]);
+        echo json_encode(['error' => "Engine returned HTTP $http. Check the URL && token."]);
         die();
     }
     $decoded = json_decode($resp, true);
@@ -93,7 +93,7 @@ if ($action === 'health') {
     }
     echo json_encode([
         'ok'      => true,
-        'version' => $decoded['version']        ?? '?',
+        'version' => $decoded['version'] ?? '?',
         'uptime'  => isset($decoded['uptime_seconds'])
             ? round($decoded['uptime_seconds'] / 60, 1) . ' min'
             : '?',
@@ -108,17 +108,17 @@ if ($action === 'testbot') {
     header('Content-Type: application/json');
     header('X-Content-Type-Options: nosniff');
 
-    $bot_token = optional_param('bot_token', '', PARAM_RAW);
-    if (empty($bot_token)) {
+    $bottoken = optional_param('bot_token', '', PARAM_RAW);
+    if (empty($bottoken)) {
         echo json_encode(['error' => 'No bot token provided.']);
         die();
     }
 
     // Call Telegram's getMe to validate the token (no data stored, read-only).
-    $tg_url = 'https://api.telegram.org/bot' . urlencode($bot_token) . '/getMe';
+    $tgurl = 'https://api.telegram.org/bot' . urlencode($bottoken) . '/getMe';
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL            => $tg_url,
+        CURLOPT_URL            => $tgurl,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 8,
         CURLOPT_HTTPHEADER     => ['Accept: application/json'],
@@ -150,33 +150,37 @@ if ($action === 'testbot') {
 if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     require_sesskey();
 
-    $mode            = required_param('engine_mode',          PARAM_ALPHA);
-    $engine_url      = required_param('engine_url',           PARAM_URL);
-    $engine_token    = optional_param('engine_token',         '', PARAM_RAW);
-    $msg_channel     = optional_param('messaging_channel',    'none', PARAM_ALPHA);
-    $tg_username     = optional_param('telegram_bot_username','', PARAM_ALPHANUMEXT);
-    $risk_med        = optional_param('risk_threshold_medium','0.40', PARAM_FLOAT);
-    $risk_high       = optional_param('risk_threshold_high',  '0.75', PARAM_FLOAT);
+    $mode            = required_param('engine_mode', PARAM_ALPHA);
+    $engineurl      = required_param('engine_url', PARAM_URL);
+    $enginetoken    = optional_param('engine_token', '', PARAM_RAW);
+    $msgchannel     = optional_param('messaging_channel', 'none', PARAM_ALPHA);
+    $tgusername     = optional_param('telegram_bot_username', '', PARAM_ALPHANUMEXT);
+    $riskmed        = optional_param('risk_threshold_medium', '0.40', PARAM_FLOAT);
+    $riskhigh       = optional_param('risk_threshold_high', '0.75', PARAM_FLOAT);
     $cooldown        = optional_param('alert_cooldown_hours', 24, PARAM_INT);
-    $risk_enabled    = optional_param('risk_eval_enabled',    1, PARAM_INT);
-    $rag_enabled     = optional_param('rag_global_enabled',   1, PARAM_INT);
+    $riskenabled    = optional_param('risk_eval_enabled', 1, PARAM_INT);
+    $ragenabled     = optional_param('rag_global_enabled', 1, PARAM_INT);
 
-    $valid_modes = ['local_ollama', 'cloud_api', 'saipa_cloud', 'custom'];
-    if (!in_array($mode, $valid_modes)) { $mode = 'custom'; }
-    $valid_channels = ['none', 'telegram', 'whatsapp', 'both'];
-    if (!in_array($msg_channel, $valid_channels)) { $msg_channel = 'none'; }
+    $validmodes = ['local_ollama', 'cloud_api', 'saipa_cloud', 'custom'];
+    if (!in_array($mode, $validmodes)) {
+        $mode = 'custom';
+    }
+    $validchannels = ['none', 'telegram', 'whatsapp', 'both'];
+    if (!in_array($msgchannel, $validchannels)) {
+        $msgchannel = 'none';
+    }
 
-    set_config('engine_mode',            $mode,         'local_saipa');
-    set_config('engine_url',             $engine_url,   'local_saipa');
-    set_config('engine_token',           $engine_token, 'local_saipa');
-    set_config('messaging_channel',      $msg_channel,  'local_saipa');
-    set_config('telegram_bot_username',  $tg_username,  'local_saipa');
-    set_config('risk_threshold_medium',  $risk_med,     'local_saipa');
-    set_config('risk_threshold_high',    $risk_high,    'local_saipa');
-    set_config('alert_cooldown_hours',   $cooldown,     'local_saipa');
-    set_config('risk_eval_enabled',      $risk_enabled, 'local_saipa');
-    set_config('rag_global_enabled',     $rag_enabled,  'local_saipa');
-    set_config('setup_complete',         1,             'local_saipa');
+    set_config('engine_mode', $mode, 'local_saipa');
+    set_config('engine_url', $engineurl, 'local_saipa');
+    set_config('engine_token', $enginetoken, 'local_saipa');
+    set_config('messaging_channel', $msgchannel, 'local_saipa');
+    set_config('telegram_bot_username', $tgusername, 'local_saipa');
+    set_config('risk_threshold_medium', $riskmed, 'local_saipa');
+    set_config('risk_threshold_high', $riskhigh, 'local_saipa');
+    set_config('alert_cooldown_hours', $cooldown, 'local_saipa');
+    set_config('risk_eval_enabled', $riskenabled, 'local_saipa');
+    set_config('rag_global_enabled', $ragenabled, 'local_saipa');
+    set_config('setup_complete', 1, 'local_saipa');
 
     redirect(
         new moodle_url('/local/saipa/setup.php', ['done' => 1]),
@@ -189,27 +193,27 @@ if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // ── Page render setup ─────────────────────────────────────────────────────────
 $done         = optional_param('done', 0, PARAM_INT);
 $sesskey      = sesskey();
-$settings_url = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(false);
-$teacher_url  = (new moodle_url('/local/saipa/teacher.php'))->out(false);
+$settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(false);
+$teacherurl  = (new moodle_url('/local/saipa/teacher.php'))->out(false);
 
 // Pre-fill from existing config (wizard re-run).
-$cfg_mode    = get_config('local_saipa', 'engine_mode')           ?: 'local_ollama';
-$cfg_url     = get_config('local_saipa', 'engine_url')            ?: 'http://localhost:8052';
-$cfg_token   = get_config('local_saipa', 'engine_token')          ?: '';
-$cfg_channel = get_config('local_saipa', 'messaging_channel')     ?: 'none';
-$cfg_tg_user = get_config('local_saipa', 'telegram_bot_username') ?: '';
-$cfg_risk_med  = get_config('local_saipa', 'risk_threshold_medium')  ?: '0.40';
-$cfg_risk_high = get_config('local_saipa', 'risk_threshold_high')    ?: '0.75';
-$cfg_cooldown  = get_config('local_saipa', 'alert_cooldown_hours')   ?: '24';
-$cfg_risk_on   = get_config('local_saipa', 'risk_eval_enabled')      ?? '1';
-$cfg_rag_on    = get_config('local_saipa', 'rag_global_enabled')     ?? '1';
+$cfgmode    = get_config('local_saipa', 'engine_mode') ?: 'local_ollama';
+$cfgurl     = get_config('local_saipa', 'engine_url') ?: 'http://localhost:8052';
+$cfgtoken   = get_config('local_saipa', 'engine_token') ?: '';
+$cfgchannel = get_config('local_saipa', 'messaging_channel') ?: 'none';
+$cfgtguser = get_config('local_saipa', 'telegram_bot_username') ?: '';
+$cfgriskmed  = get_config('local_saipa', 'risk_threshold_medium') ?: '0.40';
+$cfgriskhigh = get_config('local_saipa', 'risk_threshold_high') ?: '0.75';
+$cfgcooldown  = get_config('local_saipa', 'alert_cooldown_hours') ?: '24';
+$cfgriskon   = get_config('local_saipa', 'risk_eval_enabled') ?? '1';
+$cfgragon    = get_config('local_saipa', 'rag_global_enabled') ?? '1';
 
 // Detect server environment.
-$php_ver_ok    = version_compare(PHP_VERSION, '8.1.0', '>=');
-$moodle_ver_ok = ($CFG->version >= 2024042200);
-$curl_ok       = function_exists('curl_init');
-$php_ver_str   = PHP_VERSION;
-$moodle_ver_str = $CFG->release ?? 'unknown';
+$phpverok    = version_compare(PHP_VERSION, '8.1.0', '>=');
+$moodleverok = ($CFG->version >= 2024042200);
+$curlok       = function_exists('curl_init');
+$phpverstr   = PHP_VERSION;
+$moodleverstr = $CFG->release ?? 'unknown';
 
 echo $OUTPUT->header();
 ?>
@@ -347,18 +351,17 @@ echo $OUTPUT->header();
 
 <div class="spwiz mt-4">
 
-<?php if ($done): ?>
-
+<?php if ($done) : ?>
   <!-- Completion screen (after save + redirect) -->
   <div class="card shadow-sm">
     <div class="card-body done-card">
       <div class="done-icon">🎉</div>
       <h3>SAIPA is ready!</h3>
-      <p>The AI companion has been configured and is ready to assist teachers and students.<br>
+      <p>The AI companion has been configured && is ready to assist teachers && students.<br>
          Add the <strong>SAIPA block</strong> to a course to get started.</p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a href="<?= s($settings_url) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
-        <a href="<?= s($teacher_url) ?>" class="btn btn-outline-primary">📊 Teacher Dashboard</a>
+        <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
+        <a href="<?= s($teacherurl) ?>" class="btn btn-outline-primary">📊 Teacher Dashboard</a>
         <a href="<?= (new moodle_url('/course/index.php'))->out() ?>" class="btn btn-primary btn-lg px-5">
           Go to My Courses →
         </a>
@@ -366,8 +369,7 @@ echo $OUTPUT->header();
     </div>
   </div>
 
-<?php else: ?>
-
+<?php else : ?>
   <!-- Progress bar -->
   <div class="spwiz-progress" id="spwiz-progress">
     <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Welcome</div></div>
@@ -394,7 +396,7 @@ echo $OUTPUT->header();
           <h3 class="mb-1">Welcome to SAIPA</h3>
           <p class="text-muted mb-0">
             This wizard configures the AI companion in a few steps.
-            It covers the engine connection, notification channels, and core parameters.
+            It covers the engine connection, notification channels, && core parameters.
           </p>
         </div>
       </div>
@@ -402,7 +404,7 @@ echo $OUTPUT->header();
 
       <p class="mb-3" style="font-size:.9rem;">
         SAIPA (Sistema de Acompañamiento Inteligente Pedagógico con IA) helps teachers
-        detect at-risk students early and supports learning through AI-powered tools:
+        detect at-risk students early && supports learning through AI-powered tools:
       </p>
 
       <div class="feature-grid mb-4">
@@ -414,7 +416,7 @@ echo $OUTPUT->header();
         <div class="feature-item">
           <div class="fi-icon">💬</div>
           <div><h6>RAG-Powered Chat</h6>
-            <p>Students and teachers chat with an AI assistant that has context from the course materials. Role-aware responses.</p></div>
+            <p>Students && teachers chat with an AI assistant that has context from the course materials. Role-aware responses.</p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">📲</div>
@@ -429,7 +431,7 @@ echo $OUTPUT->header();
         <div class="feature-item">
           <div class="fi-icon">📚</div>
           <div><h6>Course Indexing</h6>
-            <p>Index Moodle Pages, PDFs, and PPTX presentations into a vector database for RAG retrieval.</p></div>
+            <p>Index Moodle Pages, PDFs, && PPTX presentations into a vector database for RAG retrieval.</p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">🤝</div>
@@ -461,30 +463,30 @@ echo $OUTPUT->header();
         <div class="req-section-body">
 
           <div class="req-row">
-            <div class="req-status"><?= $moodle_ver_ok ? '✅' : '❌' ?></div>
+            <div class="req-status"><?= $moodleverok ? '✅' : '❌' ?></div>
             <div class="req-label">
-              <strong>Moodle 4.4 or 4.5</strong>
+              <strong>Moodle 4.4 || 4.5</strong>
               <span>Older versions are not supported.</span>
             </div>
-            <div class="req-value"><?= s($moodle_ver_str) ?></div>
+            <div class="req-value"><?= s($moodleverstr) ?></div>
           </div>
 
           <div class="req-row">
-            <div class="req-status"><?= $php_ver_ok ? '✅' : '❌' ?></div>
+            <div class="req-status"><?= $phpverok ? '✅' : '❌' ?></div>
             <div class="req-label">
               <strong>PHP 8.1+</strong>
               <span>PHP 7.x is not supported.</span>
             </div>
-            <div class="req-value"><?= s($php_ver_str) ?></div>
+            <div class="req-value"><?= s($phpverstr) ?></div>
           </div>
 
           <div class="req-row">
-            <div class="req-status"><?= $curl_ok ? '✅' : '❌' ?></div>
+            <div class="req-status"><?= $curlok ? '✅' : '❌' ?></div>
             <div class="req-label">
               <strong>PHP cURL extension</strong>
-              <span>Required to communicate with the AI engine and Telegram API.</span>
+              <span>Required to communicate with the AI engine && Telegram API.</span>
             </div>
-            <div class="req-value"><?= $curl_ok ? 'Enabled' : '<span class="text-danger">Missing</span>' ?></div>
+            <div class="req-value"><?= $curlok ? 'Enabled' : '<span class="text-danger">Missing</span>' ?></div>
           </div>
 
           <div class="req-row">
@@ -495,8 +497,8 @@ echo $OUTPUT->header();
             </div>
             <div class="req-value">
               <?php
-              $block_installed = $DB->record_exists('config_plugins', ['plugin' => 'block_saipa', 'name' => 'version']);
-              echo $block_installed
+                $blockinstalled = $DB->record_exists('config_plugins', ['plugin' => 'block_saipa', 'name' => 'version']);
+                echo $blockinstalled
                   ? '<span class="text-success">Installed</span>'
                   : '<span class="text-danger">Not installed — <a href="' .
                     (new moodle_url('/admin/index.php'))->out() . '">install now</a></span>';
@@ -516,15 +518,15 @@ echo $OUTPUT->header();
 
           <p style="font-size:.87rem;margin-bottom:14px;">
             SAIPA uses the <strong>saipa-engine</strong> Python service for all AI operations:
-            course chat (RAG), dropout risk prediction, alert generation, and Telegram integration.
-            This service must be running and reachable from this Moodle server.
+            course chat (RAG), dropout risk prediction, alert generation, && Telegram integration.
+            This service must be running && reachable from this Moodle server.
           </p>
 
           <div class="req-row">
             <div class="req-status">🐍</div>
             <div class="req-label">
               <strong>saipa-engine (Python 3.11+ / FastAPI)</strong>
-              <span>Handles LLM inference, vector search (ChromaDB), XGBoost risk model, and Telegram bot.</span>
+              <span>Handles LLM inference, vector search (ChromaDB), XGBoost risk model, && Telegram bot.</span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
               <span class="badge bg-warning text-dark" style="font-size:.72rem;">Must be deployed separately</span>
@@ -544,7 +546,7 @@ echo $OUTPUT->header();
             <div class="req-status">🔤</div>
             <div class="req-label">
               <strong>Large Language Model (LLM)</strong>
-              <span>Powers chat, risk explanations, and alert generation. See provisioning options below.</span>
+              <span>Powers chat, risk explanations, && alert generation. See provisioning options below.</span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
               <span class="badge bg-danger" style="font-size:.72rem;">AI service required</span>
@@ -593,7 +595,7 @@ echo $OUTPUT->header();
               <p>Any OpenAI-compatible API (OpenAI, Azure, Groq, Mistral…) with your own key.</p>
               <ul>
                 <li>No local GPU required</li>
-                <li>Cost depends on usage and provider</li>
+                <li>Cost depends on usage && provider</li>
                 <li>Set <code>OPENAI_API_KEY</code> in saipa-engine's <code>.env</code></li>
               </ul>
             </div>
@@ -601,7 +603,7 @@ echo $OUTPUT->header();
             <div class="ai-pcard pc-saipa">
               <div class="pc-head"><div class="pc-icon">🌐</div>
                 <h6>SAIPA Cloud <span class="mode-badge badge-soon">COMING SOON</span></h6></div>
-              <p>Fully managed engine. No Ollama, no ChromaDB to install. Subscribe and connect.</p>
+              <p>Fully managed engine. No Ollama, no ChromaDB to install. Subscribe && connect.</p>
               <ul>
                 <li>Zero infrastructure to manage</li>
                 <li>Join waitlist at <code>cloud.saipa.online</code></li>
@@ -614,7 +616,7 @@ echo $OUTPUT->header();
               <p>Any compatible engine at a custom URL. Full control for advanced deployments.</p>
               <ul>
                 <li>Must implement <code>GET /health</code></li>
-                <li>Must implement <code>POST /chat</code> and related endpoints</li>
+                <li>Must implement <code>POST /chat</code> && related endpoints</li>
               </ul>
             </div>
 
@@ -623,9 +625,9 @@ echo $OUTPUT->header();
           <div class="alert alert-danger mt-3 mb-0 py-2 px-3" style="font-size:.84rem;">
             <strong>⛔ Without an active AI service, SAIPA will not be able to:</strong>
             respond to student chat messages, generate risk scores, create Telegram alerts,
-            index course materials, or provide advisor-level analytics.
+            index course materials, || provide advisor-level analytics.
             All these functions depend exclusively on the AI engine.
-            <strong>Do not continue</strong> unless you have one of the options above deployed and ready.
+            <strong>Do not continue</strong> unless you have one of the options above deployed && ready.
           </div>
 
         </div>
@@ -635,8 +637,7 @@ echo $OUTPUT->header();
       <div class="form-check mt-3 mb-1">
         <input class="form-check-input" type="checkbox" id="req-confirm">
         <label class="form-check-label" for="req-confirm" style="font-size:.88rem;">
-          I have read the requirements above. An AI service (saipa-engine + LLM) is deployed
-          and reachable from this server.
+          I have read the requirements above. An AI service (saipa-engine + LLM) is deployed && reachable from this server.
         </label>
       </div>
 
@@ -656,30 +657,30 @@ echo $OUTPUT->header();
       <p class="text-muted mb-4" style="font-size:.88rem;">Select the option that matches your deployed AI infrastructure.</p>
 
       <div class="mode-cards">
-        <label class="mode-card <?= ($cfg_mode==='local_ollama')?'selected':'' ?>" for="sp-mode-local">
+        <label class="mode-card <?= ($cfgmode === 'local_ollama') ? 'selected' : '' ?>" for="sp-mode-local">
           <input type="radio" name="engine_mode" id="sp-mode-local" value="local_ollama"
-                 <?= ($cfg_mode==='local_ollama')?'checked':'' ?>>
+                 <?= ($cfgmode === 'local_ollama') ? 'checked' : '' ?>>
           <div class="mc-icon">🖥️</div>
           <h5>Local — Ollama <span class="mode-badge badge-local">SELF-HOSTED</span></h5>
           <p>saipa-engine running on your server with Ollama as the LLM backend. Full data privacy.</p>
         </label>
-        <label class="mode-card <?= ($cfg_mode==='cloud_api')?'selected':'' ?>" for="sp-mode-cloud">
+        <label class="mode-card <?= ($cfgmode === 'cloud_api') ? 'selected' : '' ?>" for="sp-mode-cloud">
           <input type="radio" name="engine_mode" id="sp-mode-cloud" value="cloud_api"
-                 <?= ($cfg_mode==='cloud_api')?'checked':'' ?>>
+                 <?= ($cfgmode === 'cloud_api') ? 'checked' : '' ?>>
           <div class="mc-icon">☁️</div>
           <h5>Cloud API <span class="mode-badge badge-cloud">OPENAI-COMPATIBLE</span></h5>
           <p>saipa-engine configured with an OpenAI-compatible API key. No local GPU required.</p>
         </label>
-        <label class="mode-card <?= ($cfg_mode==='saipa_cloud')?'selected':'' ?>" for="sp-mode-saipa">
+        <label class="mode-card <?= ($cfgmode === 'saipa_cloud') ? 'selected' : '' ?>" for="sp-mode-saipa">
           <input type="radio" name="engine_mode" id="sp-mode-saipa" value="saipa_cloud"
-                 <?= ($cfg_mode==='saipa_cloud')?'checked':'' ?>>
+                 <?= ($cfgmode === 'saipa_cloud') ? 'checked' : '' ?>>
           <div class="mc-icon">🌐</div>
           <h5>SAIPA Cloud <span class="mode-badge badge-soon">COMING SOON</span></h5>
-          <p>Fully managed engine by Schaller &amp; Ponce. Subscribe and connect with a single API key.</p>
+          <p>Fully managed engine by Schaller &amp; Ponce. Subscribe && connect with a single API key.</p>
         </label>
-        <label class="mode-card <?= ($cfg_mode==='custom')?'selected':'' ?>" for="sp-mode-custom">
+        <label class="mode-card <?= ($cfgmode === 'custom') ? 'selected' : '' ?>" for="sp-mode-custom">
           <input type="radio" name="engine_mode" id="sp-mode-custom" value="custom"
-                 <?= ($cfg_mode==='custom')?'checked':'' ?>>
+                 <?= ($cfgmode === 'custom') ? 'checked' : '' ?>>
           <div class="mc-icon">⚙️</div>
           <h5>Custom / Enterprise <span class="mode-badge badge-custom">ADVANCED</span></h5>
           <p>Any compatible engine at a custom URL. Full control for advanced deployments.</p>
@@ -699,7 +700,7 @@ echo $OUTPUT->header();
     <div class="spwiz-step" id="spwiz-step-4">
 
       <h4 class="mb-1">Engine connection</h4>
-      <p class="text-muted mb-4" style="font-size:.88rem;">Enter the URL and token for the saipa-engine service.</p>
+      <p class="text-muted mb-4" style="font-size:.88rem;">Enter the URL && token for the saipa-engine service.</p>
 
       <div id="sp-hint-local_ollama" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
         <strong>🖥️ Local / Ollama:</strong>
@@ -709,12 +710,11 @@ echo $OUTPUT->header();
       </div>
       <div id="sp-hint-cloud_api" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
         <strong>☁️ Cloud API:</strong>
-        Enter the URL of your saipa-engine instance (configured with your cloud API key)
-        and the <code>ENGINE_SECRET</code> token.
+        Enter the URL of your saipa-engine instance (configured with your cloud API key) && the <code>ENGINE_SECRET</code> token.
       </div>
       <div id="sp-hint-saipa_cloud" class="alert alert-warning mb-3 py-2 px-3" style="font-size:.82rem;">
         <strong>🌐 SAIPA Cloud is not yet available.</strong>
-        Please select Local or Cloud API to continue.
+        Please select Local || Cloud API to continue.
       </div>
       <div id="sp-hint-custom" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
         <strong>⚙️ Custom:</strong>
@@ -726,7 +726,7 @@ echo $OUTPUT->header();
         <label class="form-label fw-semibold" for="sp-url">Engine URL <span class="text-danger">*</span></label>
         <input type="url" class="form-control" id="sp-url"
                placeholder="http://localhost:8052"
-               value="<?= s($cfg_url) ?>">
+               value="<?= s($cfgurl) ?>">
         <div class="form-text">Base URL of the saipa-engine — no trailing slash.</div>
       </div>
 
@@ -734,7 +734,7 @@ echo $OUTPUT->header();
         <label class="form-label fw-semibold" for="sp-token">Engine Token</label>
         <input type="password" class="form-control" id="sp-token"
                placeholder="Leave blank if not configured"
-               value="<?= s($cfg_token) ?>">
+               value="<?= s($cfgtoken) ?>">
         <div class="form-text">Value of <code>ENGINE_SECRET</code> in the engine's <code>.env</code>. Leave blank if not set.</div>
       </div>
 
@@ -752,45 +752,45 @@ echo $OUTPUT->header();
 
       <h4 class="mb-1">Notification channels</h4>
       <p class="text-muted mb-3" style="font-size:.88rem;">
-        Choose how SAIPA delivers proactive alerts to students and teachers.
+        Choose how SAIPA delivers proactive alerts to students && teachers.
         Telegram is optional but strongly recommended — it is SAIPA's most powerful engagement feature.
       </p>
 
       <!-- Channel selector -->
       <div class="channel-cards mb-4">
-        <label class="channel-card <?= ($cfg_channel==='none')?'selected':'' ?>" for="ch-none">
+        <label class="channel-card <?= ($cfgchannel === 'none') ? 'selected' : '' ?>" for="ch-none">
           <input type="radio" name="messaging_channel" id="ch-none" value="none"
-                 <?= ($cfg_channel==='none')?'checked':'' ?>>
+                 <?= ($cfgchannel === 'none') ? 'checked' : '' ?>>
           <div class="ch-icon">🔕</div><h6>None</h6>
           <p>Moodle notifications only. Alerts visible inside Moodle.</p>
         </label>
-        <label class="channel-card <?= ($cfg_channel==='telegram')?'selected':'' ?>" for="ch-telegram">
+        <label class="channel-card <?= ($cfgchannel === 'telegram') ? 'selected' : '' ?>" for="ch-telegram">
           <input type="radio" name="messaging_channel" id="ch-telegram" value="telegram"
-                 <?= ($cfg_channel==='telegram')?'checked':'' ?>>
+                 <?= ($cfgchannel === 'telegram') ? 'checked' : '' ?>>
           <div class="ch-icon">✈️</div><h6>Telegram</h6>
-          <p>Students receive alerts and AI chat via Telegram. Recommended.</p>
+          <p>Students receive alerts && AI chat via Telegram. Recommended.</p>
         </label>
-        <label class="channel-card <?= ($cfg_channel==='whatsapp')?'selected':'' ?>" for="ch-whatsapp">
+        <label class="channel-card <?= ($cfgchannel === 'whatsapp') ? 'selected' : '' ?>" for="ch-whatsapp">
           <input type="radio" name="messaging_channel" id="ch-whatsapp" value="whatsapp"
-                 <?= ($cfg_channel==='whatsapp')?'checked':'' ?>>
+                 <?= ($cfgchannel === 'whatsapp') ? 'checked' : '' ?>>
           <div class="ch-icon">💬</div><h6>WhatsApp</h6>
-          <p>Requires Twilio or Meta Cloud API. Configure after setup.</p>
+          <p>Requires Twilio || Meta Cloud API. Configure after setup.</p>
         </label>
-        <label class="channel-card <?= ($cfg_channel==='both')?'selected':'' ?>" for="ch-both">
+        <label class="channel-card <?= ($cfgchannel === 'both') ? 'selected' : '' ?>" for="ch-both">
           <input type="radio" name="messaging_channel" id="ch-both" value="both"
-                 <?= ($cfg_channel==='both')?'checked':'' ?>>
+                 <?= ($cfgchannel === 'both') ? 'checked' : '' ?>>
           <div class="ch-icon">📡</div><h6>Both</h6>
           <p>Telegram + WhatsApp. Maximum reach.</p>
         </label>
       </div>
 
-      <!-- Telegram details (shown when telegram or both is selected) -->
+      <!-- Telegram details (shown when telegram || both is selected) -->
       <div id="sp-telegram-section">
 
         <hr class="mb-3">
         <h5 class="mb-1" style="font-size:.95rem;">✈️ Telegram Bot configuration</h5>
         <p class="text-muted mb-3" style="font-size:.83rem;">
-          SAIPA uses a Telegram bot to deliver alerts and enable bidirectional chat with students.
+          SAIPA uses a Telegram bot to deliver alerts && enable bidirectional chat with students.
           The bot token lives in <strong>saipa-engine's <code>.env</code> file</strong>
           (<code>TELEGRAM_BOT_TOKEN</code>); the bot username is stored in Moodle for display purposes.
         </p>
@@ -799,8 +799,8 @@ echo $OUTPUT->header();
         <div class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
           <strong>How to create a Telegram bot:</strong>
           <ol class="mb-0 mt-1 ps-3">
-            <li>Open Telegram and search for <strong>@BotFather</strong></li>
-            <li>Send <code>/newbot</code> and follow the prompts</li>
+            <li>Open Telegram && search for <strong>@BotFather</strong></li>
+            <li>Send <code>/newbot</code> && follow the prompts</li>
             <li>Copy the token (format: <code>1234567890:AABCD...</code>)</li>
             <li>Add the token to saipa-engine's <code>.env</code>: <code>TELEGRAM_BOT_TOKEN=&lt;token&gt;</code></li>
             <li>Restart the engine: <code>docker compose restart saipa-engine</code></li>
@@ -826,7 +826,7 @@ echo $OUTPUT->header();
               <span class="input-group-text">@</span>
               <input type="text" class="form-control" id="sp-tg-username"
                      placeholder="saipa_bot"
-                     value="<?= s($cfg_tg_user) ?>">
+                     value="<?= s($cfgtguser) ?>">
             </div>
             <div class="form-text">The bot's username without the @ prefix. Shown to students when they link their account.</div>
           </div>
@@ -844,9 +844,9 @@ echo $OUTPUT->header();
 
       <!-- WhatsApp note -->
       <div id="sp-whatsapp-note" class="alert alert-secondary py-2 px-3 mb-3" style="font-size:.82rem;display:none">
-        <strong>💬 WhatsApp configuration</strong> requires Twilio or Meta Cloud API credentials.
+        <strong>💬 WhatsApp configuration</strong> requires Twilio || Meta Cloud API credentials.
         This cannot be completed in the wizard. After finishing, go to
-        <a href="<?= s($settings_url) ?>">Admin Settings → SAIPA → WhatsApp</a> to configure it.
+        <a href="<?= s($settingsurl) ?>">Admin Settings → SAIPA → WhatsApp</a> to configure it.
       </div>
 
       <div class="d-flex justify-content-between mt-4">
@@ -908,15 +908,15 @@ echo $OUTPUT->header();
             <h6>📊 Risk thresholds</h6>
             <div class="summary-row">
               <span class="summary-label">Medium 🟡</span>
-              <span class="summary-value">≥ <?= s($cfg_risk_med) ?></span>
+              <span class="summary-value">≥ <?= s($cfgriskmed) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">High 🔴</span>
-              <span class="summary-value">≥ <?= s($cfg_risk_high) ?></span>
+              <span class="summary-value">≥ <?= s($cfgriskhigh) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Alert cooldown</span>
-              <span class="summary-value"><?= s($cfg_cooldown) ?>h</span>
+              <span class="summary-value"><?= s($cfgcooldown) ?>h</span>
             </div>
           </div>
 
@@ -924,11 +924,11 @@ echo $OUTPUT->header();
             <h6>⚙️ Features</h6>
             <div class="summary-row">
               <span class="summary-label">Risk evaluation</span>
-              <span class="summary-value"><?= $cfg_risk_on ? '✅ Enabled' : '⬜ Disabled' ?></span>
+              <span class="summary-value"><?= $cfgriskon ? '✅ Enabled' : '⬜ Disabled' ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">RAG global chat</span>
-              <span class="summary-value"><?= $cfg_rag_on ? '✅ Enabled' : '⬜ Disabled' ?></span>
+              <span class="summary-value"><?= $cfgragon ? '✅ Enabled' : '⬜ Disabled' ?></span>
             </div>
           </div>
 
@@ -954,10 +954,10 @@ echo $OUTPUT->header();
       <div class="done-card">
         <div class="done-icon">✅</div>
         <h3>Configuration saved!</h3>
-        <p>SAIPA is connected and ready. Add the <strong>SAIPA block</strong> to any course
-           to activate the chat widget and risk dashboard for that course.</p>
+        <p>SAIPA is connected && ready. Add the <strong>SAIPA block</strong> to any course
+           to activate the chat widget && risk dashboard for that course.</p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="<?= s($settings_url) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
+          <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
           <a href="<?= (new moodle_url('/course/index.php'))->out() ?>" class="btn btn-primary btn-lg px-5">
             Go to My Courses →
           </a>
@@ -979,11 +979,11 @@ echo $OUTPUT->header();
     <input type="hidden" name="engine_token"         id="sf-token"   value="">
     <input type="hidden" name="messaging_channel"    id="sf-channel" value="">
     <input type="hidden" name="telegram_bot_username" id="sf-tguser" value="">
-    <input type="hidden" name="risk_threshold_medium" value="<?= s($cfg_risk_med) ?>">
-    <input type="hidden" name="risk_threshold_high"   value="<?= s($cfg_risk_high) ?>">
-    <input type="hidden" name="alert_cooldown_hours"  value="<?= s($cfg_cooldown) ?>">
-    <input type="hidden" name="risk_eval_enabled"     value="<?= s($cfg_risk_on) ?>">
-    <input type="hidden" name="rag_global_enabled"    value="<?= s($cfg_rag_on) ?>">
+    <input type="hidden" name="risk_threshold_medium" value="<?= s($cfgriskmed) ?>">
+    <input type="hidden" name="risk_threshold_high"   value="<?= s($cfgriskhigh) ?>">
+    <input type="hidden" name="alert_cooldown_hours"  value="<?= s($cfgcooldown) ?>">
+    <input type="hidden" name="risk_eval_enabled"     value="<?= s($cfgriskon) ?>">
+    <input type="hidden" name="rag_global_enabled"    value="<?= s($cfgragon) ?>">
   </form>
 
 <?php endif; ?>
@@ -1010,6 +1010,9 @@ echo $OUTPUT->header();
     };
 
     // ── Navigation ────────────────────────────────────────────────────────────
+    /**
+     * SpwizGoto.
+     */
     function spwizGoto(step) {
         var prev = document.getElementById('spwiz-step-' + currentStep);
         if (prev) prev.classList.remove('active');
@@ -1050,11 +1053,17 @@ echo $OUTPUT->header();
         });
     });
 
+    /**
+     * GetSelectedMode.
+     */
     function getSelectedMode() {
         var checked = document.querySelector('input[name="engine_mode"]:checked');
         return checked ? checked.value : 'local_ollama';
     }
 
+    /**
+     * UpdateHints.
+     */
     function updateHints() {
         var mode  = getSelectedMode();
         var modes = ['local_ollama', 'cloud_api', 'saipa_cloud', 'custom'];
@@ -1074,11 +1083,17 @@ echo $OUTPUT->header();
         });
     });
 
+    /**
+     * GetSelectedChannel.
+     */
     function getSelectedChannel() {
         var checked = document.querySelector('input[name="messaging_channel"]:checked');
         return checked ? checked.value : 'none';
     }
 
+    /**
+     * UpdateChannelUI.
+     */
     function updateChannelUI() {
         var ch  = getSelectedChannel();
         var tgSection  = document.getElementById('sp-telegram-section');
@@ -1091,6 +1106,9 @@ echo $OUTPUT->header();
     updateChannelUI();
 
     // ── Telegram bot test ─────────────────────────────────────────────────────
+    /**
+     * SpTestBot.
+     */
     function spTestBot() {
         var resultEl  = document.getElementById('sp-bot-result');
         var tokenEl   = document.getElementById('sp-tg-token');
@@ -1140,6 +1158,9 @@ echo $OUTPUT->header();
     window.spTestBot = spTestBot;
 
     // ── Health check ──────────────────────────────────────────────────────────
+    /**
+     * SpRunTest.
+     */
     function spRunTest() {
         healthOk = false;
         var resultEl = document.getElementById('sp-health-result');
@@ -1161,7 +1182,7 @@ echo $OUTPUT->header();
         url = url.trim();
 
         if (!url) {
-            renderHealthError('Engine URL is empty. Go back and enter a URL.', url);
+            renderHealthError('Engine URL is empty. Go back && enter a URL.', url);
             return;
         }
 
@@ -1191,7 +1212,7 @@ echo $OUTPUT->header();
                     '<div class="health-label">Uptime</div>' +
                     '<div class="health-value">' + he(data.uptime) + '</div></div>' +
                     '<div class="alert alert-success py-2 px-3 mt-3 mb-0" style="font-size:.85rem;">' +
-                    '🎉 <strong>Connection successful!</strong> Review the summary below and click <em>Save &amp; Finish</em>.</div>';
+                    '🎉 <strong>Connection successful!</strong> Review the summary below && click <em>Save &amp; Finish</em>.</div>';
 
                 // Populate summary.
                 var usernameEl = document.getElementById('sp-tg-username');
@@ -1210,6 +1231,9 @@ echo $OUTPUT->header();
     }
     window.spRunTest = spRunTest;
 
+    /**
+     * RenderHealthError.
+     */
     function renderHealthError(msg, url) {
         document.getElementById('sp-health-result').innerHTML =
             '<div class="health-row">' +
@@ -1229,6 +1253,9 @@ echo $OUTPUT->header();
     }
 
     // ── Save ──────────────────────────────────────────────────────────────────
+    /**
+     * SpSave.
+     */
     function spSave() {
         var usernameEl = document.getElementById('sp-tg-username');
         document.getElementById('sf-mode').value    = getSelectedMode();
@@ -1241,10 +1268,16 @@ echo $OUTPUT->header();
     window.spSave = spSave;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+    /**
+     * He.
+     */
     function he(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
                         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    /**
+     * SetText.
+     */
     function setText(id, val) {
         var el = document.getElementById(id);
         if (el) el.textContent = val;

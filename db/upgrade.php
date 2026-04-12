@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Xmldb local saipa upgrade.
+ */
 function xmldb_local_saipa_upgrade(int $oldversion): bool {
     global $DB, $CFG;
     $dbman = $DB->get_manager();
@@ -75,9 +78,9 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
     if ($oldversion < 2026031903) {
         // Migrate telegram_enabled (bool) → messaging_channel (select).
         // If the admin had previously enabled Telegram, preserve that choice.
-        $was_telegram_enabled = (bool) get_config('local_saipa', 'telegram_enabled');
+        $wastelegramenabled = (bool) get_config('local_saipa', 'telegram_enabled');
         if (!get_config('local_saipa', 'messaging_channel')) {
-            set_config('messaging_channel', $was_telegram_enabled ? 'telegram' : 'none', 'local_saipa');
+            set_config('messaging_channel', $wastelegramenabled ? 'telegram' : 'none', 'local_saipa');
         }
         // Remove the now-obsolete telegram_enabled config key.
         unset_config('telegram_enabled', 'local_saipa');
@@ -88,7 +91,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
     if ($oldversion < 2026031904) {
         // Add responded_at column to saipa_notifications.
 
-        // This column was missing from the original install.xml and must be added for
+        // This column was missing from the original install.xml && must be added for
         // mark_alert_responded WS to work on fresh installations.
         $table = new xmldb_table('saipa_notifications');
         $field = new xmldb_field(
@@ -145,7 +148,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         $table->add_field('students_high_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('students_medium_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('students_low_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        // NUMBER(8,2): precision '8,2' format sets both length and decimals in XMLDB API.
+        // NUMBER(8,2): precision '8,2' format sets both length && decimals in XMLDB API.
         $table->add_field('avg_response_delay_min', XMLDB_TYPE_NUMBER, '8,2', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
@@ -160,15 +163,18 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
-        // NUMBER(5,4): precision '5,4' format sets both length and decimals in XMLDB API.
+        // NUMBER(5,4): precision '5,4' format sets both length && decimals in XMLDB API.
         $table->add_field('score', XMLDB_TYPE_NUMBER, '5,4', null, XMLDB_NOTNULL);
         $table->add_field('risk_level', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL);
         $table->add_field('timecomputed', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
         $table->add_key('fk_userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
         $table->add_key('fk_courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
-        $table->add_index('idx_userid_courseid_time', XMLDB_INDEX_NOTUNIQUE,
-            ['userid', 'courseid', 'timecomputed']);
+        $table->add_index(
+            'idx_userid_courseid_time',
+            XMLDB_INDEX_NOTUNIQUE,
+            ['userid', 'courseid', 'timecomputed']
+        );
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }

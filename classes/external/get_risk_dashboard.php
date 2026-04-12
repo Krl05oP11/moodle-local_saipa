@@ -16,7 +16,7 @@
 
 /**
  * External web service: get_risk_dashboard
- * Returns risk ROI data: alert funnel, trend, and intervention effectiveness.
+ * Returns risk ROI data: alert funnel, trend, && intervention effectiveness.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -31,21 +31,31 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_risk_dashboard.
+ */
 class get_risk_dashboard extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'period'   => new external_value(PARAM_ALPHANUMEXT, 'Period: 7d, 30d, semester, all', VALUE_DEFAULT, '30d'),
-            'courseid' => new external_value(PARAM_INT,   'Course ID; 0 = all courses',     VALUE_DEFAULT, 0),
+            'courseid' => new external_value(PARAM_INT, 'Course ID; 0 = all courses', VALUE_DEFAULT, 0),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(string $period = '30d', int $courseid = 0): array {
         global $DB;
 
-        $params  = self::validate_parameters(self::execute_parameters(),
-            ['period' => $period, 'courseid' => $courseid]);
+        $params  = self::validate_parameters(
+            self::execute_parameters(),
+            ['period' => $period, 'courseid' => $courseid]
+        );
         $context = \context_system::instance();
         self::validate_context($context);
         require_capability('local/saipa:advisor', $context);
@@ -53,11 +63,11 @@ class get_risk_dashboard extends external_api {
         $since = self::period_to_since($params['period']);
         $cid   = (int) $params['courseid'];
 
-        $course_filter       = $cid > 0 ? 'AND s.courseid = :cid' : '';
-        $course_filter_notif = $cid > 0
+        $coursefilter       = $cid > 0 ? 'AND s.courseid = :cid' : '';
+        $coursefilternotif = $cid > 0
             ? 'AND n.userid IN (SELECT DISTINCT userid FROM {saipa_sessions} WHERE courseid = :cid)'
             : '';
-        $params_cid = $cid > 0 ? ['cid' => $cid] : [];
+        $paramscid = $cid > 0 ? ['cid' => $cid] : [];
 
         // ── Alert funnel ──────────────────────────────────────────────────────
         // Students evaluated (have at least one risk score).
@@ -68,40 +78,40 @@ class get_risk_dashboard extends external_api {
         );
 
         // Identified high risk (current level).
-        $identified_high = (int) $DB->count_records_sql(
+        $identifiedhigh = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT userid) FROM {saipa_risk_scores}
               WHERE risk_level = :level" . ($cid > 0 ? ' AND courseid = :cid' : ''),
             array_merge(['level' => 'high'], $cid > 0 ? ['cid' => $cid] : [])
         );
 
         // Received alert (sent since period start, scoped to course if requested).
-        $received_alert = (int) $DB->count_records_sql(
+        $receivedalert = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT n.userid) FROM {saipa_notifications} n
-              WHERE n.timesent >= :since {$course_filter_notif}",
-            array_merge(['since' => $since], $params_cid)
+              WHERE n.timesent >= :since {$coursefilternotif}",
+            array_merge(['since' => $since], $paramscid)
         );
 
         // Responded to alert.
-        $responded_alert = (int) $DB->count_records_sql(
+        $respondedalert = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT n.userid) FROM {saipa_notifications} n
-              WHERE n.timesent >= :since AND n.responded_at > 0 {$course_filter_notif}",
-            array_merge(['since' => $since], $params_cid)
+              WHERE n.timesent >= :since AND n.responded_at > 0 {$coursefilternotif}",
+            array_merge(['since' => $since], $paramscid)
         );
 
         // Accessed Moodle after alert (had a new SAIPA session after responded_at).
-        $accessed_after = (int) $DB->count_records_sql(
+        $accessedafter = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT s.userid)
                FROM {saipa_sessions} s
                JOIN {saipa_notifications} n ON n.userid = s.userid
               WHERE n.responded_at > 0
                 AND s.timecreated > n.responded_at
-                AND n.timesent >= :since {$course_filter}",
-            array_merge(['since' => $since], $params_cid)
+                AND n.timesent >= :since {$coursefilter}",
+            array_merge(['since' => $since], $paramscid)
         );
 
         // ── Risk trend by week (from saipa_risk_history) ──────────────────────
-        $week_seconds = 7 * 86400;
-        $trend_rows = $DB->get_records_sql(
+        $weekseconds = 7 * 86400;
+        $trendrows = $DB->get_records_sql(
             "SELECT FLOOR(timecomputed / :wk) AS week_bucket,
                     SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS high_cnt,
                     SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS med_cnt,
@@ -111,18 +121,18 @@ class get_risk_dashboard extends external_api {
               WHERE timecomputed >= :since" .
             ($cid > 0 ? ' AND courseid = :cid' : '') .
             " GROUP BY week_bucket ORDER BY week_bucket",
-            array_merge(['wk' => $week_seconds, 'h' => 'high', 'm' => 'medium',
-                'l' => 'low', 'since' => $since], $params_cid)
+            array_merge(['wk' => $weekseconds, 'h' => 'high', 'm' => 'medium',
+                'l' => 'low', 'since' => $since], $paramscid)
         );
 
-        $risk_trend = [];
-        foreach ($trend_rows as $row) {
+        $risktrend = [];
+        foreach ($trendrows as $row) {
             $total = max(1, (int) $row->total);
-            $risk_trend[] = [
-                'week'       => (int) ($row->week_bucket * $week_seconds),
+            $risktrend[] = [
+                'week'       => (int) ($row->week_bucket * $weekseconds),
                 'pct_high'   => round((int) $row->high_cnt / $total, 4),
-                'pct_medium' => round((int) $row->med_cnt  / $total, 4),
-                'pct_low'    => round((int) $row->low_cnt  / $total, 4),
+                'pct_medium' => round((int) $row->med_cnt / $total, 4),
+                'pct_low'    => round((int) $row->low_cnt / $total, 4),
             ];
         }
 
@@ -130,27 +140,27 @@ class get_risk_dashboard extends external_api {
         // For each student who received a high-risk alert, compare risk score
         // at alert time vs 14 days later using saipa_risk_history.
         $effectiveness = [];
-        $alert_rows = $DB->get_records_sql(
+        $alertrows = $DB->get_records_sql(
             "SELECT DISTINCT n.userid, n.timesent, s.courseid
                FROM {saipa_notifications} n
                JOIN {saipa_sessions} s ON s.userid = n.userid
-              WHERE n.timesent >= :since {$course_filter}
+              WHERE n.timesent >= :since {$coursefilter}
                 AND EXISTS (
                     SELECT 1 FROM {saipa_risk_history} rh
                      WHERE rh.userid = n.userid AND rh.risk_level = :level
                        AND rh.timecomputed BETWEEN n.timesent - 86400 AND n.timesent + 86400
                 )
               ORDER BY n.timesent",
-            array_merge(['since' => $since, 'level' => 'high'], $params_cid),
+            array_merge(['since' => $since, 'level' => 'high'], $paramscid),
             0,
             50  // Limit to 50 for performance.
         );
 
-        foreach ($alert_rows as $arow) {
+        foreach ($alertrows as $arow) {
             $uid      = (int) $arow->userid;
             $acid     = (int) $arow->courseid;
-            $alert_ts = (int) $arow->timesent;
-            $after_ts = $alert_ts + (14 * 86400);
+            $alertts = (int) $arow->timesent;
+            $afterts = $alertts + (14 * 86400);
 
             // Score closest to alert time (before).
             $before = $DB->get_record_sql(
@@ -158,7 +168,7 @@ class get_risk_dashboard extends external_api {
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed <= :ts
                   ORDER BY timecomputed DESC LIMIT 1',
-                ['uid' => $uid, 'cid' => $acid, 'ts' => $alert_ts + 86400]
+                ['uid' => $uid, 'cid' => $acid, 'ts' => $alertts + 86400]
             );
 
             // Score closest to 14 days after.
@@ -167,19 +177,19 @@ class get_risk_dashboard extends external_api {
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed >= :ts
                   ORDER BY timecomputed ASC LIMIT 1',
-                ['uid' => $uid, 'cid' => $acid, 'ts' => $after_ts - 86400]
+                ['uid' => $uid, 'cid' => $acid, 'ts' => $afterts - 86400]
             );
 
             if ($before && $after) {
-                $score_before = (float) $before->score;
-                $score_after  = (float) $after->score;
+                $scorebefore = (float) $before->score;
+                $scoreafter  = (float) $after->score;
                 $effectiveness[] = [
                     'userid'        => $uid,
                     'courseid'      => $acid,
-                    'alert_time'    => $alert_ts,
-                    'risk_at_alert' => $score_before,
-                    'risk_14d_later' => $score_after,
-                    'improved'      => $score_after < $score_before,
+                    'alert_time'    => $alertts,
+                    'risk_at_alert' => $scorebefore,
+                    'risk_14d_later' => $scoreafter,
+                    'improved'      => $scoreafter < $scorebefore,
                 ];
             }
         }
@@ -187,41 +197,51 @@ class get_risk_dashboard extends external_api {
         return [
             'funnel' => [
                 'evaluated'       => $evaluated,
-                'identified_high' => $identified_high,
-                'received_alert'  => $received_alert,
-                'responded_alert' => $responded_alert,
-                'accessed_after'  => $accessed_after,
+                'identified_high' => $identifiedhigh,
+                'received_alert'  => $receivedalert,
+                'responded_alert' => $respondedalert,
+                'accessed_after'  => $accessedafter,
             ],
-            'risk_trend'              => $risk_trend,
+            'risk_trend'              => $risktrend,
             'intervention_effectiveness' => $effectiveness,
         ];
     }
 
+    /**
+     * Convert a period string to a Unix timestamp.
+     */
     private static function period_to_since(string $period): int {
         $now = time();
         switch ($period) {
-            case '7d':       return $now - (7 * 86400);
-            case 'semester': return $now - (120 * 86400);
-            case 'all':      return 0;
-            default:         return $now - (30 * 86400);
+            case '7d':
+                return $now - (7 * 86400);
+            case 'semester':
+                return $now - (120 * 86400);
+            case 'all':
+                return 0;
+            default:
+                return $now - (30 * 86400);
         }
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
-        $trend_item = new external_single_structure([
-            'week'       => new external_value(PARAM_INT,   'Week start unix timestamp'),
+        $trenditem = new external_single_structure([
+            'week'       => new external_value(PARAM_INT, 'Week start unix timestamp'),
             'pct_high'   => new external_value(PARAM_FLOAT, 'Fraction at high risk'),
             'pct_medium' => new external_value(PARAM_FLOAT, 'Fraction at medium risk'),
             'pct_low'    => new external_value(PARAM_FLOAT, 'Fraction at low risk'),
         ]);
 
-        $eff_item = new external_single_structure([
-            'userid'          => new external_value(PARAM_INT,   'User ID'),
-            'courseid'        => new external_value(PARAM_INT,   'Course ID'),
-            'alert_time'      => new external_value(PARAM_INT,   'Unix timestamp of alert'),
+        $effitem = new external_single_structure([
+            'userid'          => new external_value(PARAM_INT, 'User ID'),
+            'courseid'        => new external_value(PARAM_INT, 'Course ID'),
+            'alert_time'      => new external_value(PARAM_INT, 'Unix timestamp of alert'),
             'risk_at_alert'   => new external_value(PARAM_FLOAT, 'Risk score at alert time'),
             'risk_14d_later'  => new external_value(PARAM_FLOAT, 'Risk score 14 days later'),
-            'improved'        => new external_value(PARAM_BOOL,  'True if risk decreased'),
+            'improved'        => new external_value(PARAM_BOOL, 'True if risk decreased'),
         ]);
 
         return new external_single_structure([
@@ -232,8 +252,8 @@ class get_risk_dashboard extends external_api {
                 'responded_alert' => new external_value(PARAM_INT, 'Students who responded'),
                 'accessed_after'  => new external_value(PARAM_INT, 'Students who accessed Moodle after alert'),
             ]),
-            'risk_trend'                 => new external_multiple_structure($trend_item),
-            'intervention_effectiveness' => new external_multiple_structure($eff_item),
+            'risk_trend'                 => new external_multiple_structure($trenditem),
+            'intervention_effectiveness' => new external_multiple_structure($effitem),
         ]);
     }
 }

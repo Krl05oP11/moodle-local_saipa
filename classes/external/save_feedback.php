@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,9 +30,14 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Save_feedback.
+ */
 class save_feedback extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id'  => new external_value(PARAM_INT, 'Course ID'),
@@ -41,12 +46,15 @@ class save_feedback extends external_api {
         ]);
     }
 
-    public static function execute(int $course_id, int $message_id, int $rating): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid, int $messageid, int $rating): array {
         global $USER, $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'course_id'  => $course_id,
-            'message_id' => $message_id,
+            'course_id'  => $courseid,
+            'message_id' => $messageid,
             'rating'     => $rating,
         ]);
 
@@ -55,7 +63,7 @@ class save_feedback extends external_api {
         require_capability('local/saipa:chat', $context);
 
         if (!in_array($params['rating'], [1, -1], true)) {
-            throw new \invalid_parameter_exception('rating must be 1 or -1');
+            throw new \invalid_parameter_exception('rating must be 1 || -1');
         }
 
         // Verify the message belongs to a session owned by this user in this course.
@@ -94,6 +102,9 @@ class save_feedback extends external_api {
         return ['status' => 'ok'];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'status' => new external_value(PARAM_TEXT, 'ok'),

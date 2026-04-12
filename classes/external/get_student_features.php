@@ -31,9 +31,14 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_student_features.
+ */
 class get_student_features extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'user_id'   => new external_value(PARAM_INT, 'Student user ID'),
@@ -41,12 +46,15 @@ class get_student_features extends external_api {
         ]);
     }
 
-    public static function execute(int $user_id, int $course_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $userid, int $courseid): array {
         global $DB;
 
         $params  = self::validate_parameters(self::execute_parameters(), [
-            'user_id'   => $user_id,
-            'course_id' => $course_id,
+            'user_id'   => $userid,
+            'course_id' => $courseid,
         ]);
         $uid = $params['user_id'];
         $cid = $params['course_id'];
@@ -59,18 +67,18 @@ class get_student_features extends external_api {
         $day  = 86400;
 
         // ── 1. last_access_days ─────────────────────────────────────────────
-        $last_access = $DB->get_field(
+        $lastaccess = $DB->get_field(
             'user_lastaccess',
             'timeaccess',
             ['userid' => $uid, 'courseid' => $cid]
         );
-        $last_access_days = $last_access
-            ? round(($now - $last_access) / $day, 1)
+        $lastaccessdays = $lastaccess
+            ? round(($now - $lastaccess) / $day, 1)
             : 90.0;
 
         // ── 2. submission_rate ──────────────────────────────────────────────
-        $total_assigns = (int) $DB->count_records('assign', ['course' => $cid]);
-        if ($total_assigns > 0) {
+        $totalassigns = (int) $DB->count_records('assign', ['course' => $cid]);
+        if ($totalassigns > 0) {
             $sql = "SELECT COUNT(DISTINCT s.assignment)
                       FROM {assign_submission} s
                       JOIN {assign} a ON a.id = s.assignment
@@ -78,21 +86,21 @@ class get_student_features extends external_api {
                        AND s.userid = :uid
                        AND s.status = 'submitted'";
             $submitted = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
-            $submission_rate = round($submitted / $total_assigns, 4);
+            $submissionrate = round($submitted / $totalassigns, 4);
         } else {
-            $submission_rate = 1.0;   // no assignments → neutral
+            $submissionrate = 1.0;   // no assignments → neutral
         }
 
         // ── 3 & 4. login counts ─────────────────────────────────────────────
         $since7  = $now - 7 * $day;
         $since30 = $now - 30 * $day;
 
-        $login_count_7d  = (int) $DB->count_records_select(
+        $logincount7d  = (int) $DB->count_records_select(
             'logstore_standard_log',
             "userid = :uid AND action = 'loggedin' AND timecreated >= :since",
             ['uid' => $uid, 'since' => $since7]
         );
-        $login_count_30d = (int) $DB->count_records_select(
+        $logincount30d = (int) $DB->count_records_select(
             'logstore_standard_log',
             "userid = :uid AND action = 'loggedin' AND timecreated >= :since",
             ['uid' => $uid, 'since' => $since30]
@@ -105,21 +113,21 @@ class get_student_features extends external_api {
         );
 
         if ($session) {
-            $saipa_msg_count = (int) $DB->count_records(
+            $saipamsgcount = (int) $DB->count_records(
                 'saipa_messages',
                 ['sessionid' => $session->id, 'role' => 'user']
             );
-            $last_chat_ts    = $DB->get_field_sql(
+            $lastchatts    = $DB->get_field_sql(
                 "SELECT MAX(timecreated) FROM {saipa_messages}
                   WHERE sessionid = :sid AND role = 'user'",
                 ['sid' => $session->id]
             );
-            $saipa_days_since_last_chat = $last_chat_ts
-                ? round(($now - $last_chat_ts) / $day, 1)
+            $saipadayssincelastchat = $lastchatts
+                ? round(($now - $lastchatts) / $day, 1)
                 : 99.0;
         } else {
-            $saipa_msg_count            = 0;
-            $saipa_days_since_last_chat = 99.0;
+            $saipamsgcount            = 0;
+            $saipadayssincelastchat = 99.0;
         }
 
         // ── 7 & 8. quiz scores ──────────────────────────────────────────────
@@ -128,17 +136,17 @@ class get_student_features extends external_api {
                   JOIN {quiz} q ON q.id = qg.quiz
                  WHERE q.course = :cid
                    AND qg.userid = :uid";
-        $quiz_rows = $DB->get_records_sql($sql, ['cid' => $cid, 'uid' => $uid]);
-        $quiz_attempt_count = count($quiz_rows);
-        if ($quiz_attempt_count > 0) {
+        $quizrows = $DB->get_records_sql($sql, ['cid' => $cid, 'uid' => $uid]);
+        $quizattemptcount = count($quizrows);
+        if ($quizattemptcount > 0) {
             $pcts = [];
-            foreach ($quiz_rows as $r) {
+            foreach ($quizrows as $r) {
                 $max    = (float) $r->maxgrade;
                 $pcts[] = $max > 0 ? min(100.0, round((float) $r->grade / $max * 100, 2)) : 0;
             }
-            $quiz_avg_score = round(array_sum($pcts) / count($pcts), 2);
+            $quizavgscore = round(array_sum($pcts) / count($pcts), 2);
         } else {
-            $quiz_avg_score = 50.0;   // neutral default
+            $quizavgscore = 50.0;   // neutral default
         }
 
         // ── 9. forum posts ──────────────────────────────────────────────────
@@ -148,55 +156,58 @@ class get_student_features extends external_api {
                   JOIN {forum} f ON f.id = fd.forum
                  WHERE f.course = :cid
                    AND fp.userid = :uid";
-        $forum_post_count = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
+        $forumpostcount = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
 
         // ── 10. positive_feedback_ratio ─────────────────────────────────────
-        $total_fb = (int) $DB->count_records('saipa_feedback', ['userid' => $uid]);
-        if ($total_fb > 0) {
-            $pos_fb = (int) $DB->count_records(
+        $totalfb = (int) $DB->count_records('saipa_feedback', ['userid' => $uid]);
+        if ($totalfb > 0) {
+            $posfb = (int) $DB->count_records(
                 'saipa_feedback',
                 ['userid' => $uid, 'rating' => 1]
             );
-            $positive_feedback_ratio = round($pos_fb / $total_fb, 4);
+            $positivefeedbackratio = round($posfb / $totalfb, 4);
         } else {
-            $positive_feedback_ratio = 0.5;   // neutral
+            $positivefeedbackratio = 0.5;   // neutral
         }
 
         // ── 11. completion_rate ─────────────────────────────────────────────
-        $sql_total = "SELECT COUNT(*) FROM {course_modules}
+        $sqltotal = "SELECT COUNT(*) FROM {course_modules}
                        WHERE course = :cid AND completion > 0";
-        $total_completable = (int) $DB->get_field_sql($sql_total, ['cid' => $cid]);
+        $totalcompletable = (int) $DB->get_field_sql($sqltotal, ['cid' => $cid]);
 
-        if ($total_completable > 0) {
-            $sql_done = "SELECT COUNT(cmc.id)
+        if ($totalcompletable > 0) {
+            $sqldone = "SELECT COUNT(cmc.id)
                            FROM {course_modules_completion} cmc
                            JOIN {course_modules} cm ON cm.id = cmc.coursemoduleid
                           WHERE cm.course = :cid
                             AND cmc.userid = :uid
                             AND cmc.completionstate > 0";
-            $done           = (int) $DB->get_field_sql($sql_done, ['cid' => $cid, 'uid' => $uid]);
-            $completion_rate = round($done / $total_completable, 4);
+            $done           = (int) $DB->get_field_sql($sqldone, ['cid' => $cid, 'uid' => $uid]);
+            $completionrate = round($done / $totalcompletable, 4);
         } else {
-            $completion_rate = 1.0;   // no tracked activities → neutral
+            $completionrate = 1.0;   // no tracked activities → neutral
         }
 
         return [
             'user_id'                    => $uid,
             'course_id'                  => $cid,
-            'last_access_days'           => (float) $last_access_days,
-            'submission_rate'            => (float) $submission_rate,
-            'login_count_7d'             => $login_count_7d,
-            'login_count_30d'            => $login_count_30d,
-            'saipa_days_since_last_chat' => (float) $saipa_days_since_last_chat,
-            'saipa_message_count'        => $saipa_msg_count,
-            'quiz_avg_score'             => (float) $quiz_avg_score,
-            'quiz_attempt_count'         => $quiz_attempt_count,
-            'forum_post_count'           => $forum_post_count,
-            'positive_feedback_ratio'    => (float) $positive_feedback_ratio,
-            'completion_rate'            => (float) $completion_rate,
+            'last_access_days'           => (float) $lastaccessdays,
+            'submission_rate'            => (float) $submissionrate,
+            'login_count_7d'             => $logincount7d,
+            'login_count_30d'            => $logincount30d,
+            'saipa_days_since_last_chat' => (float) $saipadayssincelastchat,
+            'saipa_message_count'        => $saipamsgcount,
+            'quiz_avg_score'             => (float) $quizavgscore,
+            'quiz_attempt_count'         => $quizattemptcount,
+            'forum_post_count'           => $forumpostcount,
+            'positive_feedback_ratio'    => (float) $positivefeedbackratio,
+            'completion_rate'            => (float) $completionrate,
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'user_id'                    => new external_value(PARAM_INT, 'User ID'),

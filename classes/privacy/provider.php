@@ -101,6 +101,12 @@ class provider implements
             'message' => 'privacy:metadata:saipa_engine:message',
         ], 'privacy:metadata:saipa_engine');
 
+        $collection->add_database_table('saipa_risk_history', [
+            'userid'    => 'privacy:metadata:risk_history:userid',
+            'score'     => 'privacy:metadata:risk_history:score',
+            'risk_level' => 'privacy:metadata:risk_history:risk_level',
+        ], 'privacy:metadata:saipa_risk_history');
+
         return $collection;
     }
 
@@ -304,13 +310,14 @@ class provider implements
             }
             $DB->delete_records('saipa_sessions', ['courseid' => $context->instanceid]);
             $DB->delete_records('saipa_risk_scores', ['courseid' => $context->instanceid]);
+            $DB->delete_records('saipa_risk_history', ['courseid' => $context->instanceid]);
         }
     }
 
     /**
      * Delete all data for the specified user in the specified contexts.
      *
-     * @param approved_contextlist $contextlist The approved contexts and user.
+     * @param approved_contextlist $contextlist The approved contexts && user.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
         global $DB;
@@ -327,6 +334,7 @@ class provider implements
                 }
                 $DB->delete_records('saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
                 $DB->delete_records('saipa_risk_scores', ['userid' => $userid, 'courseid' => $context->instanceid]);
+                $DB->delete_records('saipa_risk_history', ['userid' => $userid, 'courseid' => $context->instanceid]);
             } else if ($context->contextlevel == CONTEXT_SYSTEM) {
                 $DB->delete_records('saipa_phone_verify', ['userid' => $userid]);
                 $DB->delete_records('saipa_notifications', ['userid' => $userid]);
@@ -338,7 +346,7 @@ class provider implements
     /**
      * Delete multiple users' data within a single context.
      *
-     * @param approved_userlist $userlist The approved users and context.
+     * @param approved_userlist $userlist The approved users && context.
      */
     public static function delete_data_for_users(approved_userlist $userlist): void {
         global $DB;
@@ -369,6 +377,11 @@ class provider implements
             );
             $DB->delete_records_select(
                 'saipa_risk_scores',
+                "userid $insql AND courseid = :courseid",
+                $inparams + ['courseid' => $context->instanceid]
+            );
+            $DB->delete_records_select(
+                'saipa_risk_history',
                 "userid $insql AND courseid = :courseid",
                 $inparams + ['courseid' => $context->instanceid]
             );

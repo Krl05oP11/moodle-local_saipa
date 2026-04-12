@@ -35,15 +35,25 @@
 
 namespace local_saipa\task;
 
-defined('MOODLE_INTERNAL') || die();
 
+
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Risk_evaluation.
+ */
 class risk_evaluation extends \core\task\scheduled_task {
+    /**
+     * Get name.
+     */
     public function get_name(): string {
         return get_string('pluginname', 'local_saipa') . ' — Risk Evaluation';
     }
 
+    /**
+     * Execute the web service.
+     */
     public function execute(): void {
         global $DB;
 
@@ -52,30 +62,30 @@ class risk_evaluation extends \core\task\scheduled_task {
 
         // ── 1. Find active courses (have at least one SAIPA session) ──────────
         $sql = "SELECT DISTINCT courseid FROM {saipa_sessions}";
-        $course_ids = $DB->get_fieldset_sql($sql);
+        $courseids = $DB->get_fieldset_sql($sql);
 
-        if (empty($course_ids)) {
+        if (empty($courseids)) {
             mtrace('SAIPA: No courses with SAIPA activity — nothing to evaluate.');
             return;
         }
 
         mtrace(sprintf(
             'SAIPA: Evaluating %d course(s): %s',
-            count($course_ids),
-            implode(', ', $course_ids)
+            count($courseids),
+            implode(', ', $courseids)
         ));
 
-        $total_evaluated = 0;
-        $total_escalated = 0;
-        $total_errors    = 0;
+        $totalevaluated = 0;
+        $totalescalated = 0;
+        $totalerrors    = 0;
 
-        foreach ($course_ids as $cid) {
+        foreach ($courseids as $cid) {
             try {
                 [$evaluated, $escalated] = $this->evaluate_course((int) $cid);
-                $total_evaluated += $evaluated;
-                $total_escalated += $escalated;
+                $totalevaluated += $evaluated;
+                $totalescalated += $escalated;
             } catch (\Throwable $e) {
-                $total_errors++;
+                $totalerrors++;
                 mtrace(sprintf('SAIPA: ERROR evaluating course %d — %s', $cid, $e->getMessage()));
             }
         }
@@ -83,9 +93,9 @@ class risk_evaluation extends \core\task\scheduled_task {
         $elapsed = time() - $start;
         mtrace(sprintf(
             'SAIPA: Risk evaluation complete. Students evaluated: %d | Escalations to high: %d | Errors: %d | Time: %ds',
-            $total_evaluated,
-            $total_escalated,
-            $total_errors,
+            $totalevaluated,
+            $totalescalated,
+            $totalerrors,
             $elapsed
         ));
     }
@@ -109,25 +119,25 @@ class risk_evaluation extends \core\task\scheduled_task {
         $context = \context_course::instance($cid);
 
         // Collect students (chat capability but NOT view/teacher capability).
-        $all_chatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname');
-        $teacher_ids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
-        $students     = array_filter($all_chatters, fn($u) => !in_array($u->id, $teacher_ids));
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname');
+        $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
+        $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
 
         if (empty($students)) {
             mtrace("  Course {$cid} ({$course->shortname}): no students, skipping.");
             return [0, 0];
         }
 
-        $user_ids = array_values(array_map(fn($u) => (int) $u->id, $students));
-        mtrace(sprintf('  Course %d (%s): %d students', $cid, $course->shortname, count($user_ids)));
+        $userids = array_values(array_map(fn($u) => (int) $u->id, $students));
+        mtrace(sprintf('  Course %d (%s): %d students', $cid, $course->shortname, count($userids)));
 
         // Snapshot previous risk levels for escalation detection.
-        $previous = $this->get_previous_levels($cid, $user_ids);
+        $previous = $this->get_previous_levels($cid, $userids);
 
         // Extract features for each student.
-        $features_map = $this->extract_features($cid, $students);
+        $featuresmap = $this->extract_features($cid, $students);
 
-        if (empty($features_map)) {
+        if (empty($featuresmap)) {
             mtrace("  Course {$cid}: feature extraction returned nothing, skipping.");
             return [0, 0];
         }
@@ -135,8 +145,8 @@ class risk_evaluation extends \core\task\scheduled_task {
         // Call engine.
         $response = local_saipa_engine_request('/analytics/risk/batch', [
             'course_id'    => $cid,
-            'user_ids'     => array_map('intval', array_keys($features_map)),
-            'features_map' => $features_map,
+            'user_ids'     => array_map('intval', array_keys($featuresmap)),
+            'features_map' => $featuresmap,
         ], 120);
 
         if (isset($response['error'])) {
@@ -152,24 +162,24 @@ class risk_evaluation extends \core\task\scheduled_task {
         $now       = time();
         $evaluated = 0;
         $escalated = 0;
-        $new_high  = [];   // [userid => fullname]
+        $newhigh  = [];   // [userid => fullname]
 
         foreach ($response['results'] ?? [] as $r) {
             $uid        = (int) $r['user_id'];
             $score      = (float) $r['score'];
-            $risk_level = (string) $r['risk_level'];
+            $risklevel = (string) $r['risk_level'];
             $factors    = json_encode($r['factors'] ?? []);
 
-            $this->upsert_score($uid, $cid, $score, $risk_level, $factors, $now);
+            $this->upsert_score($uid, $cid, $score, $risklevel, $factors, $now);
             $evaluated++;
 
             // Escalation: wasn't "high" before, is "high" now.
             $prev = $previous[$uid] ?? null;
-            if ($risk_level === 'high' && $prev !== 'high') {
+            if ($risklevel === 'high' && $prev !== 'high') {
                 $escalated++;
                 $u = $students[$uid] ?? null;
                 $name = $u ? fullname($u) : "user {$uid}";
-                $new_high[$uid] = $name;
+                $newhigh[$uid] = $name;
                 mtrace(sprintf(
                     '    ⚠ %s (id=%d): escalated to HIGH (was: %s)',
                     $name,
@@ -180,9 +190,9 @@ class risk_evaluation extends \core\task\scheduled_task {
         }
 
         // Send notifications for escalations.
-        if (!empty($new_high)) {
-            $this->notify_teachers($cid, $course, $context, $new_high);
-            $this->notify_students_telegram($course, $new_high);
+        if (!empty($newhigh)) {
+            $this->notify_teachers($cid, $course, $context, $newhigh);
+            $this->notify_students_telegram($course, $newhigh);
         }
 
         return [$evaluated, $escalated];
@@ -190,19 +200,23 @@ class risk_evaluation extends \core\task\scheduled_task {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /** Returns [userid => risk_level] for existing scores in this course. */
-    private function get_previous_levels(int $cid, array $user_ids): array {
+    /**
+
+     * Returns [userid => risk_level] for existing scores in this course.
+
+     */
+    private function get_previous_levels(int $cid, array $userids): array {
         global $DB;
 
-        if (empty($user_ids)) {
+        if (empty($userids)) {
             return [];
         }
 
-        [$in_sql, $in_params] = $DB->get_in_or_equal($user_ids, SQL_PARAMS_NAMED, 'uid');
+        [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'uid');
         $rows = $DB->get_records_select(
             'saipa_risk_scores',
-            "courseid = :cid AND userid {$in_sql}",
-            array_merge(['cid' => $cid], $in_params),
+            "courseid = :cid AND userid {$insql}",
+            array_merge(['cid' => $cid], $inparams),
             '',
             'userid, risk_level'
         );
@@ -214,26 +228,34 @@ class risk_evaluation extends \core\task\scheduled_task {
         return $result;
     }
 
-    /** Calls get_student_features::execute() for each student; silently skips failures. */
+    /**
+
+     * Calls get_student_features::execute() for each student; silently skips failures.
+
+     */
     private function extract_features(int $cid, array $students): array {
-        $features_map = [];
+        $featuresmap = [];
         foreach ($students as $u) {
             try {
-                $features_map[(string) $u->id] =
+                $featuresmap[(string) $u->id] =
                     \local_saipa\external\get_student_features::execute($u->id, $cid);
             } catch (\Throwable $e) {
                 mtrace(sprintf('    user %d: feature extraction failed — %s', $u->id, $e->getMessage()));
             }
         }
-        return $features_map;
+        return $featuresmap;
     }
 
-    /** Upserts one row in saipa_risk_scores and appends to saipa_risk_history. */
+    /**
+
+     * Upserts one row in saipa_risk_scores and appends to saipa_risk_history.
+
+     */
     private function upsert_score(
         int $uid,
         int $cid,
         float $score,
-        string $risk_level,
+        string $risklevel,
         string $factors,
         int $now
     ): void {
@@ -245,7 +267,7 @@ class risk_evaluation extends \core\task\scheduled_task {
             $DB->update_record('saipa_risk_scores', (object) [
                 'id'           => $existing->id,
                 'score'        => $score,
-                'risk_level'   => $risk_level,
+                'risk_level'   => $risklevel,
                 'factors'      => $factors,
                 'timecomputed' => $now,
             ]);
@@ -254,7 +276,7 @@ class risk_evaluation extends \core\task\scheduled_task {
                 'userid'       => $uid,
                 'courseid'     => $cid,
                 'score'        => $score,
-                'risk_level'   => $risk_level,
+                'risk_level'   => $risklevel,
                 'factors'      => $factors,
                 'timecomputed' => $now,
             ]);
@@ -265,7 +287,7 @@ class risk_evaluation extends \core\task\scheduled_task {
             'userid'       => $uid,
             'courseid'     => $cid,
             'score'        => $score,
-            'risk_level'   => $risk_level,
+            'risk_level'   => $risklevel,
             'timecomputed' => $now,
         ]);
     }
@@ -275,25 +297,25 @@ class risk_evaluation extends \core\task\scheduled_task {
      * a confirmed Telegram link, via the saipa-engine /telegram/notify endpoint.
      *
      * @param object $course   Course DB record
-     * @param array  $new_high [userid => fullname]
+     * @param array  $newhigh [userid => fullname]
      */
-    private function notify_students_telegram(object $course, array $new_high): void {
+    private function notify_students_telegram(object $course, array $newhigh): void {
         global $DB;
 
-        $course_name = format_string($course->fullname);
+        $coursename = format_string($course->fullname);
 
-        foreach ($new_high as $uid => $name) {
+        foreach ($newhigh as $uid => $name) {
             $link = $DB->get_record('saipa_telegram_links', ['userid' => $uid, 'confirmed' => 1]);
             if (!$link || !$link->telegram_id) {
                 continue;
             }
 
             // Use first name only for a warmer, more personal tone.
-            $first_name = explode(' ', trim($name))[0];
+            $firstname = explode(' ', trim($name))[0];
 
             $message =
-                "🤖 Hola {$first_name}! SAIPA detectó que podrías necesitar un poco de apoyo " .
-                "en tu cursada de *{$course_name}*.\n\n" .
+                "🤖 Hola {$firstname}! SAIPA detectó que podrías necesitar un poco de apoyo " .
+                "en tu cursada de *{$coursename}*.\n\n" .
                 "Tu docente ya está al tanto y puede ayudarte. " .
                 "Si querés charlar o tenés alguna consulta sobre el curso, ¡escribime aquí! " .
                 "No estás solo/a. 💪";
@@ -327,13 +349,13 @@ class risk_evaluation extends \core\task\scheduled_task {
      * @param int    $cid      Course id
      * @param object $course   Course DB record
      * @param object $context  Course context
-     * @param array  $new_high [userid => fullname]
+     * @param array  $newhigh [userid => fullname]
      */
     private function notify_teachers(
         int $cid,
         object $course,
         object $context,
-        array $new_high
+        array $newhigh
     ): void {
         global $DB, $CFG;
 
@@ -349,36 +371,36 @@ class risk_evaluation extends \core\task\scheduled_task {
         }
 
         // Build the student list for the message body.
-        $student_lines = [];
-        foreach ($new_high as $uid => $name) {
-            $student_lines[] = "  • {$name}";
+        $studentlines = [];
+        foreach ($newhigh as $uid => $name) {
+            $studentlines[] = "  • {$name}";
         }
-        $student_list = implode("\n", $student_lines);
+        $studentlist = implode("\n", $studentlines);
 
-        $course_url = (new \moodle_url(
+        $courseurl = (new \moodle_url(
             '/local/saipa/teacher.php',
             ['courseid' => $cid]
         ))->out(false);
 
         $subject = sprintf('[SAIPA] Alerta de riesgo — %s', format_string($course->fullname));
 
-        $body_text = sprintf(
+        $bodytext = sprintf(
             "SAIPA detectó que los siguientes estudiantes escalaron a RIESGO ALTO en el curso \"%s\":\n\n%s\n\n" .
             "Accedé al panel del docente para ver los detalles:\n%s\n\n" .
             "Este mensaje fue generado automáticamente por SAIPA.",
             format_string($course->fullname),
-            $student_list,
-            $course_url
+            $studentlist,
+            $courseurl
         );
 
-        $body_html = sprintf(
+        $bodyhtml = sprintf(
             '<p>SAIPA detectó que los siguientes estudiantes escalaron a <strong>🔴 RIESGO ALTO</strong> ' .
             'en el curso <em>%s</em>:</p><ul>%s</ul>' .
             '<p><a href="%s">Ver panel del docente →</a></p>' .
             '<p style="color:#888;font-size:0.9em;">Mensaje generado automáticamente por SAIPA.</p>',
             format_string($course->fullname),
-            implode('', array_map(fn($n) => "<li>{$n}</li>", $new_high)),
-            $course_url
+            implode('', array_map(fn($n) => "<li>{$n}</li>", $newhigh)),
+            $courseurl
         );
 
         // Use a system user as sender (noreply).
@@ -391,16 +413,16 @@ class risk_evaluation extends \core\task\scheduled_task {
             $msg->userfrom           = $sender;
             $msg->userto             = $teacher;
             $msg->subject            = $subject;
-            $msg->fullmessage        = $body_text;
+            $msg->fullmessage        = $bodytext;
             $msg->fullmessageformat  = FORMAT_PLAIN;
-            $msg->fullmessagehtml    = $body_html;
+            $msg->fullmessagehtml    = $bodyhtml;
             $msg->smallmessage       = sprintf(
                 'SAIPA: %d estudiante(s) en riesgo alto en %s',
-                count($new_high),
+                count($newhigh),
                 format_string($course->fullname)
             );
             $msg->notification       = 1;
-            $msg->contexturl         = $course_url;
+            $msg->contexturl         = $courseurl;
             $msg->contexturlname     = 'Panel del docente';
 
             message_send($msg);

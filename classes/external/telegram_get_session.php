@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,19 +31,27 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Telegram_get_session.
+ */
 class telegram_get_session extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'telegram_id' => new external_value(PARAM_INT, 'Telegram chat_id'),
         ]);
     }
 
-    public static function execute(int $telegram_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $telegramid): array {
         global $DB;
 
-        $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegram_id]);
+        $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
         $link = $DB->get_record('saipa_telegram_links', [
             'telegram_id' => $params['telegram_id'],
@@ -67,16 +75,19 @@ class telegram_get_session extends external_api {
             1   // limitnum
         );
 
-        $course_id = $session ? (int) $session->courseid : 0;
+        $courseid = $session ? (int) $session->courseid : 0;
 
         return [
             'linked'    => true,
             'user_id'   => (int) $link->userid,
-            'course_id' => $course_id,
+            'course_id' => $courseid,
             'fullname'  => $fullname,
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'linked'    => new external_value(PARAM_BOOL, 'True if this telegram_id is linked to a Moodle user'),

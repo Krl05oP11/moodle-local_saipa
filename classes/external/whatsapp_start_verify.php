@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 /**
  * External web service: whatsapp_start_verify
- * Generates an OTP and asks the engine to send it via WhatsApp.
+ * Generates an OTP && asks the engine to send it via WhatsApp.
  * Called via AJAX from block_saipa when the student enters their phone number.
  *
  * @package    local_saipa
@@ -31,18 +31,27 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Whatsapp_start_verify.
+ */
 class whatsapp_start_verify extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'phone' => new external_value(PARAM_TEXT, 'Phone number in international format (e.g. 5491112345678)'),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(string $phone): array {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $USER, $DB;
 
         require_login();
@@ -50,8 +59,8 @@ class whatsapp_start_verify extends external_api {
         $params = self::validate_parameters(self::execute_parameters(), ['phone' => $phone]);
 
         // Sanitise phone: keep only digits.
-        $phone_clean = preg_replace('/\D/', '', $params['phone']);
-        if (strlen($phone_clean) < 7 || strlen($phone_clean) > 20) {
+        $phoneclean = preg_replace('/\D/', '', $params['phone']);
+        if (strlen($phoneclean) < 7 || strlen($phoneclean) > 20) {
             throw new \invalid_parameter_exception('Invalid phone number format.');
         }
 
@@ -64,7 +73,7 @@ class whatsapp_start_verify extends external_api {
         if ($existing) {
             $DB->update_record('saipa_phone_verify', (object) [
                 'id'          => $existing->id,
-                'phone'       => $phone_clean,
+                'phone'       => $phoneclean,
                 'otp'         => $otp,
                 'verified'    => 0,
                 'timeexpires' => $expires,
@@ -72,7 +81,7 @@ class whatsapp_start_verify extends external_api {
         } else {
             $DB->insert_record('saipa_phone_verify', (object) [
                 'userid'      => (int) $USER->id,
-                'phone'       => $phone_clean,
+                'phone'       => $phoneclean,
                 'otp'         => $otp,
                 'verified'    => 0,
                 'timecreated' => $now,
@@ -82,7 +91,7 @@ class whatsapp_start_verify extends external_api {
 
         // Ask saipa-engine to send the OTP via WhatsApp.
         $resp = local_saipa_engine_request('/whatsapp/send_otp', [
-            'phone' => $phone_clean,
+            'phone' => $phoneclean,
             'otp'   => $otp,
         ], 15);
 
@@ -95,6 +104,9 @@ class whatsapp_start_verify extends external_api {
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'sent'    => new external_value(PARAM_BOOL, 'True if the WhatsApp OTP message was sent successfully'),

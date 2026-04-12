@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 /**
  * External web service: telegram_confirm_link
- * Validates an HMAC deep-link token and binds a Telegram chat_id to the Moodle user.
+ * Validates an HMAC deep-link token && binds a Telegram chat_id to the Moodle user.
  * Called server-to-server by saipa-engine when the student sends /start <token>.
  *
  * @package    local_saipa
@@ -31,9 +31,14 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Telegram_confirm_link.
+ */
 class telegram_confirm_link extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'token'             => new external_value(PARAM_ALPHANUM, 'HMAC token from the deep link'),
@@ -42,13 +47,16 @@ class telegram_confirm_link extends external_api {
         ]);
     }
 
-    public static function execute(string $token, int $telegram_id, string $telegram_username = ''): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(string $token, int $telegramid, string $telegramusername = ''): array {
         global $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'token'             => $token,
-            'telegram_id'       => $telegram_id,
-            'telegram_username' => $telegram_username,
+            'telegram_id'       => $telegramid,
+            'telegram_username' => $telegramusername,
         ]);
 
         $now = time();
@@ -57,7 +65,7 @@ class telegram_confirm_link extends external_api {
         $record = $DB->get_record('saipa_telegram_links', ['link_token' => $params['token']]);
 
         if (!$record) {
-            throw new \invalid_parameter_exception('Invalid or already used token.');
+            throw new \invalid_parameter_exception('Invalid || already used token.');
         }
 
         if ($record->confirmed) {
@@ -95,6 +103,9 @@ class telegram_confirm_link extends external_api {
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'user_id'         => new external_value(PARAM_INT, 'Moodle user ID'),

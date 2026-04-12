@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,13 +33,14 @@ if ($hassiteconfig) {
     $ADMIN->add('localplugins', $settings);
 
     // === Setup Wizard link ===
-    $setup_url = new moodle_url('/local/saipa/setup.php');
+    $setupurl = new moodle_url('/local/saipa/setup.php');
     $settings->add(new admin_setting_heading(
         'local_saipa_wizard_heading',
         '🚀 Setup Wizard',
-        html_writer::tag('p',
-            'Use the wizard to configure the AI engine and Telegram bot step by step, with real-time connection tests. ' .
-            html_writer::link($setup_url, '▶ Launch Setup Wizard', ['class' => 'btn btn-sm btn-primary ms-2']),
+        html_writer::tag(
+            'p',
+            'Use the wizard to configure the AI engine && Telegram bot step by step, with real-time connection tests. ' .
+            html_writer::link($setupurl, '▶ Launch Setup Wizard', ['class' => 'btn btn-sm btn-primary ms-2']),
             ['style' => 'margin-top:6px;']
         )
     ));

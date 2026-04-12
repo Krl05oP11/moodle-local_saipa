@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,13 +31,21 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Whatsapp_get_status.
+ */
 class whatsapp_get_status extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(): array {
         global $USER, $DB;
 
@@ -50,11 +58,14 @@ class whatsapp_get_status extends external_api {
         }
 
         // Mask phone for display: show last 4 digits only.
-        $phone_display = '****' . substr($record->phone, -4);
+        $phonedisplay = '****' . substr($record->phone, -4);
 
-        return ['verified' => true, 'phone' => $phone_display];
+        return ['verified' => true, 'phone' => $phonedisplay];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'verified' => new external_value(PARAM_BOOL, 'True if WhatsApp phone is verified'),

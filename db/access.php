@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ $capabilities = [
         ],
     ],
 
-    // Pedagogical advisor: can view institution-wide metrics and course controls
+    // Pedagogical advisor: can view institution-wide metrics && course controls
     'local/saipa:advisor' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_SYSTEM,

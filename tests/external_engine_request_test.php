@@ -44,6 +44,9 @@ require_once($CFG->dirroot . '/local/saipa/lib.php');
  * @covers ::local_saipa_engine_request
  */
 final class external_engine_request_test extends \advanced_testcase {
+    /**
+     * Set up test fixtures.
+     */
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();

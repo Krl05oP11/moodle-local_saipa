@@ -32,13 +32,21 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_my_courses.
+ */
 class get_my_courses extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(): array {
         global $DB, $USER;
 
@@ -46,10 +54,10 @@ class get_my_courses extends external_api {
         self::validate_context($syscontext);
         require_capability('local/saipa:viewall', $syscontext);
 
-        $is_admin = has_capability('local/saipa:manage', $syscontext);
+        $isadmin = has_capability('local/saipa:manage', $syscontext);
 
         // Get courses to display: all SAIPA-active courses (admin) or only user's teaching courses.
-        if ($is_admin) {
+        if ($isadmin) {
             $sql = 'SELECT DISTINCT c.id, c.fullname, c.shortname
                       FROM {course} c
                       JOIN {saipa_sessions} s ON s.courseid = c.id
@@ -67,14 +75,14 @@ class get_my_courses extends external_api {
             }
         }
 
-        // Prefetch settings and index rows.
-        $settings_map = [];
+        // Prefetch settings && index rows.
+        $settingsmap = [];
         foreach ($DB->get_records('saipa_course_settings') as $row) {
-            $settings_map[(int) $row->courseid] = $row;
+            $settingsmap[(int) $row->courseid] = $row;
         }
-        $index_map = [];
+        $indexmap = [];
         foreach ($DB->get_records('saipa_course_index') as $row) {
-            $index_map[(int) $row->courseid] = $row;
+            $indexmap[(int) $row->courseid] = $row;
         }
 
         $result = [];
@@ -83,10 +91,10 @@ class get_my_courses extends external_api {
             $ctx = \context_course::instance($cid);
 
             // Enrolled students.
-            $all_chatters = get_enrolled_users($ctx, 'local/saipa:chat', 0, 'u.id');
-            $teacher_ids  = array_keys(get_enrolled_users($ctx, 'local/saipa:view', 0, 'u.id'));
-            $students     = array_filter($all_chatters, fn($u) => !in_array($u->id, $teacher_ids));
-            $enrolled_cnt = count($students);
+            $allchatters = get_enrolled_users($ctx, 'local/saipa:chat', 0, 'u.id');
+            $teacherids  = array_keys(get_enrolled_users($ctx, 'local/saipa:view', 0, 'u.id'));
+            $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
+            $enrolledcnt = count($students);
 
             // Active SAIPA users.
             $active = (int) $DB->count_records_sql(
@@ -96,11 +104,11 @@ class get_my_courses extends external_api {
                   WHERE s.courseid = :cid AND m.role = :role',
                 ['cid' => $cid, 'role' => 'user']
             );
-            $adoption = $enrolled_cnt > 0 ? round($active / $enrolled_cnt, 4) : 0.0;
+            $adoption = $enrolledcnt > 0 ? round($active / $enrolledcnt, 4) : 0.0;
 
             // Messages last 7 days.
             $since7d    = time() - (7 * 86400);
-            $msgs_7d    = (int) $DB->count_records_sql(
+            $msgs7d    = (int) $DB->count_records_sql(
                 'SELECT COUNT(*)
                    FROM {saipa_messages} m
                    JOIN {saipa_sessions} s ON s.id = m.sessionid
@@ -118,17 +126,17 @@ class get_my_courses extends external_api {
                 ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low']
             );
 
-            $s   = $settings_map[$cid] ?? null;
-            $idx = $index_map[$cid] ?? null;
+            $s   = $settingsmap[$cid] ?? null;
+            $idx = $indexmap[$cid] ?? null;
 
             $result[] = [
                 'courseid'        => $cid,
                 'coursename'      => $course->fullname,
                 'shortname'       => $course->shortname,
-                'enrolled_students' => $enrolled_cnt,
+                'enrolled_students' => $enrolledcnt,
                 'active_saipa_users' => $active,
                 'adoption_rate'   => $adoption,
-                'messages_7d'     => $msgs_7d,
+                'messages_7d'     => $msgs7d,
                 'high_risk'       => (int) ($risk->hi ?? 0),
                 'medium_risk'     => (int) ($risk->me ?? 0),
                 'low_risk'        => (int) ($risk->lo ?? 0),
@@ -140,22 +148,25 @@ class get_my_courses extends external_api {
         return ['courses' => $result];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'courses' => new external_multiple_structure(
                 new external_single_structure([
-                    'courseid'          => new external_value(PARAM_INT,   'Course ID'),
-                    'coursename'        => new external_value(PARAM_TEXT,  'Full course name'),
-                    'shortname'         => new external_value(PARAM_TEXT,  'Short course name'),
-                    'enrolled_students' => new external_value(PARAM_INT,   'Total enrolled students'),
-                    'active_saipa_users' => new external_value(PARAM_INT,  'Students with at least 1 message'),
+                    'courseid'          => new external_value(PARAM_INT, 'Course ID'),
+                    'coursename'        => new external_value(PARAM_TEXT, 'Full course name'),
+                    'shortname'         => new external_value(PARAM_TEXT, 'Short course name'),
+                    'enrolled_students' => new external_value(PARAM_INT, 'Total enrolled students'),
+                    'active_saipa_users' => new external_value(PARAM_INT, 'Students with at least 1 message'),
                     'adoption_rate'     => new external_value(PARAM_FLOAT, 'active/enrolled ratio'),
-                    'messages_7d'       => new external_value(PARAM_INT,   'Messages in last 7 days'),
-                    'high_risk'         => new external_value(PARAM_INT,   'Students at high risk'),
-                    'medium_risk'       => new external_value(PARAM_INT,   'Students at medium risk'),
-                    'low_risk'          => new external_value(PARAM_INT,   'Students at low risk'),
-                    'index_status'      => new external_value(PARAM_TEXT,  'RAG index status'),
-                    'saipa_enabled'     => new external_value(PARAM_BOOL,  'Whether SAIPA is enabled'),
+                    'messages_7d'       => new external_value(PARAM_INT, 'Messages in last 7 days'),
+                    'high_risk'         => new external_value(PARAM_INT, 'Students at high risk'),
+                    'medium_risk'       => new external_value(PARAM_INT, 'Students at medium risk'),
+                    'low_risk'          => new external_value(PARAM_INT, 'Students at low risk'),
+                    'index_status'      => new external_value(PARAM_TEXT, 'RAG index status'),
+                    'saipa_enabled'     => new external_value(PARAM_BOOL, 'Whether SAIPA is enabled'),
                 ])
             ),
         ]);

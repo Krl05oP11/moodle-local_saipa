@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,19 +31,27 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Telegram_generate_link.
+ */
 class telegram_generate_link extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id' => new external_value(PARAM_INT, 'Course ID for session context', VALUE_DEFAULT, 0),
         ]);
     }
 
-    public static function execute(int $course_id = 0): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid = 0): array {
         global $USER, $DB;
 
-        $params = self::validate_parameters(self::execute_parameters(), ['course_id' => $course_id]);
+        $params = self::validate_parameters(self::execute_parameters(), ['course_id' => $courseid]);
 
         // Check login. Capability is deliberately low — any enrolled user may link.
         require_login();
@@ -90,19 +98,22 @@ class telegram_generate_link extends external_api {
             ]);
         }
 
-        $bot_username = get_config('local_saipa', 'telegram_bot_username') ?: 'saipa_bot';
-        $deep_link    = "https://t.me/{$bot_username}?start={$token}";
+        $botusername = get_config('local_saipa', 'telegram_bot_username') ?: 'saipa_bot';
+        $deeplink    = "https://t.me/{$botusername}?start={$token}";
 
         return [
             'already_linked'    => false,
             'telegram_username' => '',
-            'deep_link'         => $deep_link,
-            'bot_username'      => $bot_username,
+            'deep_link'         => $deeplink,
+            'bot_username'      => $botusername,
             'token'             => $token,
             'expires'           => $expires,
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'already_linked'    => new external_value(PARAM_BOOL, 'True if this user already has a confirmed Telegram link'),

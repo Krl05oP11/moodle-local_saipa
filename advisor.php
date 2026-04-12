@@ -16,7 +16,7 @@
 
 /**
  * SAIPA — Advisor / Admin Dashboard.
- * Institution-wide analytics and controls (5-tab layout).
+ * Institution-wide analytics && controls (5-tab layout).
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -30,7 +30,7 @@ $syscontext = context_system::instance();
 require_login();
 require_capability('local/saipa:advisor', $syscontext);
 
-$is_manager = has_capability('local/saipa:manage', $syscontext);
+$ismanager = has_capability('local/saipa:manage', $syscontext);
 
 $PAGE->set_url('/local/saipa/advisor.php');
 $PAGE->set_context($syscontext);
@@ -50,7 +50,7 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->render_from_template('local_saipa/advisor_dashboard', [
     'wwwroot'    => (new moodle_url('/'))->out(false),
-    'is_manager' => $is_manager,
+    'is_manager' => $ismanager,
     'help_url'   => (new moodle_url('/local/saipa/help.php', ['page' => 'advisor']))->out(false),
 ]);
 

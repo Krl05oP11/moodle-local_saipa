@@ -32,11 +32,11 @@ require_login();
 require_capability('local/saipa:viewall', $syscontext);
 
 // Quick shortcut: if teacher has exactly 1 SAIPA course, go straight to teacher.php.
-$is_admin   = has_capability('local/saipa:manage', $syscontext);
-$courses_qs = [];
+$isadmin   = has_capability('local/saipa:manage', $syscontext);
+$coursesqs = [];
 
-if ($is_admin) {
-    $courses_qs = $DB->get_fieldset_sql(
+if ($isadmin) {
+    $coursesqs = $DB->get_fieldset_sql(
         'SELECT DISTINCT courseid FROM {saipa_sessions} ORDER BY courseid'
     );
 } else {
@@ -44,13 +44,13 @@ if ($is_admin) {
     foreach ($enrolled as $c) {
         $ctx = context_course::instance($c->id);
         if (has_capability('local/saipa:view', $ctx)) {
-            $courses_qs[] = $c->id;
+            $coursesqs[] = $c->id;
         }
     }
 }
 
-if (count($courses_qs) === 1) {
-    redirect(new moodle_url('/local/saipa/teacher.php', ['courseid' => reset($courses_qs)]));
+if (count($coursesqs) === 1) {
+    redirect(new moodle_url('/local/saipa/teacher.php', ['courseid' => reset($coursesqs)]));
 }
 
 $PAGE->set_url('/local/saipa/my_courses.php');

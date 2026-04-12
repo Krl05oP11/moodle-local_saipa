@@ -31,20 +31,28 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_history.
+ */
 class get_history extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id' => new external_value(PARAM_INT, 'Course ID'),
         ]);
     }
 
-    public static function execute(int $course_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid): array {
         global $USER, $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'course_id' => $course_id,
+            'course_id' => $courseid,
         ]);
 
         $context = \context_course::instance($params['course_id']);
@@ -91,12 +99,15 @@ class get_history extends external_api {
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'session_id' => new external_value(PARAM_INT, 'Session ID'),
             'messages'   => new external_multiple_structure(
                 new external_single_structure([
-                    'role'    => new external_value(PARAM_TEXT, 'user or assistant'),
+                    'role'    => new external_value(PARAM_TEXT, 'user || assistant'),
                     'content' => new external_value(PARAM_RAW, 'Message content'),
                 ]),
                 'Previous messages in this session'

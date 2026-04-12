@@ -31,35 +31,43 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_student_list.
+ */
 class get_student_list extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id' => new external_value(PARAM_INT, 'Course ID'),
         ]);
     }
 
-    public static function execute(int $course_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid): array {
         global $DB;
 
-        $params  = self::validate_parameters(self::execute_parameters(), ['course_id' => $course_id]);
+        $params  = self::validate_parameters(self::execute_parameters(), ['course_id' => $courseid]);
         $context = \context_course::instance($params['course_id']);
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
 
         // Get all enrolled users who can chat (students + teachers).
-        $all_chatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname, u.email');
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname, u.email');
         // Exclude those with :view (teachers).
-        $teacher_ids = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
-        $students = array_filter($all_chatters, fn($u) => !in_array($u->id, $teacher_ids));
+        $teacherids = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
+        $students = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
 
         if (empty($students)) {
             return ['students' => []];
         }
 
-        $student_ids = array_keys($students);
-        [$in_sql, $in_params] = $DB->get_in_or_equal($student_ids, SQL_PARAMS_NAMED, 'uid');
+        $studentids = array_keys($students);
+        [$insql, $inparams] = $DB->get_in_or_equal($studentids, SQL_PARAMS_NAMED, 'uid');
 
         $sql = "SELECT s.userid,
                        COUNT(m.id)        AS message_count,
@@ -68,10 +76,10 @@ class get_student_list extends external_api {
                   FROM {saipa_sessions} s
              LEFT JOIN {saipa_messages} m ON m.sessionid = s.id AND m.role = 'user'
                  WHERE s.courseid = :courseid
-                   AND s.userid $in_sql
+                   AND s.userid $insql
               GROUP BY s.userid, s.id";
 
-        $rows = $DB->get_records_sql($sql, array_merge(['courseid' => $params['course_id']], $in_params));
+        $rows = $DB->get_records_sql($sql, array_merge(['courseid' => $params['course_id']], $inparams));
 
         $activity = [];
         foreach ($rows as $row) {
@@ -79,37 +87,37 @@ class get_student_list extends external_api {
         }
 
         // Fetch Telegram link status for all students in one query.
-        $tg_links = [];
-        if (!empty($student_ids)) {
-            $tg_rows = $DB->get_records_select(
+        $tglinks = [];
+        if (!empty($studentids)) {
+            $tgrows = $DB->get_records_select(
                 'saipa_telegram_links',
-                "userid $in_sql AND confirmed = 1",
-                $in_params,
+                "userid $insql AND confirmed = 1",
+                $inparams,
                 '',
                 'userid,telegram_id'
             );
-            foreach ($tg_rows as $tg) {
-                $tg_links[$tg->userid] = (int) $tg->telegram_id;
+            foreach ($tgrows as $tg) {
+                $tglinks[$tg->userid] = (int) $tg->telegram_id;
             }
         }
 
         // Fetch latest alert engagement per student (last 30 days).
-        $alert_data = [];
-        $since_30d  = time() - (30 * DAYSECS);
-        if (!empty($student_ids)) {
+        $alertdata = [];
+        $since30d  = time() - (30 * DAYSECS);
+        if (!empty($studentids)) {
             // Get most recent teacher_alert per student.
-            $alert_rows = $DB->get_records_select(
+            $alertrows = $DB->get_records_select(
                 'saipa_notifications',
-                "userid $in_sql AND template = 'teacher_alert' AND timesent >= :since",
-                array_merge($in_params, ['since' => $since_30d]),
+                "userid $insql AND template = 'teacher_alert' AND timesent >= :since",
+                array_merge($inparams, ['since' => $since30d]),
                 'timesent DESC',
                 'userid,timesent,responded_at,status,payload'
             );
-            foreach ($alert_rows as $row) {
+            foreach ($alertrows as $row) {
                 // Keep only the most recent per user (results ordered DESC).
-                if (!isset($alert_data[$row->userid])) {
+                if (!isset($alertdata[$row->userid])) {
                     $payload = json_decode($row->payload ?? '{}', true);
-                    $alert_data[$row->userid] = [
+                    $alertdata[$row->userid] = [
                         'last_alert_sent'          => (int) $row->timesent,
                         'alert_responded'          => ($row->status === 'responded'),
                         'alert_response_delay_min' => (int) ($payload['delay_minutes'] ?? 0),
@@ -122,7 +130,7 @@ class get_student_list extends external_api {
         $result = [];
         foreach ($students as $u) {
             $act   = $activity[$u->id] ?? null;
-            $alert = $alert_data[$u->id] ?? null;
+            $alert = $alertdata[$u->id] ?? null;
             $result[] = [
                 'userid'                      => (int) $u->id,
                 'fullname'                    => fullname($u),
@@ -130,7 +138,7 @@ class get_student_list extends external_api {
                 'message_count'               => $act ? (int) $act->message_count : 0,
                 'last_message'                => $act ? (int) $act->last_message : 0,
                 'has_session'                 => $act !== null,
-                'telegram_linked'             => isset($tg_links[$u->id]),
+                'telegram_linked'             => isset($tglinks[$u->id]),
                 'last_alert_sent'             => $alert ? $alert['last_alert_sent'] : 0,
                 'alert_responded'             => $alert ? $alert['alert_responded'] : false,
                 'alert_response_delay_min'    => $alert ? $alert['alert_response_delay_min'] : 0,
@@ -148,6 +156,9 @@ class get_student_list extends external_api {
         return ['students' => $result];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'students' => new external_multiple_structure(
@@ -161,7 +172,7 @@ class get_student_list extends external_api {
                     'telegram_linked'             => new external_value(PARAM_BOOL, 'Whether student has a confirmed Telegram account linked'),
                     'last_alert_sent'             => new external_value(PARAM_INT, 'Unix timestamp of last teacher alert sent (0 if none in last 30 days)'),
                     'alert_responded'             => new external_value(PARAM_BOOL, 'True if student replied to bot after last alert'),
-                    'alert_response_delay_min'    => new external_value(PARAM_INT, 'Minutes between alert and first student response (0 if not yet responded)'),
+                    'alert_response_delay_min'    => new external_value(PARAM_INT, 'Minutes between alert && first student response (0 if not yet responded)'),
                     'moodle_accessed_after_alert' => new external_value(PARAM_BOOL, 'True if student accessed Moodle after the last alert'),
                 ])
             ),

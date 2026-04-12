@@ -41,10 +41,16 @@ require_once($CFG->dirroot . '/local/saipa/lib.php');
  * @covers \local_saipa\task\risk_evaluation
  */
 final class task_risk_evaluation_test extends \advanced_testcase {
+    /** @var \stdClass $course */
     private \stdClass $course;
+    /** @var \stdClass $teacher */
     private \stdClass $teacher;
+    /** @var \stdClass $student */
     private \stdClass $student;
 
+    /**
+     * Set up test fixtures.
+     */
     protected function setUp(): void {
         global $DB;
         parent::setUp();
@@ -69,6 +75,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         $DB->insert_record('saipa_sessions', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
+            'contextid'    => \context_course::instance($this->course->id)->id,
             'timecreated'  => time(),
             'timemodified' => time(),
         ]);
@@ -76,11 +83,17 @@ final class task_risk_evaluation_test extends \advanced_testcase {
 
     // ── Task metadata ─────────────────────────────────────────────────────────
 
+    /**
+     * Test task has name.
+     */
     public function test_task_has_name(): void {
         $task = new \local_saipa\task\risk_evaluation();
         $this->assertNotEmpty($task->get_name());
     }
 
+    /**
+     * Test task is registered.
+     */
     public function test_task_is_registered(): void {
         $tasks = \core\task\manager::get_all_scheduled_tasks();
         $found = false;
@@ -123,7 +136,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         global $DB;
 
         // Seed a previous score.
-        $existing_id = $DB->insert_record('saipa_risk_scores', (object) [
+        $existingid = $DB->insert_record('saipa_risk_scores', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'score'        => 0.3,
@@ -151,7 +164,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
             ['userid' => $this->student->id, 'courseid' => $this->course->id]
         );
 
-        $this->assertEquals($existing_id, $row->id, 'Must UPDATE existing row, not INSERT new one');
+        $this->assertEquals($existingid, $row->id, 'Must UPDATE existing row, not INSERT new one');
         $this->assertEquals('high', $row->risk_level);
         $this->assertEqualsWithDelta(0.9, (float) $row->score, 0.001);
     }

@@ -16,7 +16,7 @@
 
 /**
  * External web service: admin_chat
- * Contextual chat for advisors and admins — explains dashboard metrics and SAIPA procedures.
+ * Contextual chat for advisors && admins — explains dashboard metrics && SAIPA procedures.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -30,21 +30,28 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Admin_chat.
+ */
 class admin_chat extends external_api {
-
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'message' => new external_value(PARAM_TEXT, 'User message to the assistant'),
-            'context' => new external_value(PARAM_ALPHANUMEXT, 'Context: advisor or teacher', VALUE_DEFAULT, 'advisor'),
+            'context' => new external_value(PARAM_ALPHANUMEXT, 'Context: advisor || teacher', VALUE_DEFAULT, 'advisor'),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(string $message, string $context = 'advisor'): array {
         global $CFG;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'message' => $message,
@@ -70,6 +77,9 @@ class admin_chat extends external_api {
         return ['reply' => (string) $result['reply']];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'reply' => new external_value(PARAM_RAW, 'Assistant reply text'),

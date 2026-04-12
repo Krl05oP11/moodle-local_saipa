@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 /**
  * External web service: chat
- * Sends a student message to saipa-engine and returns the AI reply.
+ * Sends a student message to saipa-engine && returns the AI reply.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -31,11 +31,15 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Chat.
+ */
 class chat extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id'  => new external_value(PARAM_INT, 'Course ID'),
@@ -44,17 +48,22 @@ class chat extends external_api {
         ]);
     }
 
-    public static function execute(int $course_id, string $message, int $session_id = 0): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid, string $message, int $sessionid = 0): array {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $USER, $DB;
 
-        // Validate and normalise parameters.
+        // Validate && normalise parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
-            'course_id'  => $course_id,
+            'course_id'  => $courseid,
             'message'    => $message,
-            'session_id' => $session_id,
+            'session_id' => $sessionid,
         ]);
 
-        // Require course context and chat capability.
+        // Require course context && chat capability.
         $context = \context_course::instance($params['course_id']);
         self::validate_context($context);
         require_capability('local/saipa:chat', $context);
@@ -108,7 +117,7 @@ class chat extends external_api {
         // Update session timestamp.
         $DB->set_field('saipa_sessions', 'timemodified', $now, ['id' => $session->id]);
 
-        $user_role = has_capability('local/saipa:view', $context) ? 'teacher' : 'student';
+        $userrole = has_capability('local/saipa:view', $context) ? 'teacher' : 'student';
 
         $payload = [
             'course_id'  => $params['course_id'],
@@ -116,7 +125,7 @@ class chat extends external_api {
             'message'    => $params['message'],
             'session_id' => $session->id,
             'history'    => $history,
-            'user_role'  => $user_role,
+            'user_role'  => $userrole,
         ];
 
         $response = local_saipa_engine_request('/chat', $payload, 60);
@@ -132,7 +141,7 @@ class chat extends external_api {
         $reply = $response['reply'] ?? '';
 
         // Persist the assistant reply.
-        $message_id = $DB->insert_record('saipa_messages', (object) [
+        $messageid = $DB->insert_record('saipa_messages', (object) [
             'sessionid'   => $session->id,
             'role'        => 'assistant',
             'content'     => $reply,
@@ -142,11 +151,14 @@ class chat extends external_api {
         return [
             'reply'      => $reply,
             'session_id' => $session->id,
-            'message_id' => (int) $message_id,
+            'message_id' => (int) $messageid,
             'sources'    => $response['sources'] ?? [],
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'reply'      => new external_value(PARAM_RAW, 'Assistant reply'),

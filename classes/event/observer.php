@@ -25,13 +25,17 @@
 
 namespace local_saipa\event;
 
-defined('MOODLE_INTERNAL') || die();
 
+
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Observer.
+ */
 class observer {
     /**
-     * Handles course_module_created and course_module_updated events.
+     * Handles course_module_created && course_module_updated events.
      * Indexes content for supported module types: page, assign, label, forum, book.
      */
     public static function course_module_updated(\core\event\base $event): void {
@@ -45,54 +49,54 @@ class observer {
         }
 
         $cmid      = $event->objectid;
-        $course_id = (int) $event->courseid;
+        $courseid = (int) $event->courseid;
 
         $cm = $DB->get_record('course_modules', ['id' => $cmid], 'instance', IGNORE_MISSING);
         if (!$cm) {
             return;
         }
 
-        $items = local_saipa_items_for_module($modulename, (int) $cm->instance, $course_id);
+        $items = local_saipa_items_for_module($modulename, (int) $cm->instance, $courseid);
         if (empty($items)) {
             return;
         }
 
-        $total_chunks = 0;
-        $has_error    = false;
+        $totalchunks = 0;
+        $haserror    = false;
 
         foreach ($items as $item) {
             $response = local_saipa_engine_request('/index', [
-                'course_id' => $course_id,
+                'course_id' => $courseid,
                 'content'   => $item['text'],
                 'source'    => $item['source'],
             ], 120);
 
             if (isset($response['error'])) {
                 debugging('SAIPA auto-index error [' . $item['source'] . ']: ' . $response['error'], DEBUG_DEVELOPER);
-                $has_error = true;
+                $haserror = true;
             } else {
-                $total_chunks += (int) ($response['chunk_count'] ?? 1);
+                $totalchunks += (int) ($response['chunk_count'] ?? 1);
             }
         }
 
-        if ($has_error && $total_chunks === 0) {
+        if ($haserror && $totalchunks === 0) {
             return;
         }
 
         // Upsert saipa_course_index.
         $now    = time();
-        $record = $DB->get_record('saipa_course_index', ['courseid' => $course_id]);
+        $record = $DB->get_record('saipa_course_index', ['courseid' => $courseid]);
         if ($record) {
             $record->last_indexed  = $now;
-            $record->chunk_count   = $record->chunk_count + $total_chunks;
+            $record->chunk_count   = $record->chunk_count + $totalchunks;
             $record->status        = 'ready';
             $record->timemodified  = $now;
             $DB->update_record('saipa_course_index', $record);
         } else {
             $DB->insert_record('saipa_course_index', (object) [
-                'courseid'     => $course_id,
+                'courseid'     => $courseid,
                 'last_indexed' => $now,
-                'chunk_count'  => $total_chunks,
+                'chunk_count'  => $totalchunks,
                 'status'       => 'ready',
                 'timecreated'  => $now,
                 'timemodified' => $now,

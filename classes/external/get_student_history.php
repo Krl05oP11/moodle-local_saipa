@@ -31,9 +31,14 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_student_history.
+ */
 class get_student_history extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id'  => new external_value(PARAM_INT, 'Course ID'),
@@ -41,12 +46,15 @@ class get_student_history extends external_api {
         ]);
     }
 
-    public static function execute(int $course_id, int $student_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid, int $studentid): array {
         global $DB;
 
         $params  = self::validate_parameters(self::execute_parameters(), [
-            'course_id'  => $course_id,
-            'student_id' => $student_id,
+            'course_id'  => $courseid,
+            'student_id' => $studentid,
         ]);
         $context = \context_course::instance($params['course_id']);
         self::validate_context($context);
@@ -87,13 +95,16 @@ class get_student_history extends external_api {
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'session_id'   => new external_value(PARAM_INT, 'Session ID (0 if none)'),
             'student_name' => new external_value(PARAM_TEXT, 'Student full name'),
             'messages'     => new external_multiple_structure(
                 new external_single_structure([
-                    'role'        => new external_value(PARAM_TEXT, 'user or assistant'),
+                    'role'        => new external_value(PARAM_TEXT, 'user || assistant'),
                     'content'     => new external_value(PARAM_RAW, 'Message content'),
                     'timecreated' => new external_value(PARAM_INT, 'Timestamp'),
                 ])

@@ -38,10 +38,16 @@ require_once($CFG->dirroot . '/local/saipa/lib.php');
  * @covers \local_saipa\external\get_course_risk
  */
 final class external_get_course_risk_test extends \advanced_testcase {
+    /** @var \stdClass $course */
     private \stdClass $course;
+    /** @var \stdClass $teacher */
     private \stdClass $teacher;
+    /** @var array $students */
     private array $students = [];
 
+    /**
+     * Set up test fixtures.
+     */
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
@@ -100,11 +106,11 @@ final class external_get_course_risk_test extends \advanced_testcase {
         $this->assertEmpty($result['errors']);
 
         // One result per student (teacher excluded).
-        $student_ids = array_map(fn($s) => $s->id, $this->students);
-        $result_ids  = array_column($result['results'], 'userid');
-        sort($student_ids);
-        sort($result_ids);
-        $this->assertEquals($student_ids, $result_ids);
+        $studentids = array_map(fn($s) => $s->id, $this->students);
+        $resultids  = array_column($result['results'], 'userid');
+        sort($studentids);
+        sort($resultids);
+        $this->assertEquals($studentids, $resultids);
     }
 
     /**
@@ -190,14 +196,14 @@ final class external_get_course_risk_test extends \advanced_testcase {
      */
     public function test_demo_empty_course(): void {
         $this->setUser($this->teacher);
-        $empty_course = $this->getDataGenerator()->create_course();
+        $emptycourse = $this->getDataGenerator()->create_course();
         $this->getDataGenerator()->enrol_user(
             $this->teacher->id,
-            $empty_course->id,
+            $emptycourse->id,
             'editingteacher'
         );
 
-        $result = \local_saipa\external\get_course_risk::execute($empty_course->id, true);
+        $result = \local_saipa\external\get_course_risk::execute($emptycourse->id, true);
         $this->assertEmpty($result['results']);
         $this->assertEmpty($result['errors']);
     }

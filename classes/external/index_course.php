@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,22 +30,31 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Index_course.
+ */
 class index_course extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id' => new external_value(PARAM_INT, 'Course ID'),
         ]);
     }
 
-    public static function execute(int $course_id): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid): array {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'course_id' => $course_id,
+            'course_id' => $courseid,
         ]);
 
         $context = \context_course::instance($params['course_id']);
@@ -54,8 +63,8 @@ class index_course extends external_api {
 
         $items = local_saipa_items_for_course($params['course_id']);
 
-        $indexed_count = 0;
-        $chunk_count   = 0;
+        $indexedcount = 0;
+        $chunkcount   = 0;
 
         foreach ($items as $item) {
             $response = local_saipa_engine_request('/index', [
@@ -65,8 +74,8 @@ class index_course extends external_api {
             ], 120);
 
             if (!isset($response['error'])) {
-                $indexed_count++;
-                $chunk_count += (int) ($response['chunk_count'] ?? 1);
+                $indexedcount++;
+                $chunkcount += (int) ($response['chunk_count'] ?? 1);
             }
         }
 
@@ -75,7 +84,7 @@ class index_course extends external_api {
         $record = $DB->get_record('saipa_course_index', ['courseid' => $params['course_id']]);
         if ($record) {
             $record->last_indexed  = $now;
-            $record->chunk_count   = $chunk_count;
+            $record->chunk_count   = $chunkcount;
             $record->status        = 'ready';
             $record->timemodified  = $now;
             $DB->update_record('saipa_course_index', $record);
@@ -83,7 +92,7 @@ class index_course extends external_api {
             $DB->insert_record('saipa_course_index', (object) [
                 'courseid'     => $params['course_id'],
                 'last_indexed' => $now,
-                'chunk_count'  => $chunk_count,
+                'chunk_count'  => $chunkcount,
                 'status'       => 'ready',
                 'timecreated'  => $now,
                 'timemodified' => $now,
@@ -91,12 +100,15 @@ class index_course extends external_api {
         }
 
         return [
-            'indexed_count' => $indexed_count,
-            'chunk_count'   => $chunk_count,
+            'indexed_count' => $indexedcount,
+            'chunk_count'   => $chunkcount,
             'status'        => 'ready',
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'indexed_count' => new external_value(PARAM_INT, 'Number of content items indexed'),

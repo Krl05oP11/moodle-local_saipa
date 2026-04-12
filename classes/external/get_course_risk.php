@@ -19,7 +19,7 @@
  * Computes dropout risk for all enrolled students in a course.
  * Calls saipa-engine /analytics/risk/batch, which in turn calls
  * local_saipa_get_student_features for each student.
- * Saves results to saipa_risk_scores and returns them.
+ * Saves results to saipa_risk_scores && returns them.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -34,10 +34,11 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/saipa/lib.php');
 
+/**
+ * Get_course_risk.
+ */
 class get_course_risk extends external_api {
     /**
      * Predefined demo results — bypasses the engine to guarantee a visible spread
@@ -82,6 +83,9 @@ class get_course_risk extends external_api {
         ];
     }
 
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'course_id' => new external_value(PARAM_INT, 'Course ID'),
@@ -89,11 +93,16 @@ class get_course_risk extends external_api {
         ]);
     }
 
-    public static function execute(int $course_id, bool $demo = false): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $courseid, bool $demo = false): array {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $DB;
 
         $params  = self::validate_parameters(self::execute_parameters(), [
-            'course_id' => $course_id,
+            'course_id' => $courseid,
             'demo'      => $demo,
         ]);
         $cid     = $params['course_id'];
@@ -102,15 +111,15 @@ class get_course_risk extends external_api {
         require_capability('local/saipa:view', $context);
 
         // Collect enrolled students (users who can chat but NOT view = not teachers).
-        $all_chatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id');
-        $teacher_ids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
-        $students     = array_filter($all_chatters, fn($u) => !in_array($u->id, $teacher_ids));
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id');
+        $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
+        $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
 
         if (empty($students)) {
             return ['results' => [], 'errors' => []];
         }
 
-        $user_ids = array_values(array_map(fn($u) => (int) $u->id, $students));
+        $userids = array_values(array_map(fn($u) => (int) $u->id, $students));
 
         $now     = time();
         $results = [];
@@ -119,26 +128,27 @@ class get_course_risk extends external_api {
         if ($params['demo']) {
             // Demo mode: return predefined results without touching the engine or real DB.
             // Results are NOT persisted to saipa_risk_scores.
-            foreach (array_values($user_ids) as $i => $uid) {
+            foreach (array_values($userids) as $i => $uid) {
                 $results[] = self::demo_result_for($i, $uid);
             }
             return ['results' => $results, 'errors' => $errors];
         }
 
         // Real mode: compute features in PHP, send to engine.
-        $features_map = [];
-        foreach ($user_ids as $uid) {
+        $featuresmap = [];
+        foreach ($userids as $uid) {
             try {
-                $features_map[(string) $uid] = get_student_features::execute($uid, $cid);
+                $featuresmap[(string) $uid] = get_student_features::execute($uid, $cid);
             } catch (\Throwable $e) {
                 // Skip students whose features cannot be extracted.
+                debugging("get_course_risk caught: " . $e->getMessage(), DEBUG_DEVELOPER);
             }
         }
 
         $response = local_saipa_engine_request('/analytics/risk/batch', [
             'course_id'    => $cid,
-            'user_ids'     => array_map('intval', array_keys($features_map)),
-            'features_map' => $features_map,
+            'user_ids'     => array_map('intval', array_keys($featuresmap)),
+            'features_map' => $featuresmap,
         ], 120);
 
         if (isset($response['error'])) {
@@ -148,7 +158,7 @@ class get_course_risk extends external_api {
         foreach ($response['results'] ?? [] as $r) {
             $uid        = (int) $r['user_id'];
             $score      = (float) $r['score'];
-            $risk_level = (string) $r['risk_level'];
+            $risklevel = (string) $r['risk_level'];
             $factors    = json_encode($r['factors'] ?? []);
 
             $existing = $DB->get_record(
@@ -160,7 +170,7 @@ class get_course_risk extends external_api {
                 $DB->update_record('saipa_risk_scores', (object) [
                     'id'           => $existing->id,
                     'score'        => $score,
-                    'risk_level'   => $risk_level,
+                    'risk_level'   => $risklevel,
                     'factors'      => $factors,
                     'timecomputed' => $now,
                 ]);
@@ -169,7 +179,7 @@ class get_course_risk extends external_api {
                     'userid'       => $uid,
                     'courseid'     => $cid,
                     'score'        => $score,
-                    'risk_level'   => $risk_level,
+                    'risk_level'   => $risklevel,
                     'factors'      => $factors,
                     'timecomputed' => $now,
                 ]);
@@ -178,7 +188,7 @@ class get_course_risk extends external_api {
             $results[] = [
                 'userid'     => $uid,
                 'score'      => $score,
-                'risk_level' => $risk_level,
+                'risk_level' => $risklevel,
                 'factors'    => $factors,
             ];
         }
@@ -193,13 +203,16 @@ class get_course_risk extends external_api {
         return ['results' => $results, 'errors' => $errors];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'results' => new external_multiple_structure(
                 new external_single_structure([
                     'userid'     => new external_value(PARAM_INT, 'Student user ID'),
                     'score'      => new external_value(PARAM_FLOAT, 'Dropout risk 0.0–1.0'),
-                    'risk_level' => new external_value(PARAM_TEXT, '"low", "medium" or "high"'),
+                    'risk_level' => new external_value(PARAM_TEXT, '"low", "medium" || "high"'),
                     'factors'    => new external_value(PARAM_RAW, 'JSON object of top contributing features'),
                 ])
             ),

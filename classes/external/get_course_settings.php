@@ -31,13 +31,21 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_course_settings.
+ */
 class get_course_settings extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(): array {
         global $DB;
 
@@ -53,16 +61,16 @@ class get_course_settings extends external_api {
         $courses = $DB->get_records_sql($sql);
 
         // Get existing settings rows.
-        $settings_map = [];
+        $settingsmap = [];
         $rows = $DB->get_records('saipa_course_settings');
         foreach ($rows as $row) {
-            $settings_map[(int) $row->courseid] = $row;
+            $settingsmap[(int) $row->courseid] = $row;
         }
 
         $result = [];
         foreach ($courses as $course) {
             $cid = (int) $course->courseid;
-            $s   = $settings_map[$cid] ?? null;
+            $s   = $settingsmap[$cid] ?? null;
 
             // Get index status.
             $idx = $DB->get_record('saipa_course_index', ['courseid' => $cid]);
@@ -71,11 +79,11 @@ class get_course_settings extends external_api {
                 'courseid'       => $cid,
                 'coursename'     => $course->fullname,
                 'shortname'      => $course->shortname,
-                'saipa_enabled'  => $s ? (bool) $s->saipa_enabled  : true,
-                'chat_enabled'   => $s ? (bool) $s->chat_enabled   : true,
-                'risk_enabled'   => $s ? (bool) $s->risk_enabled   : true,
+                'saipa_enabled'  => $s ? (bool) $s->saipa_enabled : true,
+                'chat_enabled'   => $s ? (bool) $s->chat_enabled : true,
+                'risk_enabled'   => $s ? (bool) $s->risk_enabled : true,
                 'alerts_enabled' => $s ? (bool) $s->alerts_enabled : true,
-                'rag_enabled'    => $s ? (bool) $s->rag_enabled    : true,
+                'rag_enabled'    => $s ? (bool) $s->rag_enabled : true,
                 'index_status'   => $idx ? $idx->status : 'pending',
                 'last_indexed'   => $idx ? (int) $idx->last_indexed : 0,
             ];
@@ -84,11 +92,14 @@ class get_course_settings extends external_api {
         return ['courses' => $result];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'courses' => new external_multiple_structure(
                 new external_single_structure([
-                    'courseid'       => new external_value(PARAM_INT,  'Course ID'),
+                    'courseid'       => new external_value(PARAM_INT, 'Course ID'),
                     'coursename'     => new external_value(PARAM_TEXT, 'Course full name'),
                     'shortname'      => new external_value(PARAM_TEXT, 'Course short name'),
                     'saipa_enabled'  => new external_value(PARAM_BOOL, 'SAIPA enabled for course'),
@@ -97,7 +108,7 @@ class get_course_settings extends external_api {
                     'alerts_enabled' => new external_value(PARAM_BOOL, 'Alerts enabled'),
                     'rag_enabled'    => new external_value(PARAM_BOOL, 'RAG enabled'),
                     'index_status'   => new external_value(PARAM_TEXT, 'pending|indexing|ready|error'),
-                    'last_indexed'   => new external_value(PARAM_INT,  'Unix timestamp of last index'),
+                    'last_indexed'   => new external_value(PARAM_INT, 'Unix timestamp of last index'),
                 ])
             ),
         ]);

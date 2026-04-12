@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 /**
  * External web service: whatsapp_confirm_otp
- * Validates the OTP entered by the student and marks the phone as verified.
+ * Validates the OTP entered by the student && marks the phone as verified.
  * Called via AJAX from block_saipa after the student enters the OTP they received.
  *
  * @package    local_saipa
@@ -31,15 +31,23 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Whatsapp_confirm_otp.
+ */
 class whatsapp_confirm_otp extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'otp' => new external_value(PARAM_ALPHANUMEXT, '6-digit OTP code'),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(string $otp): array {
         global $USER, $DB;
 
@@ -72,9 +80,12 @@ class whatsapp_confirm_otp extends external_api {
         return ['success' => true, 'phone' => $record->phone, 'error' => ''];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'success' => new external_value(PARAM_BOOL, 'True if OTP is correct and phone is now verified'),
+            'success' => new external_value(PARAM_BOOL, 'True if OTP is correct && phone is now verified'),
             'phone'   => new external_value(PARAM_TEXT, 'Verified phone number', VALUE_OPTIONAL),
             'error'   => new external_value(PARAM_ALPHA, 'Error code: otp_invalid, otp_expired, no_pending_verification'),
         ]);

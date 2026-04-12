@@ -16,7 +16,7 @@
 
 /**
  * External web service: get_institution_summary
- * Returns institution-wide KPIs and trend sparklines for the advisor dashboard.
+ * Returns institution-wide KPIs && trend sparklines for the advisor dashboard.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -31,15 +31,23 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Get_institution_summary.
+ */
 class get_institution_summary extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'period' => new external_value(PARAM_ALPHANUMEXT, 'Period: 7d, 30d, semester, all', VALUE_DEFAULT, '30d'),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(string $period = '30d'): array {
         global $DB;
 
@@ -51,14 +59,14 @@ class get_institution_summary extends external_api {
         $since = self::period_to_since($params['period']);
 
         // ── Active courses ────────────────────────────────────────────────────
-        $active_courses = (int) $DB->count_records_sql(
+        $activecourses = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT courseid) FROM {saipa_sessions}
               WHERE timecreated >= :since',
             ['since' => $since]
         );
 
         // ── Total enrolled students across SAIPA-enabled courses ─────────────
-        $total_enrolled = (int) $DB->count_records_sql(
+        $totalenrolled = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT ue.userid)
                FROM {user_enrolments} ue
                JOIN {enrol} e ON ue.enrolid = e.id
@@ -72,19 +80,21 @@ class get_institution_summary extends external_api {
         );
 
         // ── Unique SAIPA users who sent at least 1 message ───────────────────
-        $total_saipa_users = (int) $DB->count_records_sql(
+        $totalsaipausers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT s.userid)
                FROM {saipa_messages} m
                JOIN {saipa_sessions} s ON s.id = m.sessionid
               WHERE m.role = :role AND m.timecreated >= :since',
             ['role' => 'user', 'since' => $since]
         );
-        $adoption_rate = $total_enrolled > 0
-            ? round($total_saipa_users / $total_enrolled, 4) : 0.0;
+        $adoptionrate = $totalenrolled > 0
+            ? round($totalsaipausers / $totalenrolled, 4) : 0.0;
 
         // ── Total messages ────────────────────────────────────────────────────
-        $total_messages = (int) $DB->count_records_select(
-            'saipa_messages', 'timecreated >= :since', ['since' => $since]
+        $totalmessages = (int) $DB->count_records_select(
+            'saipa_messages',
+            'timecreated >= :since',
+            ['since' => $since]
         );
 
         // ── Feedback ratio ────────────────────────────────────────────────────
@@ -95,10 +105,10 @@ class get_institution_summary extends external_api {
               WHERE timecreated >= :since',
             ['since' => $since]
         );
-        $pos_fb = (int) ($fb->pos ?? 0);
-        $neg_fb = (int) ($fb->neg ?? 0);
-        $positive_feedback_pct = ($pos_fb + $neg_fb) > 0
-            ? round($pos_fb / ($pos_fb + $neg_fb), 4) : 0.0;
+        $posfb = (int) ($fb->pos ?? 0);
+        $negfb = (int) ($fb->neg ?? 0);
+        $positivefeedbackpct = ($posfb + $negfb) > 0
+            ? round($posfb / ($posfb + $negfb), 4) : 0.0;
 
         // ── Alerts ────────────────────────────────────────────────────────────
         $alerts = $DB->get_record_sql(
@@ -108,14 +118,14 @@ class get_institution_summary extends external_api {
               WHERE timesent >= :since',
             ['since' => $since]
         );
-        $alerts_sent      = (int) ($alerts->sent ?? 0);
-        $alerts_responded = (int) ($alerts->responded ?? 0);
-        $alert_response_rate = $alerts_sent > 0
-            ? round($alerts_responded / $alerts_sent, 4) : 0.0;
+        $alertssent      = (int) ($alerts->sent ?? 0);
+        $alertsresponded = (int) ($alerts->responded ?? 0);
+        $alertresponserate = $alertssent > 0
+            ? round($alertsresponded / $alertssent, 4) : 0.0;
 
         // ── Trend sparklines (last 30 days from saipa_daily_stats) ───────────
-        $trend_since  = time() - (30 * 86400);
-        $trend_rows   = $DB->get_records_sql(
+        $trendsince  = time() - (30 * 86400);
+        $trendrows   = $DB->get_records_sql(
             'SELECT stat_date,
                     SUM(total_messages) AS msgs,
                     SUM(active_users) AS users
@@ -123,28 +133,28 @@ class get_institution_summary extends external_api {
               WHERE stat_date >= :since
               GROUP BY stat_date
               ORDER BY stat_date',
-            ['since' => $trend_since]
+            ['since' => $trendsince]
         );
 
-        $trend_messages  = [];
-        $trend_new_users = [];
-        foreach ($trend_rows as $row) {
-            $trend_messages[]  = ['date' => (int) $row->stat_date, 'count' => (int) $row->msgs];
-            $trend_new_users[] = ['date' => (int) $row->stat_date, 'count' => (int) $row->users];
+        $trendmessages  = [];
+        $trendnewusers = [];
+        foreach ($trendrows as $row) {
+            $trendmessages[]  = ['date' => (int) $row->stat_date, 'count' => (int) $row->msgs];
+            $trendnewusers[] = ['date' => (int) $row->stat_date, 'count' => (int) $row->users];
         }
 
         return [
-            'active_courses'         => $active_courses,
-            'total_enrolled'         => $total_enrolled,
-            'total_saipa_users'      => $total_saipa_users,
-            'adoption_rate'          => $adoption_rate,
-            'total_messages'         => $total_messages,
-            'positive_feedback_pct'  => $positive_feedback_pct,
-            'alerts_sent'            => $alerts_sent,
-            'alerts_responded'       => $alerts_responded,
-            'alert_response_rate'    => $alert_response_rate,
-            'trend_messages'         => $trend_messages,
-            'trend_new_users'        => $trend_new_users,
+            'active_courses'         => $activecourses,
+            'total_enrolled'         => $totalenrolled,
+            'total_saipa_users'      => $totalsaipausers,
+            'adoption_rate'          => $adoptionrate,
+            'total_messages'         => $totalmessages,
+            'positive_feedback_pct'  => $positivefeedbackpct,
+            'alerts_sent'            => $alertssent,
+            'alerts_responded'       => $alertsresponded,
+            'alert_response_rate'    => $alertresponserate,
+            'trend_messages'         => $trendmessages,
+            'trend_new_users'        => $trendnewusers,
         ];
     }
 
@@ -166,24 +176,27 @@ class get_institution_summary extends external_api {
         }
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
-        $trend_item = new external_single_structure([
+        $trenditem = new external_single_structure([
             'date'  => new external_value(PARAM_INT, 'Unix timestamp midnight UTC'),
             'count' => new external_value(PARAM_INT, 'Count for that day'),
         ]);
 
         return new external_single_structure([
-            'active_courses'         => new external_value(PARAM_INT,   'Courses with SAIPA activity in period'),
-            'total_enrolled'         => new external_value(PARAM_INT,   'Unique students across all SAIPA courses'),
-            'total_saipa_users'      => new external_value(PARAM_INT,   'Unique users who sent at least 1 message'),
+            'active_courses'         => new external_value(PARAM_INT, 'Courses with SAIPA activity in period'),
+            'total_enrolled'         => new external_value(PARAM_INT, 'Unique students across all SAIPA courses'),
+            'total_saipa_users'      => new external_value(PARAM_INT, 'Unique users who sent at least 1 message'),
             'adoption_rate'          => new external_value(PARAM_FLOAT, 'saipa_users/enrolled ratio'),
-            'total_messages'         => new external_value(PARAM_INT,   'Total messages in period'),
+            'total_messages'         => new external_value(PARAM_INT, 'Total messages in period'),
             'positive_feedback_pct'  => new external_value(PARAM_FLOAT, 'Fraction of positive feedback'),
-            'alerts_sent'            => new external_value(PARAM_INT,   'Alerts sent in period'),
-            'alerts_responded'       => new external_value(PARAM_INT,   'Alerts responded in period'),
+            'alerts_sent'            => new external_value(PARAM_INT, 'Alerts sent in period'),
+            'alerts_responded'       => new external_value(PARAM_INT, 'Alerts responded in period'),
             'alert_response_rate'    => new external_value(PARAM_FLOAT, 'responded/sent ratio'),
-            'trend_messages'         => new external_multiple_structure($trend_item, 'Daily message counts last 30 days'),
-            'trend_new_users'        => new external_multiple_structure($trend_item, 'Daily active user counts last 30 days'),
+            'trend_messages'         => new external_multiple_structure($trenditem, 'Daily message counts last 30 days'),
+            'trend_new_users'        => new external_multiple_structure($trenditem, 'Daily active user counts last 30 days'),
         ]);
     }
 }

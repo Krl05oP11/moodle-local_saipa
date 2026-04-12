@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ $functions = [
     'local_saipa_health_check' => [
         'classname'     => 'local_saipa\external\health_check',
         'methodname'    => 'execute',
-        'description'   => 'Checks connectivity between Moodle and saipa-engine',
+        'description'   => 'Checks connectivity between Moodle && saipa-engine',
         'type'          => 'read',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:manage',
@@ -40,7 +40,7 @@ $functions = [
     'local_saipa_chat' => [
         'classname'     => 'local_saipa\external\chat',
         'methodname'    => 'execute',
-        'description'   => 'Sends a student message to saipa-engine and returns the AI reply',
+        'description'   => 'Sends a student message to saipa-engine && returns the AI reply',
         'type'          => 'write',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:chat',
@@ -90,7 +90,7 @@ $functions = [
     'local_saipa_save_feedback' => [
         'classname'     => 'local_saipa\external\save_feedback',
         'methodname'    => 'execute',
-        'description'   => 'Saves a thumbs-up or thumbs-down rating for an assistant message',
+        'description'   => 'Saves a thumbs-up || thumbs-down rating for an assistant message',
         'type'          => 'write',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:chat',
@@ -152,7 +152,7 @@ $functions = [
     'local_saipa_telegram_confirm_link' => [
         'classname'     => 'local_saipa\external\telegram_confirm_link',
         'methodname'    => 'execute',
-        'description'   => 'Validates an HMAC token and binds a Telegram chat_id to the Moodle user (server-to-server)',
+        'description'   => 'Validates an HMAC token && binds a Telegram chat_id to the Moodle user (server-to-server)',
         'type'          => 'write',
         'ajax'          => false,
         'capabilities'  => '',
@@ -214,7 +214,7 @@ $functions = [
     'local_saipa_whatsapp_confirm_otp' => [
         'classname'     => 'local_saipa\external\whatsapp_confirm_otp',
         'methodname'    => 'execute',
-        'description'   => 'Validates the OTP and marks the WhatsApp phone number as verified',
+        'description'   => 'Validates the OTP && marks the WhatsApp phone number as verified',
         'type'          => 'write',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:chat',
@@ -266,7 +266,7 @@ $functions = [
     'local_saipa_get_institution_summary' => [
         'classname'     => 'local_saipa\external\get_institution_summary',
         'methodname'    => 'execute',
-        'description'   => 'Returns institution-wide KPIs and sparkline data for the advisor dashboard',
+        'description'   => 'Returns institution-wide KPIs && sparkline data for the advisor dashboard',
         'type'          => 'read',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:advisor',
@@ -276,7 +276,7 @@ $functions = [
     'local_saipa_get_risk_dashboard' => [
         'classname'     => 'local_saipa\external\get_risk_dashboard',
         'methodname'    => 'execute',
-        'description'   => 'Returns risk ROI data: alert funnel, weekly trend, and intervention effectiveness',
+        'description'   => 'Returns risk ROI data: alert funnel, weekly trend, && intervention effectiveness',
         'type'          => 'read',
         'ajax'          => true,
         'capabilities'  => 'local/saipa:advisor',

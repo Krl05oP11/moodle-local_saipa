@@ -35,11 +35,18 @@ defined('MOODLE_INTERNAL') || die();
  * @covers \local_saipa\external\save_feedback
  */
 final class external_save_feedback_test extends \advanced_testcase {
+    /** @var \stdClass $course */
     private \stdClass $course;
+    /** @var \stdClass $student */
     private \stdClass $student;
-    private int $session_id;
-    private int $message_id;
+    /** @var int $sessionid */
+    private int $sessionid;
+    /** @var int $messageid */
+    private int $messageid;
 
+    /**
+     * Set up test fixtures.
+     */
     protected function setUp(): void {
         global $DB;
         parent::setUp();
@@ -54,15 +61,16 @@ final class external_save_feedback_test extends \advanced_testcase {
         );
 
         // Seed a session and an assistant message.
-        $this->session_id = $DB->insert_record('saipa_sessions', (object) [
+        $this->sessionid = $DB->insert_record('saipa_sessions', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
+            'contextid'    => \context_course::instance($this->course->id)->id,
             'timecreated'  => time(),
             'timemodified' => time(),
         ]);
 
-        $this->message_id = $DB->insert_record('saipa_messages', (object) [
-            'sessionid'   => $this->session_id,
+        $this->messageid = $DB->insert_record('saipa_messages', (object) [
+            'sessionid'   => $this->sessionid,
             'role'        => 'assistant',
             'content'     => 'Test assistant response',
             'timecreated' => time(),
@@ -71,38 +79,44 @@ final class external_save_feedback_test extends \advanced_testcase {
 
     // ── Happy path ────────────────────────────────────────────────────────────
 
+    /**
+     * Test thumbs up saves rating 1.
+     */
     public function test_thumbs_up_saves_rating_1(): void {
         global $DB;
         $this->setUser($this->student);
 
         $result = \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             1
         );
 
-        $this->assertTrue($result['success']);
+        $this->assertEquals('ok', $result['status']);
         $row = $DB->get_record(
             'saipa_feedback',
-            ['userid' => $this->student->id, 'messageid' => $this->message_id]
+            ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertNotFalse($row);
         $this->assertEquals(1, (int) $row->rating);
     }
 
+    /**
+     * Test thumbs down saves rating minus1.
+     */
     public function test_thumbs_down_saves_rating_minus1(): void {
         global $DB;
         $this->setUser($this->student);
 
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             -1
         );
 
         $row = $DB->get_record(
             'saipa_feedback',
-            ['userid' => $this->student->id, 'messageid' => $this->message_id]
+            ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertEquals(-1, (int) $row->rating);
     }
@@ -117,24 +131,24 @@ final class external_save_feedback_test extends \advanced_testcase {
 
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             1
         );
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             -1
         );
 
         $count = $DB->count_records('saipa_feedback', [
             'userid'    => $this->student->id,
-            'messageid' => $this->message_id,
+            'messageid' => $this->messageid,
         ]);
         $this->assertEquals(1, $count, 'Should be exactly one row after two calls');
 
         $row = $DB->get_record(
             'saipa_feedback',
-            ['userid' => $this->student->id, 'messageid' => $this->message_id]
+            ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertEquals(-1, (int) $row->rating, 'Rating should reflect last call');
     }
@@ -149,7 +163,7 @@ final class external_save_feedback_test extends \advanced_testcase {
         $this->expectException(\invalid_parameter_exception::class);
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             0
         );
     }
@@ -165,19 +179,20 @@ final class external_save_feedback_test extends \advanced_testcase {
         $other = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($other->id, $this->course->id, 'student');
 
-        $other_session = $DB->insert_record('saipa_sessions', (object) [
+        $othersession = $DB->insert_record('saipa_sessions', (object) [
             'userid' => $other->id, 'courseid' => $this->course->id,
+            'contextid' => \context_course::instance($this->course->id)->id,
             'timecreated' => time(), 'timemodified' => time(),
         ]);
-        $other_message = $DB->insert_record('saipa_messages', (object) [
-            'sessionid' => $other_session, 'role' => 'assistant',
+        $othermessage = $DB->insert_record('saipa_messages', (object) [
+            'sessionid' => $othersession, 'role' => 'assistant',
             'content' => 'Other response', 'timecreated' => time(),
         ]);
 
         $this->expectException(\moodle_exception::class);
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $other_message,
+            $othermessage,
             1
         );
     }
@@ -188,10 +203,10 @@ final class external_save_feedback_test extends \advanced_testcase {
     public function test_unenrolled_user_rejected(): void {
         $stranger = $this->getDataGenerator()->create_user();
         $this->setUser($stranger);
-        $this->expectException(\required_capability_exception::class);
+        $this->expectException(\require_login_exception::class);
         \local_saipa\external\save_feedback::execute(
             $this->course->id,
-            $this->message_id,
+            $this->messageid,
             1
         );
     }

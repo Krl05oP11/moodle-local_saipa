@@ -43,10 +43,16 @@ require_once($CFG->dirroot . '/local/saipa/lib.php');
  * @covers \local_saipa\external\chat
  */
 final class external_chat_test extends \advanced_testcase {
+    /** @var \stdClass $course */
     private \stdClass $course;
+    /** @var \stdClass $student */
     private \stdClass $student;
+    /** @var \stdClass $teacher */
     private \stdClass $teacher;
 
+    /**
+     * Set up test fixtures.
+     */
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
@@ -138,12 +144,12 @@ final class external_chat_test extends \advanced_testcase {
         ]);
         $this->assertNotFalse($session);
 
-        $user_msgs = $DB->get_records('saipa_messages', [
+        $usermsgs = $DB->get_records('saipa_messages', [
             'sessionid' => $session->id,
             'role'      => 'user',
         ]);
-        $this->assertCount(1, $user_msgs);
-        $this->assertEquals('Test message', reset($user_msgs)->content);
+        $this->assertCount(1, $usermsgs);
+        $this->assertEquals('Test message', reset($usermsgs)->content);
     }
 
     /**
@@ -222,19 +228,16 @@ final class external_chat_test extends \advanced_testcase {
         $noncap = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($noncap->id, $this->course->id, 'student');
 
-        // Revoke chat capability from the student role in this course.
+        // Revoke chat capability from student role in this course.
         $context = \context_course::instance($this->course->id);
+        $nochatrole = $this->getDataGenerator()->create_role(['shortname' => 'nochat']);
         assign_capability(
             'local/saipa:chat',
             CAP_PROHIBIT,
-            $this->getDataGenerator()->create_role(['shortname' => 'nochat']),
+            $nochatrole,
             $context
         );
-        role_assign(
-            $this->getDataGenerator()->create_role(['shortname' => 'nochat2']),
-            $noncap->id,
-            $context
-        );
+        role_assign($nochatrole, $noncap->id, $context);
 
         $this->setUser($noncap);
         $this->expectException(\required_capability_exception::class);

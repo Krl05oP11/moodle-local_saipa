@@ -17,11 +17,11 @@
 /**
  * External web service: mark_alert_responded
  * Called by saipa-engine when a student sends any message to the Telegram bot.
- * Finds the most recent pending teacher_alert for this student and marks it
+ * Finds the most recent pending teacher_alert for this student && marks it
  * as responded, recording the delay since the alert was sent.
  *
  * Also checks if the student re-accessed Moodle after the alert (using
- * user_lastaccess) and stores that in the payload.
+ * user_lastaccess) && stores that in the payload.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -35,9 +35,14 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Mark_alert_responded.
+ */
 class mark_alert_responded extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'telegram_id'   => new external_value(PARAM_INT, 'Telegram chat_id of the student'),
@@ -45,11 +50,14 @@ class mark_alert_responded extends external_api {
         ]);
     }
 
-    public static function execute(int $telegram_id, int $timereceived = 0): array {
+    /**
+     * Execute the web service.
+     */
+    public static function execute(int $telegramid, int $timereceived = 0): array {
         global $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'telegram_id'  => $telegram_id,
+            'telegram_id'  => $telegramid,
             'timereceived' => $timereceived,
         ]);
 
@@ -83,22 +91,22 @@ class mark_alert_responded extends external_api {
             return ['found' => false, 'delay_minutes' => 0, 'moodle_accessed' => false];
         }
 
-        $delay_minutes = (int) round(($params['timereceived'] - $alert->timesent) / 60);
+        $delayminutes = (int) round(($params['timereceived'] - $alert->timesent) / 60);
 
         // Decode payload to get course_id.
         $payload = json_decode($alert->payload ?? '{}', true);
-        $course_id = (int) ($payload['course_id'] ?? 0);
+        $courseid = (int) ($payload['course_id'] ?? 0);
 
         // Check Moodle re-access after alert.
-        $moodle_accessed = false;
-        if ($course_id > 0) {
-            $access = $DB->get_record('user_lastaccess', ['userid' => $userid, 'courseid' => $course_id]);
-            $moodle_accessed = $access && ((int) $access->timeaccess > (int) $alert->timesent);
+        $moodleaccessed = false;
+        if ($courseid > 0) {
+            $access = $DB->get_record('user_lastaccess', ['userid' => $userid, 'courseid' => $courseid]);
+            $moodleaccessed = $access && ((int) $access->timeaccess > (int) $alert->timesent);
         }
 
         // Update the alert record.
-        $payload['delay_minutes']   = $delay_minutes;
-        $payload['moodle_accessed'] = $moodle_accessed;
+        $payload['delay_minutes']   = $delayminutes;
+        $payload['moodle_accessed'] = $moodleaccessed;
 
         $DB->update_record('saipa_notifications', (object) [
             'id'           => $alert->id,
@@ -109,15 +117,18 @@ class mark_alert_responded extends external_api {
 
         return [
             'found'          => true,
-            'delay_minutes'  => $delay_minutes,
-            'moodle_accessed' => $moodle_accessed,
+            'delay_minutes'  => $delayminutes,
+            'moodle_accessed' => $moodleaccessed,
         ];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'found'           => new external_value(PARAM_BOOL, 'True if a pending alert was found and marked'),
-            'delay_minutes'   => new external_value(PARAM_INT, 'Minutes between alert and student response'),
+            'found'           => new external_value(PARAM_BOOL, 'True if a pending alert was found && marked'),
+            'delay_minutes'   => new external_value(PARAM_INT, 'Minutes between alert && student response'),
             'moodle_accessed' => new external_value(PARAM_BOOL, 'True if student re-accessed Moodle after the alert'),
         ]);
     }

@@ -30,37 +30,45 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Set_course_settings.
+ */
 class set_course_settings extends external_api {
+    /**
+     * Define the parameters for this web service.
+     */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'courseid'       => new external_value(PARAM_INT,  'Course ID'),
-            'saipa_enabled'  => new external_value(PARAM_BOOL, 'SAIPA enabled',  VALUE_OPTIONAL),
-            'chat_enabled'   => new external_value(PARAM_BOOL, 'Chat enabled',   VALUE_OPTIONAL),
-            'risk_enabled'   => new external_value(PARAM_BOOL, 'Risk enabled',   VALUE_OPTIONAL),
-            'alerts_enabled' => new external_value(PARAM_BOOL, 'Alerts enabled', VALUE_OPTIONAL),
-            'rag_enabled'    => new external_value(PARAM_BOOL, 'RAG enabled',    VALUE_OPTIONAL),
+            'courseid'       => new external_value(PARAM_INT, 'Course ID'),
+            'saipa_enabled'  => new external_value(PARAM_BOOL, 'SAIPA enabled', VALUE_DEFAULT, null),
+            'chat_enabled'   => new external_value(PARAM_BOOL, 'Chat enabled', VALUE_DEFAULT, null),
+            'risk_enabled'   => new external_value(PARAM_BOOL, 'Risk enabled', VALUE_DEFAULT, null),
+            'alerts_enabled' => new external_value(PARAM_BOOL, 'Alerts enabled', VALUE_DEFAULT, null),
+            'rag_enabled'    => new external_value(PARAM_BOOL, 'RAG enabled', VALUE_DEFAULT, null),
         ]);
     }
 
+    /**
+     * Execute the web service.
+     */
     public static function execute(
         int $courseid,
-        ?bool $saipa_enabled  = null,
-        ?bool $chat_enabled   = null,
-        ?bool $risk_enabled   = null,
-        ?bool $alerts_enabled = null,
-        ?bool $rag_enabled    = null
+        ?bool $saipaenabled = null,
+        ?bool $chatenabled = null,
+        ?bool $riskenabled = null,
+        ?bool $alertsenabled = null,
+        ?bool $ragenabled = null
     ): array {
         global $DB;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid'       => $courseid,
-            'saipa_enabled'  => $saipa_enabled,
-            'chat_enabled'   => $chat_enabled,
-            'risk_enabled'   => $risk_enabled,
-            'alerts_enabled' => $alerts_enabled,
-            'rag_enabled'    => $rag_enabled,
+            'saipa_enabled'  => $saipaenabled,
+            'chat_enabled'   => $chatenabled,
+            'risk_enabled'   => $riskenabled,
+            'alerts_enabled' => $alertsenabled,
+            'rag_enabled'    => $ragenabled,
         ]);
 
         $context = \context_system::instance();
@@ -74,30 +82,30 @@ class set_course_settings extends external_api {
         if ($existing) {
             $record = clone $existing;
             $record->timemodified = $now;
-            if ($params['saipa_enabled']  !== null) {
+            if ($params['saipa_enabled'] !== null) {
                 $record->saipa_enabled  = (int) $params['saipa_enabled'];
             }
-            if ($params['chat_enabled']   !== null) {
+            if ($params['chat_enabled'] !== null) {
                 $record->chat_enabled   = (int) $params['chat_enabled'];
             }
-            if ($params['risk_enabled']   !== null) {
+            if ($params['risk_enabled'] !== null) {
                 $record->risk_enabled   = (int) $params['risk_enabled'];
             }
             if ($params['alerts_enabled'] !== null) {
                 $record->alerts_enabled = (int) $params['alerts_enabled'];
             }
-            if ($params['rag_enabled']    !== null) {
+            if ($params['rag_enabled'] !== null) {
                 $record->rag_enabled    = (int) $params['rag_enabled'];
             }
             $DB->update_record('saipa_course_settings', $record);
         } else {
             $DB->insert_record('saipa_course_settings', (object) [
                 'courseid'       => $cid,
-                'saipa_enabled'  => (int) ($params['saipa_enabled']  ?? true),
-                'chat_enabled'   => (int) ($params['chat_enabled']   ?? true),
-                'risk_enabled'   => (int) ($params['risk_enabled']   ?? true),
+                'saipa_enabled'  => (int) ($params['saipa_enabled'] ?? true),
+                'chat_enabled'   => (int) ($params['chat_enabled'] ?? true),
+                'risk_enabled'   => (int) ($params['risk_enabled'] ?? true),
                 'alerts_enabled' => (int) ($params['alerts_enabled'] ?? true),
-                'rag_enabled'    => (int) ($params['rag_enabled']    ?? true),
+                'rag_enabled'    => (int) ($params['rag_enabled'] ?? true),
                 'timecreated'    => $now,
                 'timemodified'   => $now,
             ]);
@@ -106,6 +114,9 @@ class set_course_settings extends external_api {
         return ['success' => true, 'message' => ''];
     }
 
+    /**
+     * Define the return structure for this web service.
+     */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'success' => new external_value(PARAM_BOOL, 'Whether the save succeeded'),
