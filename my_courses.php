@@ -29,9 +29,8 @@ require_once(__DIR__ . '/../../config.php');
 $syscontext = context_system::instance();
 
 require_login();
-require_capability('local/saipa:viewall', $syscontext);
 
-// Quick shortcut: if teacher has exactly 1 SAIPA course, go straight to teacher.php.
+// No system-wide gate: access is checked per-course below (admins vs teachers).
 $isadmin   = has_capability('local/saipa:manage', $syscontext);
 $coursesqs = [];
 
