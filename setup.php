@@ -40,8 +40,8 @@ require_capability('moodle/site:config', context_system::instance());
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/saipa/setup.php'));
 $PAGE->set_pagelayout('admin');
-$PAGE->set_title('SAIPA — Setup Wizard');
-$PAGE->set_heading('SAIPA Setup Wizard');
+$PAGE->set_title(get_string('wizard_page_title', 'local_saipa'));
+$PAGE->set_heading(get_string('wizard_page_heading', 'local_saipa'));
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
@@ -55,7 +55,7 @@ if ($action === 'health') {
     $enginetoken = optional_param('engine_token', '', PARAM_RAW);
 
     if (empty($engineurl)) {
-        echo json_encode(['error' => 'Engine URL is required.']);
+        echo json_encode(['error' => get_string('wizard_err_url_required', 'local_saipa')]);
         die();
     }
 
@@ -79,16 +79,16 @@ if ($action === 'health') {
     curl_close($ch);
 
     if ($errno) {
-        echo json_encode(['error' => 'Connection failed: ' . $err]);
+        echo json_encode(['error' => get_string('wizard_err_connection', 'local_saipa', $err)]);
         die();
     }
     if ($http !== 200) {
-        echo json_encode(['error' => "Engine returned HTTP $http. Check the URL && token."]);
+        echo json_encode(['error' => get_string('wizard_err_http', 'local_saipa', $http)]);
         die();
     }
     $decoded = json_decode($resp, true);
     if (!$decoded || ($decoded['status'] ?? '') !== 'ok') {
-        echo json_encode(['error' => 'Unexpected engine response: ' . substr($resp, 0, 200)]);
+        echo json_encode(['error' => get_string('wizard_err_unexpected_response', 'local_saipa', substr($resp, 0, 200))]);
         die();
     }
     echo json_encode([
@@ -110,7 +110,7 @@ if ($action === 'testbot') {
 
     $bottoken = optional_param('bot_token', '', PARAM_RAW);
     if (empty($bottoken)) {
-        echo json_encode(['error' => 'No bot token provided.']);
+        echo json_encode(['error' => get_string('wizard_err_no_bot_token', 'local_saipa')]);
         die();
     }
 
@@ -129,13 +129,13 @@ if ($action === 'testbot') {
     curl_close($ch);
 
     if ($errno) {
-        echo json_encode(['error' => 'Could not reach Telegram API: ' . $err]);
+        echo json_encode(['error' => get_string('wizard_err_telegram_unreachable', 'local_saipa', $err)]);
         die();
     }
     $tg = json_decode($resp, true);
     if (!$tg || empty($tg['ok'])) {
         $desc = $tg['description'] ?? 'Invalid response';
-        echo json_encode(['error' => 'Telegram API error: ' . $desc]);
+        echo json_encode(['error' => get_string('wizard_err_telegram_api', 'local_saipa', $desc)]);
         die();
     }
     echo json_encode([
@@ -184,7 +184,7 @@ if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     redirect(
         new moodle_url('/local/saipa/setup.php', ['done' => 1]),
-        'SAIPA configuration saved successfully.',
+        get_string('wizard_save_success', 'local_saipa'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -356,14 +356,13 @@ echo $OUTPUT->header();
   <div class="card shadow-sm">
     <div class="card-body done-card">
       <div class="done-icon">🎉</div>
-      <h3>SAIPA is ready!</h3>
-      <p>The AI companion has been configured && is ready to assist teachers && students.<br>
-         Add the <strong>SAIPA block</strong> to a course to get started.</p>
+      <h3><?= get_string('wizard_done_title', 'local_saipa') ?></h3>
+      <p><?= get_string('wizard_done_desc', 'local_saipa') ?></p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
-        <a href="<?= s($teacherurl) ?>" class="btn btn-outline-primary">📊 Teacher Dashboard</a>
+        <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary"><?= get_string('wizard_btn_admin', 'local_saipa') ?></a>
+        <a href="<?= s($teacherurl) ?>" class="btn btn-outline-primary"><?= get_string('wizard_btn_teacher', 'local_saipa') ?></a>
         <a href="<?= (new moodle_url('/course/index.php'))->out() ?>" class="btn btn-primary btn-lg px-5">
-          Go to My Courses →
+          <?= get_string('wizard_btn_courses', 'local_saipa') ?>
         </a>
       </div>
     </div>
@@ -372,13 +371,13 @@ echo $OUTPUT->header();
 <?php else : ?>
   <!-- Progress bar -->
   <div class="spwiz-progress" id="spwiz-progress">
-    <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Welcome</div></div>
-    <div class="step"        data-step="2"><div class="step-circle">2</div><div class="step-label">Requirements</div></div>
-    <div class="step"        data-step="3"><div class="step-circle">3</div><div class="step-label">AI Mode</div></div>
-    <div class="step"        data-step="4"><div class="step-circle">4</div><div class="step-label">Engine</div></div>
-    <div class="step"        data-step="5"><div class="step-circle">5</div><div class="step-label">Telegram</div></div>
-    <div class="step"        data-step="6"><div class="step-circle">6</div><div class="step-label">Test</div></div>
-    <div class="step"        data-step="7"><div class="step-circle">7</div><div class="step-label">Done</div></div>
+    <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label"><?= get_string('wizard_step_welcome', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="2"><div class="step-circle">2</div><div class="step-label"><?= get_string('wizard_step_requirements', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="3"><div class="step-circle">3</div><div class="step-label"><?= get_string('wizard_step_ai_mode', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="4"><div class="step-circle">4</div><div class="step-label"><?= get_string('wizard_step_engine', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="5"><div class="step-circle">5</div><div class="step-label"><?= get_string('wizard_step_telegram', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="6"><div class="step-circle">6</div><div class="step-label"><?= get_string('wizard_step_test', 'local_saipa') ?></div></div>
+    <div class="step"        data-step="7"><div class="step-circle">7</div><div class="step-label"><?= get_string('wizard_step_done', 'local_saipa') ?></div></div>
   </div>
 
   <div class="card shadow-sm">
@@ -393,55 +392,53 @@ echo $OUTPUT->header();
       <div class="d-flex align-items-center gap-3 mb-3">
         <div style="font-size:2.8rem;line-height:1">🤖</div>
         <div>
-          <h3 class="mb-1">Welcome to SAIPA</h3>
+          <h3 class="mb-1"><?= get_string('wizard_welcome_title', 'local_saipa') ?></h3>
           <p class="text-muted mb-0">
-            This wizard configures the AI companion in a few steps.
-            It covers the engine connection, notification channels, && core parameters.
+            <?= get_string('wizard_welcome_intro', 'local_saipa') ?>
           </p>
         </div>
       </div>
       <hr class="my-3">
 
       <p class="mb-3" style="font-size:.9rem;">
-        SAIPA (Sistema de Acompañamiento Inteligente Pedagógico con IA) helps teachers
-        detect at-risk students early && supports learning through AI-powered tools:
+        <?= get_string('wizard_welcome_about', 'local_saipa') ?>
       </p>
 
       <div class="feature-grid mb-4">
         <div class="feature-item">
           <div class="fi-icon">🔴</div>
-          <div><h6>Dropout Risk Detection</h6>
-            <p>XGBoost model predicts dropout probability from 11 engagement features. Risk badges per student: 🟢 Low / 🟡 Medium / 🔴 High.</p></div>
+          <div><h6><?= get_string('wizard_feat_dropout_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_dropout_desc', 'local_saipa') ?></p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">💬</div>
-          <div><h6>RAG-Powered Chat</h6>
-            <p>Students && teachers chat with an AI assistant that has context from the course materials. Role-aware responses.</p></div>
+          <div><h6><?= get_string('wizard_feat_chat_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_chat_desc', 'local_saipa') ?></p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">📲</div>
-          <div><h6>Proactive Telegram Alerts</h6>
-            <p>Teachers send personalised AI-generated alerts to at-risk students directly from the dashboard via Telegram.</p></div>
+          <div><h6><?= get_string('wizard_feat_alerts_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_alerts_desc', 'local_saipa') ?></p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">📊</div>
-          <div><h6>Advisor Dashboard</h6>
-            <p>Institution-wide view: risk distribution, engagement trends, per-course health across all courses.</p></div>
+          <div><h6><?= get_string('wizard_feat_advisor_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_advisor_desc', 'local_saipa') ?></p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">📚</div>
-          <div><h6>Course Indexing</h6>
-            <p>Index Moodle Pages, PDFs, && PPTX presentations into a vector database for RAG retrieval.</p></div>
+          <div><h6><?= get_string('wizard_feat_index_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_index_desc', 'local_saipa') ?></p></div>
         </div>
         <div class="feature-item">
           <div class="fi-icon">🤝</div>
-          <div><h6>EVAL-IA Compatible</h6>
-            <p>When both plugins are installed, EVAL-IA automatically inherits SAIPA's engine configuration.</p></div>
+          <div><h6><?= get_string('wizard_feat_evalia_title', 'local_saipa') ?></h6>
+            <p><?= get_string('wizard_feat_evalia_desc', 'local_saipa') ?></p></div>
         </div>
       </div>
 
       <div class="d-flex justify-content-end">
-        <button class="btn btn-primary px-5" onclick="spwizGoto(2)">Next →</button>
+        <button class="btn btn-primary px-5" onclick="spwizGoto(2)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 1 -->
 
@@ -451,22 +448,21 @@ echo $OUTPUT->header();
          ══════════════════════════════════════════ -->
     <div class="spwiz-step" id="spwiz-step-2">
 
-      <h4 class="mb-1">Minimum requirements</h4>
+      <h4 class="mb-1"><?= get_string('wizard_req_title', 'local_saipa') ?></h4>
       <p class="text-muted mb-4" style="font-size:.88rem;">
-        Verify that your environment meets all requirements before continuing.
-        <strong>SAIPA will not work without an active AI service.</strong>
+        <?= get_string('wizard_req_intro', 'local_saipa') ?>
       </p>
 
       <!-- Platform -->
       <div class="req-section">
-        <div class="req-section-header" style="background:#f8f9fa;">🖥️ Platform</div>
+        <div class="req-section-header" style="background:#f8f9fa;"><?= get_string('wizard_req_platform', 'local_saipa') ?></div>
         <div class="req-section-body">
 
           <div class="req-row">
             <div class="req-status"><?= $moodleverok ? '✅' : '❌' ?></div>
             <div class="req-label">
-              <strong>Moodle 4.4 || 4.5</strong>
-              <span>Older versions are not supported.</span>
+              <strong><?= get_string('wizard_req_moodle_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_moodle_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value"><?= s($moodleverstr) ?></div>
           </div>
@@ -474,8 +470,8 @@ echo $OUTPUT->header();
           <div class="req-row">
             <div class="req-status"><?= $phpverok ? '✅' : '❌' ?></div>
             <div class="req-label">
-              <strong>PHP 8.1+</strong>
-              <span>PHP 7.x is not supported.</span>
+              <strong><?= get_string('wizard_req_php_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_php_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value"><?= s($phpverstr) ?></div>
           </div>
@@ -483,25 +479,26 @@ echo $OUTPUT->header();
           <div class="req-row">
             <div class="req-status"><?= $curlok ? '✅' : '❌' ?></div>
             <div class="req-label">
-              <strong>PHP cURL extension</strong>
-              <span>Required to communicate with the AI engine && Telegram API.</span>
+              <strong><?= get_string('wizard_req_curl_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_curl_desc', 'local_saipa') ?></span>
             </div>
-            <div class="req-value"><?= $curlok ? 'Enabled' : '<span class="text-danger">Missing</span>' ?></div>
+            <div class="req-value"><?= $curlok ? get_string('wizard_req_curl_enabled', 'local_saipa') : '<span class="text-danger">' . get_string('wizard_req_curl_missing', 'local_saipa') . '</span>' ?></div>
           </div>
 
           <div class="req-row">
             <div class="req-status">ℹ️</div>
             <div class="req-label">
-              <strong>block_saipa (companion block)</strong>
-              <span>Required — provides the chat widget in course sidebars.</span>
+              <strong><?= get_string('wizard_req_block_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_block_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value">
               <?php
                 $blockinstalled = $DB->record_exists('config_plugins', ['plugin' => 'block_saipa', 'name' => 'version']);
                 echo $blockinstalled
-                  ? '<span class="text-success">Installed</span>'
-                  : '<span class="text-danger">Not installed — <a href="' .
-                    (new moodle_url('/admin/index.php'))->out() . '">install now</a></span>';
+                  ? '<span class="text-success">' . get_string('wizard_req_block_installed', 'local_saipa') . '</span>'
+                  : '<span class="text-danger">' .
+                    get_string('wizard_req_block_missing', 'local_saipa', (new moodle_url('/admin/index.php'))->out()) .
+                    '</span>';
               ?>
             </div>
           </div>
@@ -512,54 +509,52 @@ echo $OUTPUT->header();
       <!-- AI Engine -->
       <div class="req-section" style="border-color:#f0ad4e;">
         <div class="req-section-header" style="background:#fff8e1;color:#856404;border-bottom:1px solid #f0e0a0;">
-          ⚠️ AI Engine — <em>Required. SAIPA will not function without this.</em>
+          <?= get_string('wizard_req_ai_heading', 'local_saipa') ?>
         </div>
         <div class="req-section-body">
 
           <p style="font-size:.87rem;margin-bottom:14px;">
-            SAIPA uses the <strong>saipa-engine</strong> Python service for all AI operations:
-            course chat (RAG), dropout risk prediction, alert generation, && Telegram integration.
-            This service must be running && reachable from this Moodle server.
+            <?= get_string('wizard_req_ai_intro', 'local_saipa') ?>
           </p>
 
           <div class="req-row">
             <div class="req-status">🐍</div>
             <div class="req-label">
-              <strong>saipa-engine (Python 3.11+ / FastAPI)</strong>
-              <span>Handles LLM inference, vector search (ChromaDB), XGBoost risk model, && Telegram bot.</span>
+              <strong><?= get_string('wizard_req_enginepy_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_enginepy_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
-              <span class="badge bg-warning text-dark" style="font-size:.72rem;">Must be deployed separately</span>
+              <span class="badge bg-warning text-dark" style="font-size:.72rem;"><?= get_string('wizard_req_enginepy_value', 'local_saipa') ?></span>
             </div>
           </div>
 
           <div class="req-row">
             <div class="req-status">🗄️</div>
             <div class="req-label">
-              <strong>ChromaDB (embedded in saipa-engine)</strong>
-              <span>Vector database for RAG over indexed course materials.</span>
+              <strong><?= get_string('wizard_req_chroma_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_chroma_desc', 'local_saipa') ?></span>
             </div>
-            <div class="req-value">Included in engine</div>
+            <div class="req-value"><?= get_string('wizard_req_included', 'local_saipa') ?></div>
           </div>
 
           <div class="req-row">
             <div class="req-status">🔤</div>
             <div class="req-label">
-              <strong>Large Language Model (LLM)</strong>
-              <span>Powers chat, risk explanations, && alert generation. See provisioning options below.</span>
+              <strong><?= get_string('wizard_req_llm_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_llm_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
-              <span class="badge bg-danger" style="font-size:.72rem;">AI service required</span>
+              <span class="badge bg-danger" style="font-size:.72rem;"><?= get_string('wizard_req_llm_value', 'local_saipa') ?></span>
             </div>
           </div>
 
           <div class="req-row">
             <div class="req-status">📊</div>
             <div class="req-label">
-              <strong>XGBoost risk model</strong>
-              <span>Pre-trained model included in saipa-engine. Requires at least 4 weeks of student activity data for meaningful predictions.</span>
+              <strong><?= get_string('wizard_req_xgb_title', 'local_saipa') ?></strong>
+              <span><?= get_string('wizard_req_xgb_desc', 'local_saipa') ?></span>
             </div>
-            <div class="req-value">Included in engine</div>
+            <div class="req-value"><?= get_string('wizard_req_included', 'local_saipa') ?></div>
           </div>
 
         </div>
@@ -568,66 +563,62 @@ echo $OUTPUT->header();
       <!-- AI Provisioning options -->
       <div class="req-section" style="border-color:#0d6efd;">
         <div class="req-section-header" style="background:#e7f1ff;color:#084298;border-bottom:1px solid #b6d4fe;">
-          🤖 AI service provisioning — choose one option
+          <?= get_string('wizard_prov_heading', 'local_saipa') ?>
         </div>
         <div class="req-section-body">
 
           <p style="font-size:.85rem;margin-bottom:14px;color:#495057;">
-            The LLM that powers SAIPA can come from three sources. You must have at least one ready.
+            <?= get_string('wizard_prov_intro', 'local_saipa') ?>
           </p>
 
           <div class="ai-provision-cards">
 
             <div class="ai-pcard pc-local">
               <div class="pc-head"><div class="pc-icon">🖥️</div>
-                <h6>Local — Ollama <span class="mode-badge badge-local">SELF-HOSTED</span></h6></div>
-              <p>Run the LLM on your own server using <a href="https://ollama.com" target="_blank">Ollama</a>. Full privacy — no data leaves your infrastructure.</p>
+                <h6><?= get_string('wizard_prov_local_title', 'local_saipa') ?> <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span></h6></div>
+              <p><?= get_string('wizard_prov_local_desc', 'local_saipa') ?></p>
               <ul>
-                <li>Recommended: <code>qwen2.5:14b</code> (≥16 GB RAM)</li>
-                <li>Minimum: any 7B model (≥8 GB RAM)</li>
-                <li>saipa-engine must have network access to Ollama</li>
+                <li><?= get_string('wizard_prov_local_i1', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_local_i2', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_local_i3', 'local_saipa') ?></li>
               </ul>
             </div>
 
             <div class="ai-pcard pc-cloud">
               <div class="pc-head"><div class="pc-icon">☁️</div>
-                <h6>Cloud API <span class="mode-badge badge-cloud">OPENAI-COMPATIBLE</span></h6></div>
-              <p>Any OpenAI-compatible API (OpenAI, Azure, Groq, Mistral…) with your own key.</p>
+                <h6><?= get_string('wizard_prov_cloud_title', 'local_saipa') ?> <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span></h6></div>
+              <p><?= get_string('wizard_prov_cloud_desc', 'local_saipa') ?></p>
               <ul>
-                <li>No local GPU required</li>
-                <li>Cost depends on usage && provider</li>
-                <li>Set <code>OPENAI_API_KEY</code> in saipa-engine's <code>.env</code></li>
+                <li><?= get_string('wizard_prov_cloud_i1', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_cloud_i2', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_cloud_i3', 'local_saipa') ?></li>
               </ul>
             </div>
 
             <div class="ai-pcard pc-saipa">
               <div class="pc-head"><div class="pc-icon">🌐</div>
-                <h6>SAIPA Cloud <span class="mode-badge badge-soon">COMING SOON</span></h6></div>
-              <p>Fully managed engine. No Ollama, no ChromaDB to install. Subscribe && connect.</p>
+                <h6><?= get_string('wizard_prov_saipa_title', 'local_saipa') ?> <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span></h6></div>
+              <p><?= get_string('wizard_prov_saipa_desc', 'local_saipa') ?></p>
               <ul>
-                <li>Zero infrastructure to manage</li>
-                <li>Join waitlist at <code>cloud.saipa.online</code></li>
+                <li><?= get_string('wizard_prov_saipa_i1', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_saipa_i2', 'local_saipa') ?></li>
               </ul>
             </div>
 
             <div class="ai-pcard pc-custom">
               <div class="pc-head"><div class="pc-icon">⚙️</div>
-                <h6>Custom / Enterprise <span class="mode-badge badge-custom">ADVANCED</span></h6></div>
-              <p>Any compatible engine at a custom URL. Full control for advanced deployments.</p>
+                <h6><?= get_string('wizard_prov_custom_title', 'local_saipa') ?> <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span></h6></div>
+              <p><?= get_string('wizard_prov_custom_desc', 'local_saipa') ?></p>
               <ul>
-                <li>Must implement <code>GET /health</code></li>
-                <li>Must implement <code>POST /chat</code> && related endpoints</li>
+                <li><?= get_string('wizard_prov_custom_i1', 'local_saipa') ?></li>
+                <li><?= get_string('wizard_prov_custom_i2', 'local_saipa') ?></li>
               </ul>
             </div>
 
           </div>
 
           <div class="alert alert-danger mt-3 mb-0 py-2 px-3" style="font-size:.84rem;">
-            <strong>⛔ Without an active AI service, SAIPA will not be able to:</strong>
-            respond to student chat messages, generate risk scores, create Telegram alerts,
-            index course materials, || provide advisor-level analytics.
-            All these functions depend exclusively on the AI engine.
-            <strong>Do not continue</strong> unless you have one of the options above deployed && ready.
+            <?= get_string('wizard_prov_warning', 'local_saipa') ?>
           </div>
 
         </div>
@@ -637,13 +628,13 @@ echo $OUTPUT->header();
       <div class="form-check mt-3 mb-1">
         <input class="form-check-input" type="checkbox" id="req-confirm">
         <label class="form-check-label" for="req-confirm" style="font-size:.88rem;">
-          I have read the requirements above. An AI service (saipa-engine + LLM) is deployed && reachable from this server.
+          <?= get_string('wizard_req_confirm', 'local_saipa') ?>
         </label>
       </div>
 
       <div class="d-flex justify-content-between mt-3">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(1)">← Back</button>
-        <button class="btn btn-primary px-5" id="req-next-btn" disabled onclick="spwizGoto(3)">Next →</button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(1)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" id="req-next-btn" disabled onclick="spwizGoto(3)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 2 -->
 
@@ -653,43 +644,43 @@ echo $OUTPUT->header();
          ══════════════════════════════════════════ -->
     <div class="spwiz-step" id="spwiz-step-3">
 
-      <h4 class="mb-1">Choose your AI provisioning mode</h4>
-      <p class="text-muted mb-4" style="font-size:.88rem;">Select the option that matches your deployed AI infrastructure.</p>
+      <h4 class="mb-1"><?= get_string('wizard_mode_title', 'local_saipa') ?></h4>
+      <p class="text-muted mb-4" style="font-size:.88rem;"><?= get_string('wizard_mode_intro', 'local_saipa') ?></p>
 
       <div class="mode-cards">
         <label class="mode-card <?= ($cfgmode === 'local_ollama') ? 'selected' : '' ?>" for="sp-mode-local">
           <input type="radio" name="engine_mode" id="sp-mode-local" value="local_ollama"
                  <?= ($cfgmode === 'local_ollama') ? 'checked' : '' ?>>
           <div class="mc-icon">🖥️</div>
-          <h5>Local — Ollama <span class="mode-badge badge-local">SELF-HOSTED</span></h5>
-          <p>saipa-engine running on your server with Ollama as the LLM backend. Full data privacy.</p>
+          <h5><?= get_string('wizard_prov_local_title', 'local_saipa') ?> <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span></h5>
+          <p><?= get_string('wizard_mode_local_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'cloud_api') ? 'selected' : '' ?>" for="sp-mode-cloud">
           <input type="radio" name="engine_mode" id="sp-mode-cloud" value="cloud_api"
                  <?= ($cfgmode === 'cloud_api') ? 'checked' : '' ?>>
           <div class="mc-icon">☁️</div>
-          <h5>Cloud API <span class="mode-badge badge-cloud">OPENAI-COMPATIBLE</span></h5>
-          <p>saipa-engine configured with an OpenAI-compatible API key. No local GPU required.</p>
+          <h5><?= get_string('wizard_prov_cloud_title', 'local_saipa') ?> <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span></h5>
+          <p><?= get_string('wizard_mode_cloud_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'saipa_cloud') ? 'selected' : '' ?>" for="sp-mode-saipa">
           <input type="radio" name="engine_mode" id="sp-mode-saipa" value="saipa_cloud"
                  <?= ($cfgmode === 'saipa_cloud') ? 'checked' : '' ?>>
           <div class="mc-icon">🌐</div>
-          <h5>SAIPA Cloud <span class="mode-badge badge-soon">COMING SOON</span></h5>
-          <p>Fully managed engine by Schaller &amp; Ponce. Subscribe && connect with a single API key.</p>
+          <h5><?= get_string('wizard_prov_saipa_title', 'local_saipa') ?> <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span></h5>
+          <p><?= get_string('wizard_mode_saipa_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'custom') ? 'selected' : '' ?>" for="sp-mode-custom">
           <input type="radio" name="engine_mode" id="sp-mode-custom" value="custom"
                  <?= ($cfgmode === 'custom') ? 'checked' : '' ?>>
           <div class="mc-icon">⚙️</div>
-          <h5>Custom / Enterprise <span class="mode-badge badge-custom">ADVANCED</span></h5>
-          <p>Any compatible engine at a custom URL. Full control for advanced deployments.</p>
+          <h5><?= get_string('wizard_prov_custom_title', 'local_saipa') ?> <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span></h5>
+          <p><?= get_string('wizard_mode_custom_desc', 'local_saipa') ?></p>
         </label>
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(2)">← Back</button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(4)">Next →</button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(2)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" onclick="spwizGoto(4)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 3 -->
 
@@ -699,48 +690,41 @@ echo $OUTPUT->header();
          ══════════════════════════════════════════ -->
     <div class="spwiz-step" id="spwiz-step-4">
 
-      <h4 class="mb-1">Engine connection</h4>
-      <p class="text-muted mb-4" style="font-size:.88rem;">Enter the URL && token for the saipa-engine service.</p>
+      <h4 class="mb-1"><?= get_string('wizard_engine_title', 'local_saipa') ?></h4>
+      <p class="text-muted mb-4" style="font-size:.88rem;"><?= get_string('wizard_engine_intro', 'local_saipa') ?></p>
 
       <div id="sp-hint-local_ollama" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
-        <strong>🖥️ Local / Ollama:</strong>
-        Default port is <code>8052</code>. If running via Docker on the same host, use
-        <code>http://localhost:8052</code>. If Moodle itself runs in Docker, use
-        <code>http://host.docker.internal:8052</code>.
+        <?= get_string('wizard_hint_local', 'local_saipa') ?>
       </div>
-      <div id="sp-hint-cloud_api" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
-        <strong>☁️ Cloud API:</strong>
-        Enter the URL of your saipa-engine instance (configured with your cloud API key) && the <code>ENGINE_SECRET</code> token.
+      <div id="sp-hint-cloud_api" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;display:none">
+        <?= get_string('wizard_hint_cloud', 'local_saipa') ?>
       </div>
-      <div id="sp-hint-saipa_cloud" class="alert alert-warning mb-3 py-2 px-3" style="font-size:.82rem;">
-        <strong>🌐 SAIPA Cloud is not yet available.</strong>
-        Please select Local || Cloud API to continue.
+      <div id="sp-hint-saipa_cloud" class="alert alert-warning mb-3 py-2 px-3" style="font-size:.82rem;display:none">
+        <?= get_string('wizard_hint_saipa', 'local_saipa') ?>
       </div>
-      <div id="sp-hint-custom" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
-        <strong>⚙️ Custom:</strong>
-        Enter the base URL of your engine. The wizard will verify
-        <code>{url}/health</code> returns <code>{"status":"ok"}</code>.
+      <div id="sp-hint-custom" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;display:none">
+        <?= get_string('wizard_hint_custom', 'local_saipa') ?>
       </div>
 
       <div class="mb-3">
-        <label class="form-label fw-semibold" for="sp-url">Engine URL <span class="text-danger">*</span></label>
+        <label class="form-label fw-semibold" for="sp-url"><?= get_string('wizard_url_label', 'local_saipa') ?> <span class="text-danger">*</span></label>
         <input type="url" class="form-control" id="sp-url"
-               placeholder="http://localhost:8052"
+               placeholder="<?= get_string('wizard_url_placeholder', 'local_saipa') ?>"
                value="<?= s($cfgurl) ?>">
-        <div class="form-text">Base URL of the saipa-engine — no trailing slash.</div>
+        <div class="form-text"><?= get_string('wizard_url_help', 'local_saipa') ?></div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label fw-semibold" for="sp-token">Engine Token</label>
+        <label class="form-label fw-semibold" for="sp-token"><?= get_string('wizard_token_label', 'local_saipa') ?></label>
         <input type="password" class="form-control" id="sp-token"
-               placeholder="Leave blank if not configured"
+               placeholder="<?= get_string('wizard_token_placeholder', 'local_saipa') ?>"
                value="<?= s($cfgtoken) ?>">
-        <div class="form-text">Value of <code>ENGINE_SECRET</code> in the engine's <code>.env</code>. Leave blank if not set.</div>
+        <div class="form-text"><?= get_string('wizard_token_help', 'local_saipa') ?></div>
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(3)">← Back</button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(5)">Next →</button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(3)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" onclick="spwizGoto(5)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 4 -->
 
@@ -750,10 +734,9 @@ echo $OUTPUT->header();
          ══════════════════════════════════════════ -->
     <div class="spwiz-step" id="spwiz-step-5">
 
-      <h4 class="mb-1">Notification channels</h4>
+      <h4 class="mb-1"><?= get_string('wizard_channels_title', 'local_saipa') ?></h4>
       <p class="text-muted mb-3" style="font-size:.88rem;">
-        Choose how SAIPA delivers proactive alerts to students && teachers.
-        Telegram is optional but strongly recommended — it is SAIPA's most powerful engagement feature.
+        <?= get_string('wizard_channels_intro', 'local_saipa') ?>
       </p>
 
       <!-- Channel selector -->
@@ -761,26 +744,26 @@ echo $OUTPUT->header();
         <label class="channel-card <?= ($cfgchannel === 'none') ? 'selected' : '' ?>" for="ch-none">
           <input type="radio" name="messaging_channel" id="ch-none" value="none"
                  <?= ($cfgchannel === 'none') ? 'checked' : '' ?>>
-          <div class="ch-icon">🔕</div><h6>None</h6>
-          <p>Moodle notifications only. Alerts visible inside Moodle.</p>
+          <div class="ch-icon">🔕</div><h6><?= get_string('wizard_ch_none_title', 'local_saipa') ?></h6>
+          <p><?= get_string('wizard_ch_none_desc', 'local_saipa') ?></p>
         </label>
         <label class="channel-card <?= ($cfgchannel === 'telegram') ? 'selected' : '' ?>" for="ch-telegram">
           <input type="radio" name="messaging_channel" id="ch-telegram" value="telegram"
                  <?= ($cfgchannel === 'telegram') ? 'checked' : '' ?>>
-          <div class="ch-icon">✈️</div><h6>Telegram</h6>
-          <p>Students receive alerts && AI chat via Telegram. Recommended.</p>
+          <div class="ch-icon">✈️</div><h6><?= get_string('wizard_ch_telegram_title', 'local_saipa') ?></h6>
+          <p><?= get_string('wizard_ch_telegram_desc', 'local_saipa') ?></p>
         </label>
         <label class="channel-card <?= ($cfgchannel === 'whatsapp') ? 'selected' : '' ?>" for="ch-whatsapp">
           <input type="radio" name="messaging_channel" id="ch-whatsapp" value="whatsapp"
                  <?= ($cfgchannel === 'whatsapp') ? 'checked' : '' ?>>
-          <div class="ch-icon">💬</div><h6>WhatsApp</h6>
-          <p>Requires Twilio || Meta Cloud API. Configure after setup.</p>
+          <div class="ch-icon">💬</div><h6><?= get_string('wizard_ch_whatsapp_title', 'local_saipa') ?></h6>
+          <p><?= get_string('wizard_ch_whatsapp_desc', 'local_saipa') ?></p>
         </label>
         <label class="channel-card <?= ($cfgchannel === 'both') ? 'selected' : '' ?>" for="ch-both">
           <input type="radio" name="messaging_channel" id="ch-both" value="both"
                  <?= ($cfgchannel === 'both') ? 'checked' : '' ?>>
-          <div class="ch-icon">📡</div><h6>Both</h6>
-          <p>Telegram + WhatsApp. Maximum reach.</p>
+          <div class="ch-icon">📡</div><h6><?= get_string('wizard_ch_both_title', 'local_saipa') ?></h6>
+          <p><?= get_string('wizard_ch_both_desc', 'local_saipa') ?></p>
         </label>
       </div>
 
@@ -788,70 +771,64 @@ echo $OUTPUT->header();
       <div id="sp-telegram-section">
 
         <hr class="mb-3">
-        <h5 class="mb-1" style="font-size:.95rem;">✈️ Telegram Bot configuration</h5>
+        <h5 class="mb-1" style="font-size:.95rem;"><?= get_string('wizard_tg_heading', 'local_saipa') ?></h5>
         <p class="text-muted mb-3" style="font-size:.83rem;">
-          SAIPA uses a Telegram bot to deliver alerts && enable bidirectional chat with students.
-          The bot token lives in <strong>saipa-engine's <code>.env</code> file</strong>
-          (<code>TELEGRAM_BOT_TOKEN</code>); the bot username is stored in Moodle for display purposes.
+          <?= get_string('wizard_tg_intro', 'local_saipa') ?>
         </p>
 
         <!-- How to create a bot -->
         <div class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;">
-          <strong>How to create a Telegram bot:</strong>
+          <strong><?= get_string('wizard_tg_howto_title', 'local_saipa') ?></strong>
           <ol class="mb-0 mt-1 ps-3">
-            <li>Open Telegram && search for <strong>@BotFather</strong></li>
-            <li>Send <code>/newbot</code> && follow the prompts</li>
-            <li>Copy the token (format: <code>1234567890:AABCD...</code>)</li>
-            <li>Add the token to saipa-engine's <code>.env</code>: <code>TELEGRAM_BOT_TOKEN=&lt;token&gt;</code></li>
-            <li>Restart the engine: <code>docker compose restart saipa-engine</code></li>
+            <li><?= get_string('wizard_tg_howto_1', 'local_saipa') ?></li>
+            <li><?= get_string('wizard_tg_howto_2', 'local_saipa') ?></li>
+            <li><?= get_string('wizard_tg_howto_3', 'local_saipa') ?></li>
+            <li><?= get_string('wizard_tg_howto_4', 'local_saipa') ?></li>
+            <li><?= get_string('wizard_tg_howto_5', 'local_saipa') ?></li>
           </ol>
         </div>
 
         <div class="row g-3 mb-3">
           <div class="col-md-7">
-            <label class="form-label fw-semibold" for="sp-tg-token">Bot token <small class="text-muted fw-normal">(for validation only — not saved to Moodle)</small></label>
+            <label class="form-label fw-semibold" for="sp-tg-token"><?= get_string('wizard_tg_token_label', 'local_saipa') ?> <small class="text-muted fw-normal"><?= get_string('wizard_tg_token_note', 'local_saipa') ?></small></label>
             <div class="input-group">
               <input type="password" class="form-control" id="sp-tg-token"
-                     placeholder="1234567890:AABCDEF..."
+                     placeholder="<?= get_string('wizard_tg_token_placeholder', 'local_saipa') ?>"
                      autocomplete="off">
               <button class="btn btn-outline-primary" type="button" onclick="spTestBot()">
-                Validate
+                <?= get_string('wizard_btn_validate', 'local_saipa') ?>
               </button>
             </div>
-            <div class="form-text">Enter the token to verify it works. It will NOT be stored here — only the username is saved to Moodle.</div>
+            <div class="form-text"><?= get_string('wizard_tg_token_help', 'local_saipa') ?></div>
           </div>
           <div class="col-md-5">
-            <label class="form-label fw-semibold" for="sp-tg-username">Bot username <span class="text-danger">*</span></label>
+            <label class="form-label fw-semibold" for="sp-tg-username"><?= get_string('wizard_tg_username_label', 'local_saipa') ?> <span class="text-danger">*</span></label>
             <div class="input-group">
               <span class="input-group-text">@</span>
               <input type="text" class="form-control" id="sp-tg-username"
-                     placeholder="saipa_bot"
+                     placeholder="<?= get_string('wizard_tg_username_placeholder', 'local_saipa') ?>"
                      value="<?= s($cfgtguser) ?>">
             </div>
-            <div class="form-text">The bot's username without the @ prefix. Shown to students when they link their account.</div>
+            <div class="form-text"><?= get_string('wizard_tg_username_help', 'local_saipa') ?></div>
           </div>
         </div>
 
         <div id="sp-bot-result" class="mb-3"></div>
 
         <div class="alert alert-info py-2 px-3" style="font-size:.82rem;">
-          <strong>Students link their accounts by:</strong>
-          going to <em>My Profile → SAIPA → Link Telegram</em> in Moodle, then
-          sending <code>/vincular &lt;code&gt;</code> to the bot in Telegram.
+          <?= get_string('wizard_tg_link_info', 'local_saipa') ?>
         </div>
 
       </div><!-- /telegram-section -->
 
       <!-- WhatsApp note -->
       <div id="sp-whatsapp-note" class="alert alert-secondary py-2 px-3 mb-3" style="font-size:.82rem;display:none">
-        <strong>💬 WhatsApp configuration</strong> requires Twilio || Meta Cloud API credentials.
-        This cannot be completed in the wizard. After finishing, go to
-        <a href="<?= s($settingsurl) ?>">Admin Settings → SAIPA → WhatsApp</a> to configure it.
+        <?= get_string('wizard_wa_note', 'local_saipa', s($settingsurl)) ?>
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(4)">← Back</button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(6)">Next →</button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(4)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" onclick="spwizGoto(6)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 5 -->
 
@@ -861,74 +838,74 @@ echo $OUTPUT->header();
          ══════════════════════════════════════════ -->
     <div class="spwiz-step" id="spwiz-step-6">
 
-      <h4 class="mb-1">Connection test &amp; configuration summary</h4>
-      <p class="text-muted mb-4" style="font-size:.88rem;">Verifying connectivity with the SAIPA Engine…</p>
+      <h4 class="mb-1"><?= get_string('wizard_test_title', 'local_saipa') ?></h4>
+      <p class="text-muted mb-4" style="font-size:.88rem;"><?= get_string('wizard_test_intro', 'local_saipa') ?></p>
 
       <div id="sp-health-result" class="mb-4">
         <div class="d-flex align-items-center gap-2 text-muted py-2">
           <div class="spinner-border spinner-border-sm" role="status"></div>
-          <span>Connecting…</span>
+          <span><?= get_string('wizard_test_connecting', 'local_saipa') ?></span>
         </div>
       </div>
 
       <!-- Configuration summary (shown after test) -->
       <div id="sp-summary" style="display:none">
-        <h6 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;margin-bottom:10px;">Configuration summary</h6>
+        <h6 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;margin-bottom:10px;"><?= get_string('wizard_summary_heading', 'local_saipa') ?></h6>
         <div class="summary-grid mb-4">
 
           <div class="summary-card">
-            <h6>🤖 AI Engine</h6>
+            <h6><?= get_string('wizard_summary_engine', 'local_saipa') ?></h6>
             <div class="summary-row">
-              <span class="summary-label">Mode</span>
+              <span class="summary-label"><?= get_string('wizard_summary_mode', 'local_saipa') ?></span>
               <span class="summary-value" id="sum-mode">—</span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">URL</span>
+              <span class="summary-label"><?= get_string('wizard_summary_url', 'local_saipa') ?></span>
               <span class="summary-value" id="sum-url" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl">—</span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">Token</span>
+              <span class="summary-label"><?= get_string('wizard_summary_token', 'local_saipa') ?></span>
               <span class="summary-value" id="sum-token">—</span>
             </div>
           </div>
 
           <div class="summary-card">
-            <h6>📲 Notifications</h6>
+            <h6><?= get_string('wizard_summary_notif', 'local_saipa') ?></h6>
             <div class="summary-row">
-              <span class="summary-label">Channel</span>
+              <span class="summary-label"><?= get_string('wizard_summary_channel', 'local_saipa') ?></span>
               <span class="summary-value" id="sum-channel">—</span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">Telegram bot</span>
+              <span class="summary-label"><?= get_string('wizard_summary_tgbot', 'local_saipa') ?></span>
               <span class="summary-value" id="sum-tg">—</span>
             </div>
           </div>
 
           <div class="summary-card">
-            <h6>📊 Risk thresholds</h6>
+            <h6><?= get_string('wizard_summary_risk', 'local_saipa') ?></h6>
             <div class="summary-row">
-              <span class="summary-label">Medium 🟡</span>
+              <span class="summary-label"><?= get_string('wizard_summary_medium', 'local_saipa') ?></span>
               <span class="summary-value">≥ <?= s($cfgriskmed) ?></span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">High 🔴</span>
+              <span class="summary-label"><?= get_string('wizard_summary_high', 'local_saipa') ?></span>
               <span class="summary-value">≥ <?= s($cfgriskhigh) ?></span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">Alert cooldown</span>
+              <span class="summary-label"><?= get_string('wizard_summary_cooldown', 'local_saipa') ?></span>
               <span class="summary-value"><?= s($cfgcooldown) ?>h</span>
             </div>
           </div>
 
           <div class="summary-card">
-            <h6>⚙️ Features</h6>
+            <h6><?= get_string('wizard_summary_features', 'local_saipa') ?></h6>
             <div class="summary-row">
-              <span class="summary-label">Risk evaluation</span>
-              <span class="summary-value"><?= $cfgriskon ? '✅ Enabled' : '⬜ Disabled' ?></span>
+              <span class="summary-label"><?= get_string('wizard_summary_risk_eval', 'local_saipa') ?></span>
+              <span class="summary-value"><?= $cfgriskon ? get_string('wizard_enabled', 'local_saipa') : get_string('wizard_disabled', 'local_saipa') ?></span>
             </div>
             <div class="summary-row">
-              <span class="summary-label">RAG global chat</span>
-              <span class="summary-value"><?= $cfgragon ? '✅ Enabled' : '⬜ Disabled' ?></span>
+              <span class="summary-label"><?= get_string('wizard_summary_rag', 'local_saipa') ?></span>
+              <span class="summary-value"><?= $cfgragon ? get_string('wizard_enabled', 'local_saipa') : get_string('wizard_disabled', 'local_saipa') ?></span>
             </div>
           </div>
 
@@ -936,12 +913,12 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-2">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(5)">← Back</button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(5)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary" id="sp-retry-btn" style="display:none"
-                  onclick="spRunTest()">↻ Retry</button>
+                  onclick="spRunTest()"><?= get_string('wizard_btn_retry', 'local_saipa') ?></button>
           <button class="btn btn-success px-5" id="sp-save-btn" style="display:none"
-                  onclick="spSave()">✅ Save &amp; Finish</button>
+                  onclick="spSave()"><?= get_string('wizard_btn_save_finish', 'local_saipa') ?></button>
         </div>
       </div>
     </div><!-- /step 6 -->
@@ -953,13 +930,12 @@ echo $OUTPUT->header();
     <div class="spwiz-step" id="spwiz-step-7">
       <div class="done-card">
         <div class="done-icon">✅</div>
-        <h3>Configuration saved!</h3>
-        <p>SAIPA is connected && ready. Add the <strong>SAIPA block</strong> to any course
-           to activate the chat widget && risk dashboard for that course.</p>
+        <h3><?= get_string('wizard_done_inline_title', 'local_saipa') ?></h3>
+        <p><?= get_string('wizard_done_inline_desc', 'local_saipa') ?></p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary">⚙️ Admin Settings</a>
+          <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary"><?= get_string('wizard_btn_admin', 'local_saipa') ?></a>
           <a href="<?= (new moodle_url('/course/index.php'))->out() ?>" class="btn btn-primary btn-lg px-5">
-            Go to My Courses →
+            <?= get_string('wizard_btn_courses', 'local_saipa') ?>
           </a>
         </div>
       </div>
@@ -993,20 +969,44 @@ echo $OUTPUT->header();
 (function () {
     'use strict';
 
+    var L = <?= json_encode([
+        'enter_token'       => get_string('wizard_js_enter_token', 'local_saipa'),
+        'validating'        => get_string('wizard_js_validating', 'local_saipa'),
+        'bot_verified'      => get_string('wizard_js_bot_verified', 'local_saipa'),
+        'username_autofill' => get_string('wizard_js_username_autofill', 'local_saipa'),
+        'error'             => get_string('wizard_js_error', 'local_saipa'),
+        'invalid_token'     => get_string('wizard_js_invalid_token', 'local_saipa'),
+        'network_error'     => get_string('wizard_js_network_error', 'local_saipa'),
+        'connecting'        => get_string('wizard_js_connecting', 'local_saipa'),
+        'url_empty'         => get_string('wizard_js_url_empty', 'local_saipa'),
+        'engine_reachable'  => get_string('wizard_js_engine_reachable', 'local_saipa'),
+        'engine_version'    => get_string('wizard_js_engine_version', 'local_saipa'),
+        'uptime'            => get_string('wizard_js_uptime', 'local_saipa'),
+        'success'           => get_string('wizard_js_success', 'local_saipa'),
+        'not_configured'    => get_string('wizard_js_not_configured', 'local_saipa'),
+        'connection_failed' => get_string('wizard_js_connection_failed', 'local_saipa'),
+        'unknown_error'     => get_string('wizard_js_unknown_error', 'local_saipa'),
+        'troubleshooting'   => get_string('wizard_js_troubleshooting', 'local_saipa'),
+        'ts_running'        => get_string('wizard_js_ts_running', 'local_saipa'),
+        'ts_url'            => get_string('wizard_js_ts_url', 'local_saipa'),
+        'ts_docker'         => get_string('wizard_js_ts_docker', 'local_saipa'),
+        'ts_token'          => get_string('wizard_js_ts_token', 'local_saipa'),
+    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
     var currentStep = 1;
     var healthOk    = false;
 
     var modeLabels = {
-        local_ollama: 'Local — Ollama',
-        cloud_api:    'Cloud API',
-        saipa_cloud:  'SAIPA Cloud',
-        custom:       'Custom / Enterprise'
+        local_ollama: <?= json_encode(get_string('wizard_js_mode_local', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        cloud_api:    <?= json_encode(get_string('wizard_js_mode_cloud', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        saipa_cloud:  <?= json_encode(get_string('wizard_js_mode_saipa', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        custom:       <?= json_encode(get_string('wizard_js_mode_custom', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     };
     var channelLabels = {
-        none:     'None (Moodle only)',
-        telegram: 'Telegram',
-        whatsapp: 'WhatsApp',
-        both:     'Telegram + WhatsApp'
+        none:     <?= json_encode(get_string('wizard_js_ch_none', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        telegram: <?= json_encode(get_string('wizard_js_ch_telegram', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        whatsapp: <?= json_encode(get_string('wizard_js_ch_whatsapp', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        both:     <?= json_encode(get_string('wizard_js_ch_both', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     };
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -1115,14 +1115,14 @@ echo $OUTPUT->header();
         var usernameEl = document.getElementById('sp-tg-username');
 
         if (!tokenEl || !tokenEl.value.trim()) {
-            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">Please enter a bot token first.</div>';
+            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">' + he(L.enter_token) + '</div>';
             return;
         }
 
         resultEl.innerHTML =
             '<div class="d-flex align-items-center gap-2 text-muted py-1">' +
             '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>Validating bot token…</span></div>';
+            '<span>' + he(L.validating) + '</span></div>';
 
         var fd = new FormData();
         fd.append('action',    'testbot');
@@ -1140,19 +1140,19 @@ echo $OUTPUT->header();
                 }
                 resultEl.innerHTML =
                     '<div class="alert alert-success py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '✅ <strong>Bot verified:</strong> @' + he(data.username) +
+                    '✅ <strong>' + he(L.bot_verified) + '</strong> @' + he(data.username) +
                     ' (' + he((data.name || '').trim()) + '). ' +
-                    'Username has been filled automatically.</div>';
+                    he(L.username_autofill) + '</div>';
             } else {
                 resultEl.innerHTML =
                     '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '❌ <strong>Error:</strong> ' + he(data.error || 'Invalid token') + '</div>';
+                    '❌ <strong>' + he(L.error) + '</strong> ' + he(data.error || L.invalid_token) + '</div>';
             }
         })
         .catch(function (e) {
             resultEl.innerHTML =
                 '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                '❌ Network error: ' + he(e.message) + '</div>';
+                '❌ ' + he(L.network_error) + ' ' + he(e.message) + '</div>';
         });
     }
     window.spTestBot = spTestBot;
@@ -1175,14 +1175,14 @@ echo $OUTPUT->header();
         resultEl.innerHTML =
             '<div class="d-flex align-items-center gap-2 text-muted py-2">' +
             '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>Connecting to engine…</span></div>';
+            '<span>' + he(L.connecting) + '</span></div>';
 
         var url   = (document.getElementById('sp-url')   || {}).value || '';
         var token = (document.getElementById('sp-token') || {}).value || '';
         url = url.trim();
 
         if (!url) {
-            renderHealthError('Engine URL is empty. Go back && enter a URL.', url);
+            renderHealthError(L.url_empty, url);
             return;
         }
 
@@ -1201,33 +1201,33 @@ echo $OUTPUT->header();
                 resultEl.innerHTML =
                     '<div class="health-row">' +
                     '<div class="health-icon">✅</div>' +
-                    '<div class="health-label"><strong>Engine reachable</strong></div>' +
+                    '<div class="health-label"><strong>' + he(L.engine_reachable) + '</strong></div>' +
                     '<div class="health-value">' + he(url) + '</div></div>' +
                     '<div class="health-row">' +
                     '<div class="health-icon">🔢</div>' +
-                    '<div class="health-label">Engine version</div>' +
+                    '<div class="health-label">' + he(L.engine_version) + '</div>' +
                     '<div class="health-value">' + he(data.version) + '</div></div>' +
                     '<div class="health-row">' +
                     '<div class="health-icon">⏱️</div>' +
-                    '<div class="health-label">Uptime</div>' +
+                    '<div class="health-label">' + he(L.uptime) + '</div>' +
                     '<div class="health-value">' + he(data.uptime) + '</div></div>' +
                     '<div class="alert alert-success py-2 px-3 mt-3 mb-0" style="font-size:.85rem;">' +
-                    '🎉 <strong>Connection successful!</strong> Review the summary below && click <em>Save &amp; Finish</em>.</div>';
+                    L.success + '</div>';
 
                 // Populate summary.
                 var usernameEl = document.getElementById('sp-tg-username');
                 setText('sum-mode',    modeLabels[getSelectedMode()] || getSelectedMode());
                 setText('sum-url',     url);
-                setText('sum-token',   token ? '●●●●●●●●' : 'Not configured');
+                setText('sum-token',   token ? '●●●●●●●●' : L.not_configured);
                 setText('sum-channel', channelLabels[getSelectedChannel()] || getSelectedChannel());
-                setText('sum-tg',      usernameEl && usernameEl.value ? '@' + usernameEl.value : 'Not configured');
+                setText('sum-tg',      usernameEl && usernameEl.value ? '@' + usernameEl.value : L.not_configured);
                 if (summaryEl) summaryEl.style.display = '';
                 saveBtn.style.display = '';
             } else {
-                renderHealthError(data.error || 'Unknown error', url);
+                renderHealthError(data.error || L.unknown_error, url);
             }
         })
-        .catch(function (e) { renderHealthError(e.message || 'Network error', url); });
+        .catch(function (e) { renderHealthError(e.message || L.network_error, url); });
     }
     window.spRunTest = spRunTest;
 
@@ -1238,16 +1238,16 @@ echo $OUTPUT->header();
         document.getElementById('sp-health-result').innerHTML =
             '<div class="health-row">' +
             '<div class="health-icon">❌</div>' +
-            '<div class="health-label"><strong>Connection failed</strong></div>' +
+            '<div class="health-label"><strong>' + he(L.connection_failed) + '</strong></div>' +
             '<div class="health-value">' + he(url || '—') + '</div></div>' +
             '<div class="alert alert-danger py-2 px-3 mt-3 mb-0" style="font-size:.84rem;">' +
-            '<strong>Error:</strong> ' + he(msg) + '<br><br>' +
-            '<strong>Troubleshooting:</strong>' +
+            '<strong>' + he(L.error) + '</strong> ' + he(msg) + '<br><br>' +
+            '<strong>' + he(L.troubleshooting) + '</strong>' +
             '<ul class="mb-0 mt-1">' +
-            '<li>Is saipa-engine running? <code>docker compose ps</code></li>' +
-            '<li>Correct URL? Default: <code>http://localhost:8052</code></li>' +
-            '<li>Running Moodle in Docker? Use <code>http://host.docker.internal:8052</code></li>' +
-            '<li>Token match? Check <code>ENGINE_SECRET</code> in <code>.env</code></li>' +
+            '<li>' + L.ts_running + '</li>' +
+            '<li>' + L.ts_url + '</li>' +
+            '<li>' + L.ts_docker + '</li>' +
+            '<li>' + L.ts_token + '</li>' +
             '</ul></div>';
         document.getElementById('sp-retry-btn').style.display = '';
     }

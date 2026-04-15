@@ -296,3 +296,223 @@ $string['whatsapp:send_otp_button']  = 'Enviar código';
 $string['whatsapp:unlink_button']    = 'Desvincular';
 $string['whatsapp:verified_as']      = 'Número verificado: {$a}';
 $string['whatsapp:verified_title']   = 'WhatsApp vinculado';
+
+// ── Asistente de configuración ───────────────────────────────────────────────
+$string['wizard_page_title']   = 'SAIPA — Asistente de configuración';
+$string['wizard_page_heading'] = 'Asistente de configuración de SAIPA';
+
+// Etiquetas de la barra de progreso.
+$string['wizard_step_welcome']      = 'Bienvenida';
+$string['wizard_step_requirements'] = 'Requisitos';
+$string['wizard_step_ai_mode']      = 'Modo de IA';
+$string['wizard_step_engine']       = 'Motor';
+$string['wizard_step_telegram']     = 'Telegram';
+$string['wizard_step_test']         = 'Prueba';
+$string['wizard_step_done']         = 'Listo';
+
+// Botones comunes.
+$string['wizard_btn_next']        = 'Siguiente →';
+$string['wizard_btn_back']        = '← Atrás';
+$string['wizard_btn_retry']       = '↻ Reintentar';
+$string['wizard_btn_save_finish'] = '✅ Guardar y finalizar';
+$string['wizard_btn_validate']    = 'Validar';
+
+// Mensajes de AJAX y guardado.
+$string['wizard_err_url_required']       = 'Se requiere la URL del motor.';
+$string['wizard_err_connection']         = 'Falló la conexión: {$a}';
+$string['wizard_err_http']               = 'El motor devolvió HTTP {$a}. Revisá la URL y el token.';
+$string['wizard_err_unexpected_response'] = 'Respuesta inesperada del motor: {$a}';
+$string['wizard_err_no_bot_token']       = 'No se proporcionó el token del bot.';
+$string['wizard_err_telegram_unreachable'] = 'No pudimos conectarnos con la API de Telegram: {$a}';
+$string['wizard_err_telegram_api']       = 'Error de la API de Telegram: {$a}';
+$string['wizard_save_success']           = 'La configuración de SAIPA se guardó correctamente.';
+
+// Paso 1 — Bienvenida.
+$string['wizard_welcome_title']   = 'Te damos la bienvenida a SAIPA';
+$string['wizard_welcome_intro']   = 'Este asistente te ayudará a configurar tu acompañante de IA en pocos pasos. Vamos a cubrir la conexión con el motor, los canales de notificación y los parámetros principales.';
+$string['wizard_welcome_about']   = 'SAIPA (Sistema de Acompañamiento Inteligente Pedagógico con IA) te acompaña a detectar tempranamente a estudiantes en riesgo y potenciar el aprendizaje con herramientas de IA:';
+$string['wizard_feat_dropout_title'] = 'Detección de riesgo de abandono';
+$string['wizard_feat_dropout_desc']  = 'Un modelo XGBoost estima la probabilidad de abandono a partir de 11 variables de participación. Cada estudiante recibe una etiqueta: 🟢 Bajo / 🟡 Medio / 🔴 Alto.';
+$string['wizard_feat_chat_title']    = 'Chat con IA y RAG';
+$string['wizard_feat_chat_desc']     = 'Estudiantes y docentes conversan con un asistente que conoce los materiales del curso. Las respuestas se adaptan al rol.';
+$string['wizard_feat_alerts_title']  = 'Alertas proactivas por Telegram';
+$string['wizard_feat_alerts_desc']   = 'Las y los docentes pueden enviar alertas personalizadas generadas por IA a estudiantes en riesgo, directamente desde el panel, a través de Telegram.';
+$string['wizard_feat_advisor_title'] = 'Panel del asesor institucional';
+$string['wizard_feat_advisor_desc']  = 'Una mirada a nivel institución: distribución de riesgo, tendencias de participación y salud de cada curso.';
+$string['wizard_feat_index_title']   = 'Indexado de materiales';
+$string['wizard_feat_index_desc']    = 'Indexa páginas de Moodle, PDFs y presentaciones PPTX en una base vectorial para habilitar la recuperación RAG.';
+$string['wizard_feat_evalia_title']  = 'Compatibilidad con EVAL-IA';
+$string['wizard_feat_evalia_desc']   = 'Si tenés ambos plugins instalados, EVAL-IA hereda automáticamente la configuración del motor de SAIPA.';
+
+// Paso 2 — Requisitos.
+$string['wizard_req_title'] = 'Requisitos mínimos';
+$string['wizard_req_intro'] = 'Te sugerimos verificar que tu entorno cumpla con todos los requisitos antes de continuar. <strong>SAIPA no puede funcionar sin un servicio de IA activo.</strong>';
+$string['wizard_req_platform']    = '🖥️ Plataforma';
+$string['wizard_req_moodle_title']  = 'Moodle 4.4 o 4.5';
+$string['wizard_req_moodle_desc']   = 'Las versiones anteriores no están soportadas.';
+$string['wizard_req_php_title']     = 'PHP 8.1 o superior';
+$string['wizard_req_php_desc']      = 'PHP 7.x no está soportado.';
+$string['wizard_req_curl_title']    = 'Extensión cURL de PHP';
+$string['wizard_req_curl_desc']     = 'Necesaria para comunicarse con el motor de IA y con la API de Telegram.';
+$string['wizard_req_curl_enabled']  = 'Habilitada';
+$string['wizard_req_curl_missing']  = 'Ausente';
+$string['wizard_req_block_title']   = 'block_saipa (bloque complementario)';
+$string['wizard_req_block_desc']    = 'Es obligatorio: provee el widget de chat en las barras laterales del curso.';
+$string['wizard_req_block_installed'] = 'Instalado';
+$string['wizard_req_block_missing']   = 'No está instalado — <a href="{$a}">instalalo ahora</a>';
+
+$string['wizard_req_ai_heading']   = '⚠️ Motor de IA — <em>Obligatorio. SAIPA no puede funcionar sin esto.</em>';
+$string['wizard_req_ai_intro']     = 'SAIPA utiliza el servicio Python <strong>saipa-engine</strong> para todas las operaciones de IA: chat del curso (RAG), predicción de riesgo de abandono, generación de alertas e integración con Telegram. Este servicio debe estar corriendo y ser alcanzable desde este servidor de Moodle.';
+$string['wizard_req_enginepy_title'] = 'saipa-engine (Python 3.11+ / FastAPI)';
+$string['wizard_req_enginepy_desc']  = 'Maneja la inferencia del LLM, la búsqueda vectorial (ChromaDB), el modelo XGBoost y el bot de Telegram.';
+$string['wizard_req_enginepy_value'] = 'Se despliega por separado';
+$string['wizard_req_chroma_title']   = 'ChromaDB (embebido en saipa-engine)';
+$string['wizard_req_chroma_desc']    = 'Base de datos vectorial para RAG sobre los materiales indexados del curso.';
+$string['wizard_req_included']       = 'Incluido en el motor';
+$string['wizard_req_llm_title']      = 'Modelo de lenguaje grande (LLM)';
+$string['wizard_req_llm_desc']       = 'Es el motor de inteligencia del chat, las explicaciones de riesgo y la generación de alertas. Abajo podés ver las opciones de aprovisionamiento.';
+$string['wizard_req_llm_value']      = 'Servicio de IA requerido';
+$string['wizard_req_xgb_title']      = 'Modelo de riesgo XGBoost';
+$string['wizard_req_xgb_desc']       = 'Modelo pre-entrenado incluido en saipa-engine. Requiere al menos 4 semanas de actividad estudiantil para generar predicciones significativas.';
+
+$string['wizard_prov_heading'] = '🤖 Aprovisionamiento del servicio de IA — elegí una opción';
+$string['wizard_prov_intro']   = 'El LLM que da vida a SAIPA puede provenir de tres orígenes. Te sugerimos tener al menos uno listo antes de continuar.';
+$string['wizard_prov_local_title'] = 'Local — Ollama';
+$string['wizard_prov_local_badge'] = 'AUTOALOJADO';
+$string['wizard_prov_local_desc']  = 'Ejecutá el LLM en tu propio servidor usando <a href="https://ollama.com" target="_blank">Ollama</a>. Privacidad total: ningún dato sale de tu infraestructura.';
+$string['wizard_prov_local_i1']    = 'Recomendado: <code>qwen2.5:14b</code> (≥16 GB de RAM)';
+$string['wizard_prov_local_i2']    = 'Mínimo: cualquier modelo 7B (≥8 GB de RAM)';
+$string['wizard_prov_local_i3']    = 'saipa-engine debe tener acceso de red a Ollama';
+$string['wizard_prov_cloud_title'] = 'API en la nube';
+$string['wizard_prov_cloud_badge'] = 'COMPATIBLE CON OPENAI';
+$string['wizard_prov_cloud_desc']  = 'Cualquier API compatible con OpenAI (OpenAI, Azure, Groq, Mistral…) con tu propia clave.';
+$string['wizard_prov_cloud_i1']    = 'No requiere GPU local';
+$string['wizard_prov_cloud_i2']    = 'El costo depende del uso y del proveedor';
+$string['wizard_prov_cloud_i3']    = 'Configurá <code>OPENAI_API_KEY</code> en el <code>.env</code> de saipa-engine';
+$string['wizard_prov_saipa_title'] = 'SAIPA Cloud';
+$string['wizard_prov_saipa_badge'] = 'PRÓXIMAMENTE';
+$string['wizard_prov_saipa_desc']  = 'Motor totalmente gestionado. Sin Ollama ni ChromaDB que instalar. Te suscribís y conectás.';
+$string['wizard_prov_saipa_i1']    = 'Cero infraestructura que administrar';
+$string['wizard_prov_saipa_i2']    = 'Unite a la lista en <code>cloud.saipa.online</code>';
+$string['wizard_prov_custom_title'] = 'Personalizado / Empresarial';
+$string['wizard_prov_custom_badge'] = 'AVANZADO';
+$string['wizard_prov_custom_desc']  = 'Cualquier motor compatible en una URL personalizada. Control total para despliegues avanzados.';
+$string['wizard_prov_custom_i1']    = 'Debe implementar <code>GET /health</code>';
+$string['wizard_prov_custom_i2']    = 'Debe implementar <code>POST /chat</code> y endpoints relacionados';
+
+$string['wizard_prov_warning'] = '<strong>⛔ Sin un servicio de IA activo, SAIPA no podrá:</strong> responder a los mensajes de chat del estudiantado, generar puntajes de riesgo, crear alertas de Telegram, indexar materiales ni brindar analíticas institucionales. Todas estas funciones dependen exclusivamente del motor de IA. <strong>Te pedimos no continuar</strong> si no tenés una de las opciones de arriba desplegada y lista.';
+$string['wizard_req_confirm'] = 'Leí los requisitos de arriba. Tengo un servicio de IA (saipa-engine + LLM) desplegado y alcanzable desde este servidor.';
+
+// Paso 3 — Modo de IA.
+$string['wizard_mode_title'] = 'Elegí el modo de aprovisionamiento de IA';
+$string['wizard_mode_intro'] = 'Seleccioná la opción que coincide con tu infraestructura de IA desplegada.';
+$string['wizard_mode_local_desc']  = 'saipa-engine corriendo en tu servidor con Ollama como backend del LLM. Privacidad total de los datos.';
+$string['wizard_mode_cloud_desc']  = 'saipa-engine configurado con una clave de API compatible con OpenAI. No requiere GPU local.';
+$string['wizard_mode_saipa_desc']  = 'Motor gestionado por Schaller & Ponce. Te suscribís y conectás con una sola clave de API.';
+$string['wizard_mode_custom_desc'] = 'Cualquier motor compatible en una URL personalizada. Control total para despliegues avanzados.';
+
+// Paso 4 — Conexión del motor.
+$string['wizard_engine_title'] = 'Conexión con el motor';
+$string['wizard_engine_intro'] = 'Ingresá la URL y el token del servicio saipa-engine.';
+$string['wizard_hint_local']   = '<strong>🖥️ Local / Ollama:</strong> El puerto por defecto es <code>8052</code>. Si corre en Docker en el mismo host, usá <code>http://localhost:8052</code>. Si Moodle también está en Docker, usá <code>http://host.docker.internal:8052</code>.';
+$string['wizard_hint_cloud']   = '<strong>☁️ API en la nube:</strong> Ingresá la URL de tu instancia de saipa-engine (configurada con tu clave de API en la nube) y el token <code>ENGINE_SECRET</code>.';
+$string['wizard_hint_saipa']   = '<strong>🌐 SAIPA Cloud todavía no está disponible.</strong> Seleccioná Local o API en la nube para continuar.';
+$string['wizard_hint_custom']  = '<strong>⚙️ Personalizado:</strong> Ingresá la URL base de tu motor. El asistente verificará que <code>{url}/health</code> devuelva <code>{"status":"ok"}</code>.';
+$string['wizard_url_label']       = 'URL del motor';
+$string['wizard_url_placeholder'] = 'http://localhost:8052';
+$string['wizard_url_help']        = 'URL base de saipa-engine, sin barra al final.';
+$string['wizard_token_label']       = 'Token del motor';
+$string['wizard_token_placeholder'] = 'Dejalo en blanco si no está configurado';
+$string['wizard_token_help']        = 'Valor de <code>ENGINE_SECRET</code> en el <code>.env</code> del motor. Dejalo en blanco si no lo configuraste.';
+
+// Paso 5 — Telegram / Canales.
+$string['wizard_channels_title'] = 'Canales de notificación';
+$string['wizard_channels_intro'] = 'Elegí cómo SAIPA entrega las alertas proactivas a estudiantes y docentes. Telegram es opcional pero te lo recomendamos: es la herramienta de engagement más potente de SAIPA.';
+$string['wizard_ch_none_title']     = 'Ninguno';
+$string['wizard_ch_none_desc']      = 'Solo notificaciones de Moodle. Las alertas se ven dentro de Moodle.';
+$string['wizard_ch_telegram_title'] = 'Telegram';
+$string['wizard_ch_telegram_desc']  = 'Estudiantes reciben alertas y chat con IA por Telegram. Recomendado.';
+$string['wizard_ch_whatsapp_title'] = 'WhatsApp';
+$string['wizard_ch_whatsapp_desc']  = 'Requiere Twilio o Meta Cloud API. Lo configurás después de la instalación.';
+$string['wizard_ch_both_title']     = 'Ambos';
+$string['wizard_ch_both_desc']      = 'Telegram + WhatsApp. Máximo alcance.';
+
+$string['wizard_tg_heading'] = '✈️ Configuración del bot de Telegram';
+$string['wizard_tg_intro']   = 'SAIPA usa un bot de Telegram para entregar alertas y habilitar el chat bidireccional con estudiantes. El token del bot vive en <strong>el archivo <code>.env</code> de saipa-engine</strong> (<code>TELEGRAM_BOT_TOKEN</code>); el nombre de usuario del bot se guarda en Moodle para mostrarlo en pantalla.';
+$string['wizard_tg_howto_title'] = 'Cómo crear un bot de Telegram:';
+$string['wizard_tg_howto_1'] = 'Abrí Telegram y buscá a <strong>@BotFather</strong>';
+$string['wizard_tg_howto_2'] = 'Enviá <code>/newbot</code> y seguí las indicaciones';
+$string['wizard_tg_howto_3'] = 'Copiá el token (formato: <code>1234567890:AABCD...</code>)';
+$string['wizard_tg_howto_4'] = 'Agregá el token al <code>.env</code> de saipa-engine: <code>TELEGRAM_BOT_TOKEN=&lt;token&gt;</code>';
+$string['wizard_tg_howto_5'] = 'Reiniciá el motor: <code>docker compose restart saipa-engine</code>';
+$string['wizard_tg_token_label']       = 'Token del bot';
+$string['wizard_tg_token_note']        = '(solo para validación — no se guarda en Moodle)';
+$string['wizard_tg_token_placeholder'] = '1234567890:AABCDEF...';
+$string['wizard_tg_token_help']        = 'Ingresá el token para verificar que funciona. NO se guarda acá; solo el nombre de usuario se almacena en Moodle.';
+$string['wizard_tg_username_label']       = 'Nombre de usuario del bot';
+$string['wizard_tg_username_placeholder'] = 'saipa_bot';
+$string['wizard_tg_username_help']        = 'El nombre de usuario del bot sin el prefijo @. Se muestra a estudiantes cuando vinculan su cuenta.';
+$string['wizard_tg_link_info'] = '<strong>Cómo vinculan su cuenta tus estudiantes:</strong> desde <em>Mi perfil → SAIPA → Vincular Telegram</em> en Moodle, y luego enviando <code>/vincular &lt;código&gt;</code> al bot en Telegram.';
+$string['wizard_wa_note'] = '<strong>💬 La configuración de WhatsApp</strong> requiere credenciales de Twilio o de Meta Cloud API. No es posible completarla en el asistente. Al finalizar, andá a <a href="{$a}">Configuración de administrador → SAIPA → WhatsApp</a> para configurarla.';
+
+// Paso 6 — Prueba y resumen.
+$string['wizard_test_title']       = 'Prueba de conexión y resumen de configuración';
+$string['wizard_test_intro']       = 'Verificando conectividad con el motor SAIPA…';
+$string['wizard_test_connecting']  = 'Conectando…';
+$string['wizard_summary_heading']  = 'Resumen de configuración';
+$string['wizard_summary_engine']   = '🤖 Motor de IA';
+$string['wizard_summary_mode']     = 'Modo';
+$string['wizard_summary_url']      = 'URL';
+$string['wizard_summary_token']    = 'Token';
+$string['wizard_summary_notif']    = '📲 Notificaciones';
+$string['wizard_summary_channel']  = 'Canal';
+$string['wizard_summary_tgbot']    = 'Bot de Telegram';
+$string['wizard_summary_risk']     = '📊 Umbrales de riesgo';
+$string['wizard_summary_medium']   = 'Medio 🟡';
+$string['wizard_summary_high']     = 'Alto 🔴';
+$string['wizard_summary_cooldown'] = 'Cooldown de alertas';
+$string['wizard_summary_features'] = '⚙️ Funcionalidades';
+$string['wizard_summary_risk_eval'] = 'Evaluación de riesgo';
+$string['wizard_summary_rag']      = 'Chat RAG global';
+$string['wizard_enabled']          = '✅ Habilitado';
+$string['wizard_disabled']         = '⬜ Deshabilitado';
+
+// Paso 7 — Listo.
+$string['wizard_done_title']     = '¡SAIPA está listo!';
+$string['wizard_done_desc']      = 'El acompañante de IA quedó configurado y listo para asistir a docentes y estudiantes.<br>Agregá el <strong>bloque SAIPA</strong> a un curso para empezar.';
+$string['wizard_done_inline_title'] = '¡Configuración guardada!';
+$string['wizard_done_inline_desc']  = 'SAIPA está conectado y listo. Agregá el <strong>bloque SAIPA</strong> a cualquier curso para activar el widget de chat y el panel de riesgo en ese curso.';
+$string['wizard_btn_admin']    = '⚙️ Configuración de administrador';
+$string['wizard_btn_teacher']  = '📊 Panel docente';
+$string['wizard_btn_courses']  = 'Ir a mis cursos →';
+
+// Cadenas para el runtime JS.
+$string['wizard_js_enter_token']       = 'Primero ingresá un token de bot.';
+$string['wizard_js_validating']        = 'Validando token del bot…';
+$string['wizard_js_bot_verified']      = 'Bot verificado:';
+$string['wizard_js_username_autofill'] = 'El nombre de usuario se completó automáticamente.';
+$string['wizard_js_error']             = 'Error:';
+$string['wizard_js_invalid_token']     = 'Token inválido';
+$string['wizard_js_network_error']     = 'Error de red:';
+$string['wizard_js_connecting']        = 'Conectando con el motor…';
+$string['wizard_js_url_empty']         = 'La URL del motor está vacía. Volvé atrás e ingresá una URL.';
+$string['wizard_js_engine_reachable']  = 'Motor alcanzable';
+$string['wizard_js_engine_version']    = 'Versión del motor';
+$string['wizard_js_uptime']            = 'Tiempo activo';
+$string['wizard_js_success']           = '🎉 <strong>¡Conexión exitosa!</strong> Revisá el resumen de abajo y hacé clic en <em>Guardar y finalizar</em>.';
+$string['wizard_js_not_configured']    = 'Sin configurar';
+$string['wizard_js_connection_failed'] = 'Falló la conexión';
+$string['wizard_js_unknown_error']     = 'Error desconocido';
+$string['wizard_js_troubleshooting']   = 'Diagnóstico:';
+$string['wizard_js_ts_running']        = '¿Está corriendo saipa-engine? <code>docker compose ps</code>';
+$string['wizard_js_ts_url']            = '¿URL correcta? Por defecto: <code>http://localhost:8052</code>';
+$string['wizard_js_ts_docker']         = '¿Moodle corre en Docker? Usá <code>http://host.docker.internal:8052</code>';
+$string['wizard_js_ts_token']          = '¿Coincide el token? Revisá <code>ENGINE_SECRET</code> en el <code>.env</code>';
+$string['wizard_js_mode_local']        = 'Local — Ollama';
+$string['wizard_js_mode_cloud']        = 'API en la nube';
+$string['wizard_js_mode_saipa']        = 'SAIPA Cloud';
+$string['wizard_js_mode_custom']       = 'Personalizado / Empresarial';
+$string['wizard_js_ch_none']           = 'Ninguno (solo Moodle)';
+$string['wizard_js_ch_telegram']       = 'Telegram';
+$string['wizard_js_ch_whatsapp']       = 'WhatsApp';
+$string['wizard_js_ch_both']           = 'Telegram + WhatsApp';
