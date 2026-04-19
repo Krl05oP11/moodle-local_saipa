@@ -674,7 +674,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         }
 
         // Bootstrap tab events — must use jQuery because shown.bs.tab is a jQuery custom event.
-        $('#saipa-adv-tabs a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        $('#saipa-adv-tabs a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
             onTabShow($(e.target).data('tab'));
         });
 
