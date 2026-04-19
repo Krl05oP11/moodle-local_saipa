@@ -202,5 +202,22 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026032403, 'local', 'saipa');
     }
 
+    // 2026041901 — Grant local/saipa:viewall to teacher and editingteacher at system level.
+    if ($oldversion < 2026041901) {
+        upgrade_plugin_savepoint(true, 2026041901, 'local', 'saipa');
+    }
+
+    // 2026041902 — Assign viewall capability to existing teacher/editingteacher roles.
+    if ($oldversion < 2026041902) {
+        $syscontext = context_system::instance();
+        foreach (['teacher', 'editingteacher'] as $archetype) {
+            $roles = get_archetype_roles($archetype);
+            foreach ($roles as $role) {
+                assign_capability('local/saipa:viewall', CAP_ALLOW, $role->id, $syscontext->id, true);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026041902, 'local', 'saipa');
+    }
+
     return true;
 }
