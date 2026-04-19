@@ -183,7 +183,7 @@ $wsdetail     = $wsenabled ? 'Web Services are enabled site-wide.' : 'Go to Site
 
 global $DB;
 
-$wsservice    = $DB->get_record('external_services', ['shortname' => 'saipa_external_service'], 'id,name,enabled');
+$wsservice    = $DB->get_record('external_services', ['shortname' => 'saipa_service'], 'id,name,enabled');
 $serviceok    = !empty($wsservice) && !empty($wsservice->enabled);
 $servicedetail = '';
 
