@@ -29,7 +29,7 @@ $plugin->version    = 2026041901;
 $plugin->requires   = 2025041400;   // Moodle 5.0 minimum
 $plugin->maturity   = MATURITY_BETA;
 $plugin->release    = '0.5.1';
-$plugin->supported  = [500];
+$plugin->supported  = [500, 501];
 $plugin->dependencies = [
     'block_saipa' => 2026032401,
 ];
