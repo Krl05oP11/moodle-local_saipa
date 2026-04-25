@@ -54,7 +54,7 @@ jobs:
 
       - name: Install moodle-plugin-ci
         run: |
-          moodle-plugin-ci install --plugin ./plugin --db-type pgsql
+          moodle-plugin-ci install --plugin ./plugin --db-type pgsql --moodle-branch ${{ matrix.moodle-branch }}
         env:
           DB: pgsql
 
