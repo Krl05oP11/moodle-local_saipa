@@ -30,6 +30,5 @@ $plugin->requires   = 2024042200;   // Moodle 4.4 minimum
 $plugin->maturity   = MATURITY_BETA;
 $plugin->release    = '0.5.1';
 $plugin->supported  = [404, 405];
-$plugin->dependencies = [
-    'block_saipa' => 2026032401,
-];
+// No plugin dependencies: local_saipa is the core component. block_saipa is an
+// optional front-end that depends on THIS plugin, not the other way around.

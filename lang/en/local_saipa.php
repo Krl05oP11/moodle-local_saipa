@@ -230,7 +230,7 @@ $string['settings:channel_whatsapp']           = 'WhatsApp only';
 $string['settings:engine_token']      = 'API Token';
 $string['settings:engine_token_desc'] = 'Bearer token for authenticating requests to saipa-engine';
 $string['settings:engine_url']        = 'SAIPA Engine URL';
-$string['settings:engine_url_desc']   = 'URL of the saipa-engine FastAPI service (e.g. http://host.docker.internal:8052)';
+$string['settings:engine_url_desc']   = 'Base URL of the saipa-engine service, without a trailing slash (e.g. https://saipa-engine.example.edu or http://localhost:8052). Leave empty to disable all AI features until the engine is deployed.';
 $string['settings:heading_engine']    = 'SAIPA Engine Connection';
 $string['settings:heading_messaging']          = 'Messaging Channels';
 $string['settings:heading_messaging_desc']     = 'Choose which messaging apps SAIPA uses to reach students. '
@@ -343,9 +343,9 @@ $string['wizard_req_curl_desc']     = 'Required to communicate with the AI engin
 $string['wizard_req_curl_enabled']  = 'Enabled';
 $string['wizard_req_curl_missing']  = 'Missing';
 $string['wizard_req_block_title']   = 'block_saipa (companion block)';
-$string['wizard_req_block_desc']    = 'Required — provides the chat widget in course sidebars.';
+$string['wizard_req_block_desc']    = 'Recommended — adds the chat widget and channel-linking panels to course pages. SAIPA\'s dashboards and risk analysis work without it.';
 $string['wizard_req_block_installed'] = 'Installed';
-$string['wizard_req_block_missing']   = 'Not installed — <a href="{$a}">install now</a>';
+$string['wizard_req_block_missing']   = 'Not installed — <a href="{$a}">install now</a> to give students the course chat widget';
 
 $string['wizard_req_ai_heading']   = '⚠️ AI Engine — <em>Required. SAIPA will not function without this.</em>';
 $string['wizard_req_ai_intro']     = 'SAIPA uses the <strong>saipa-engine</strong> Python service for all AI operations: course chat (RAG), dropout risk prediction, alert generation, and Telegram integration. This service must be running and reachable from this Moodle server.';

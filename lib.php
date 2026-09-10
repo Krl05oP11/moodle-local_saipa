@@ -36,13 +36,19 @@ function local_saipa_extend_navigation(global_navigation $navigation): void {
 /**
  * Makes a GET/POST request to saipa-engine.
  *
- * @param  string $endpoint  Path relative to engine root, e.g. '/health'
- * @param  array  $data      POST body as associative array (null for GET)
- * @return array             Decoded JSON response or ['error' => message]
+ * Uses Moodle's {@see \core\http_client} (Guzzle) so the request honours the
+ * site's proxy and HTTP-security settings. Never throws: transport failures,
+ * non-2xx responses and unparseable bodies are all returned as
+ * `['error' => message]`. On success the decoded JSON body is returned as-is.
+ *
+ * @param  string     $endpoint  Path relative to engine root, e.g. '/health'
+ * @param  array|null $data      POST body as associative array (null for GET)
+ * @param  int        $timeout   Request timeout in seconds
+ * @return array                 Decoded JSON response, or ['error' => message]
  */
 function local_saipa_engine_request(string $endpoint, ?array $data = null, int $timeout = 10): array {
     $engineurl = get_config('local_saipa', 'engine_url');
-    $token      = get_config('local_saipa', 'engine_token');
+    $token     = get_config('local_saipa', 'engine_token');
 
     if (empty($engineurl)) {
         return ['error' => 'SAIPA engine URL not configured'];
@@ -50,42 +56,46 @@ function local_saipa_engine_request(string $endpoint, ?array $data = null, int $
 
     $url = rtrim($engineurl, '/') . $endpoint;
 
-    $headers = [
-        'Content-Type: application/json',
-        'Accept: application/json',
-        'Authorization: Bearer ' . ($token ?? ''),
+    $options = [
+        'headers' => [
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+            'Authorization' => 'Bearer ' . ($token ?? ''),
+        ],
+        // Inspect the status code ourselves — never let a 4xx/5xx throw.
+        'http_errors' => false,
     ];
 
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => $timeout,
-        CURLOPT_HTTPHEADER     => $headers,
-    ]);
-
+    $method = 'GET';
     if ($data !== null) {
-        $body = json_encode($data);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        $method            = 'POST';
+        $options['body']   = json_encode($data);
     }
 
-    $responsestr = curl_exec($ch);
-    $errno        = curl_errno($ch);
-    $error        = curl_error($ch);
-    curl_close($ch);
-
-    if ($errno) {
-        return ['error' => 'cURL error (' . $errno . '): ' . $error];
+    try {
+        $client   = new \core\http_client(['timeout' => $timeout]);
+        $response = $client->request($method, $url, $options);
+    } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        // Connection refused / timeout / DNS failure / blocked by Moodle's HTTP
+        // security helper / too many redirects.
+        return ['error' => 'Engine request failed: ' . $e->getMessage()];
     }
 
-    if ($responsestr === false || $responsestr === '') {
-        return ['error' => 'Empty response from engine'];
+    $status      = $response->getStatusCode();
+    $responsestr = (string) $response->getBody();
+
+    if ($status >= 400) {
+        $detail = $responsestr !== '' ? ': ' . substr($responsestr, 0, 300) : '';
+        return ['error' => 'Engine request failed: HTTP ' . $status . $detail];
+    }
+
+    if ($responsestr === '') {
+        return ['error' => 'Engine request failed: empty response from engine'];
     }
 
     $decoded = json_decode($responsestr, true);
-    if ($decoded === null) {
-        return ['error' => 'Invalid JSON from engine: ' . substr($responsestr, 0, 300)];
+    if (!is_array($decoded)) {
+        return ['error' => 'Engine request failed: invalid JSON — ' . substr($responsestr, 0, 300)];
     }
 
     return $decoded;
@@ -106,10 +116,10 @@ function local_saipa_risk_thresholds(): array {
     $defaults = [0.40, 0.75];
 
     $medium = get_config('local_saipa', 'risk_threshold_medium');
-    $high   = get_config('local_saipa', 'risk_threshold_high');
+    $high = get_config('local_saipa', 'risk_threshold_high');
 
     $medium = ($medium !== false && $medium !== '') ? (float) $medium : $defaults[0];
-    $high   = ($high   !== false && $high   !== '') ? (float) $high   : $defaults[1];
+    $high = ($high !== false && $high !== '') ? (float) $high : $defaults[1];
 
     if ($medium <= 0.0 || $high > 1.0 || $medium >= $high) {
         return $defaults;

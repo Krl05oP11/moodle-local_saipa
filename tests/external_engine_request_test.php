@@ -22,9 +22,9 @@
  *
  * These tests cover the HTTP transport logic without requiring a real engine.
  * They do this by pointing the engine URL at controlled targets:
- *   - Empty string        → immediate error (no network call)
- *   - Closed port         → cURL connection refused
- *   - PHP built-in server → controlled responses (JSON, empty, invalid JSON)
+ *   - Empty string  → immediate error (no network call)
+ *   - Closed port   → connection refused, returned as ['error' => ...]
+ *   - TEST-NET host → timeout, returned as ['error' => ...]
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -81,26 +81,26 @@ final class external_engine_request_test extends \advanced_testcase {
     // ── Network error paths ───────────────────────────────────────────────────
 
     /**
-     * Connecting to a closed port must produce a cURL error, not an exception.
+     * Connecting to a closed port must return an error array, not throw.
      */
-    public function test_connection_refused_returns_curl_error(): void {
+    public function test_connection_refused_returns_error(): void {
         // Port 19999 is almost certainly not listening.
         set_config('engine_url', 'http://127.0.0.1:19999', 'local_saipa');
 
         $result = local_saipa_engine_request('/health', null, 2);
 
         $this->assertArrayHasKey('error', $result);
-        $this->assertStringContainsString(
-            'cURL error',
+        $this->assertStringStartsWith(
+            'Engine request failed',
             $result['error'],
-            'A refused connection must produce a cURL error message'
+            'A refused connection must be reported through the stable error prefix'
         );
     }
 
     /**
-     * A 1-second timeout against an unreachable host must fail with a cURL error.
+     * A 1-second timeout against an unreachable host must return an error, not throw.
      */
-    public function test_timeout_returns_curl_error(): void {
+    public function test_timeout_returns_error(): void {
         // 192.0.2.1 is TEST-NET-1 (RFC 5737) — guaranteed unreachable, causes timeout.
         set_config('engine_url', 'http://192.0.2.1', 'local_saipa');
 
@@ -120,21 +120,20 @@ final class external_engine_request_test extends \advanced_testcase {
      */
     public function test_trailing_slash_in_url_is_normalised(): void {
         // With a closed port we can still verify no exception is thrown, meaning
-        // the URL was constructed without a double slash (which would also fail,
-        // but with a different cURL errno on some systems).
+        // the URL was constructed without a double slash.
         set_config('engine_url', 'http://127.0.0.1:19999/', 'local_saipa');
 
         $result = local_saipa_engine_request('/health', null, 1);
 
-        // Should get a cURL error (connection refused), not a PHP error.
+        // Should get a connection error array, not a PHP error.
         $this->assertIsArray($result);
         $this->assertArrayHasKey('error', $result);
     }
 
     /**
-     * GET requests (data=null) must not set CURLOPT_POST.
-     * We verify this indirectly: a GET to a closed port still returns a cURL error,
-     * not a fatal PHP error about unexpected request type.
+     * GET requests (data=null) issue a GET, not a POST.
+     * Verified indirectly: a GET to a closed port still returns an error array,
+     * not a fatal PHP error about an unexpected request type.
      */
     public function test_null_data_issues_get_request(): void {
         set_config('engine_url', 'http://127.0.0.1:19999', 'local_saipa');

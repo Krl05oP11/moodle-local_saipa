@@ -71,7 +71,7 @@ if ($hassiteconfig) {
         'local_saipa/engine_url',
         get_string('settings:engine_url', 'local_saipa'),
         get_string('settings:engine_url_desc', 'local_saipa'),
-        'http://host.docker.internal:8052',
+        '',
         PARAM_URL
     ));
 

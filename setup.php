@@ -59,29 +59,23 @@ if ($action === 'health') {
         die();
     }
 
-    $url     = rtrim($engineurl, '/') . '/health';
-    $headers = [
-        'Content-Type: application/json',
-        'Accept: application/json',
-        'Authorization: Bearer ' . $enginetoken,
-    ];
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => $headers,
-    ]);
-    $resp  = curl_exec($ch);
-    $errno = curl_errno($ch);
-    $err   = curl_error($ch);
-    $http  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($errno) {
-        echo json_encode(['error' => get_string('wizard_err_connection', 'local_saipa', $err)]);
+    $url = rtrim($engineurl, '/') . '/health';
+    try {
+        $client   = new \core\http_client(['timeout' => 10]);
+        $response = $client->get($url, [
+            'headers' => [
+                'Accept'        => 'application/json',
+                'Authorization' => 'Bearer ' . $enginetoken,
+            ],
+            'http_errors' => false,
+        ]);
+    } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        echo json_encode(['error' => get_string('wizard_err_connection', 'local_saipa', $e->getMessage())]);
         die();
     }
+    $http = $response->getStatusCode();
+    $resp = (string) $response->getBody();
+
     if ($http !== 200) {
         echo json_encode(['error' => get_string('wizard_err_http', 'local_saipa', $http)]);
         die();
@@ -116,22 +110,17 @@ if ($action === 'testbot') {
 
     // Call Telegram's getMe to validate the token (no data stored, read-only).
     $tgurl = 'https://api.telegram.org/bot' . urlencode($bottoken) . '/getMe';
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $tgurl,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 8,
-        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
-    ]);
-    $resp  = curl_exec($ch);
-    $errno = curl_errno($ch);
-    $err   = curl_error($ch);
-    curl_close($ch);
-
-    if ($errno) {
-        echo json_encode(['error' => get_string('wizard_err_telegram_unreachable', 'local_saipa', $err)]);
+    try {
+        $client   = new \core\http_client(['timeout' => 8]);
+        $response = $client->get($tgurl, [
+            'headers'     => ['Accept' => 'application/json'],
+            'http_errors' => false,
+        ]);
+    } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        echo json_encode(['error' => get_string('wizard_err_telegram_unreachable', 'local_saipa', $e->getMessage())]);
         die();
     }
+    $resp = (string) $response->getBody();
     $tg = json_decode($resp, true);
     if (!$tg || empty($tg['ok'])) {
         $desc = $tg['description'] ?? 'Invalid response';
@@ -496,7 +485,7 @@ echo $OUTPUT->header();
                 $blockinstalled = $DB->record_exists('config_plugins', ['plugin' => 'block_saipa', 'name' => 'version']);
                 echo $blockinstalled
                   ? '<span class="text-success">' . get_string('wizard_req_block_installed', 'local_saipa') . '</span>'
-                  : '<span class="text-danger">' .
+                  : '<span class="text-warning">' .
                     get_string('wizard_req_block_missing', 'local_saipa', (new moodle_url('/admin/index.php'))->out()) .
                     '</span>';
               ?>

@@ -244,7 +244,7 @@ $string['settings:channel_whatsapp']           = 'WhatsApp únicamente';
 $string['settings:engine_token']           = 'Token de API';
 $string['settings:engine_token_desc']      = 'Token Bearer para autenticar las solicitudes al saipa-engine';
 $string['settings:engine_url']             = 'URL del motor SAIPA';
-$string['settings:engine_url_desc']        = 'URL del servicio FastAPI saipa-engine (ej. http://host.docker.internal:8052)';
+$string['settings:engine_url_desc']        = 'URL base del servicio saipa-engine, sin barra final (ej. https://saipa-engine.example.edu o http://localhost:8052). Dejalo vacío para deshabilitar las funciones de IA hasta desplegar el motor.';
 $string['settings:heading_engine']         = 'Conexión con el motor SAIPA';
 $string['settings:heading_messaging']          = 'Canales de mensajería';
 $string['settings:heading_messaging_desc']     = 'Seleccioná por cuáles aplicaciones SAIPA va a contactar a los estudiantes. '
@@ -357,9 +357,9 @@ $string['wizard_req_curl_desc']     = 'Necesaria para comunicarse con el motor d
 $string['wizard_req_curl_enabled']  = 'Habilitada';
 $string['wizard_req_curl_missing']  = 'Ausente';
 $string['wizard_req_block_title']   = 'block_saipa (bloque complementario)';
-$string['wizard_req_block_desc']    = 'Es obligatorio: provee el widget de chat en las barras laterales del curso.';
+$string['wizard_req_block_desc']    = 'Recomendado: agrega el widget de chat y los paneles de vinculación de canales a las páginas del curso. Los tableros y el análisis de riesgo de SAIPA funcionan sin él.';
 $string['wizard_req_block_installed'] = 'Instalado';
-$string['wizard_req_block_missing']   = 'No está instalado — <a href="{$a}">instalalo ahora</a>';
+$string['wizard_req_block_missing']   = 'No está instalado — <a href="{$a}">instalalo ahora</a> para dar a los alumnos el widget de chat del curso';
 
 $string['wizard_req_ai_heading']   = '⚠️ Motor de IA — <em>Obligatorio. SAIPA no puede funcionar sin esto.</em>';
 $string['wizard_req_ai_intro']     = 'SAIPA utiliza el servicio Python <strong>saipa-engine</strong> para todas las operaciones de IA: chat del curso (RAG), predicción de riesgo de abandono, generación de alertas e integración con Telegram. Este servicio debe estar corriendo y ser alcanzable desde este servidor de Moodle.';

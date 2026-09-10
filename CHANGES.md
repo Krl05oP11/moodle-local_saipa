@@ -5,6 +5,18 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 ## [Unreleased]
 
 ### Changed
+- All calls to `saipa-engine` now go through Moodle's `\core\http_client`
+  (Guzzle) instead of raw PHP `curl_*`, so they honour the site's proxy and
+  HTTP-security settings. The transport error message has a stable prefix
+  (`Engine request failed: …`); non-2xx responses are now reported as errors
+  instead of being parsed as a body.
+- `engine_url` no longer defaults to `http://host.docker.internal:8052` (a
+  dev-only assumption). The default is now empty — AI features stay disabled,
+  with a clear message, until an admin sets the URL.
+- **`block_saipa` is no longer a hard dependency.** `local_saipa` is the core
+  component; its dashboards, risk analysis and cron work without the block. The
+  dependency now points the correct way (`block_saipa` requires `local_saipa`),
+  and the setup wizard lists the block as *recommended*, not *required*.
 - Dropout-risk scoring is a documented **deterministic rule-based model** over 11
   engagement signals (never an XGBoost/ML model). User-facing strings, the setup
   wizard, and this changelog now describe it accurately.
