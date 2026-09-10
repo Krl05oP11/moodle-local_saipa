@@ -1,0 +1,171 @@
+{{!
+    @template local_saipa/help_advisor
+    Contextual help page for the SAIPA Advisor Dashboard.
+}}
+<div class="saipa-help py-3" style="max-width:860px; margin:0 auto;">
+
+    <div class="d-flex align-items-center mb-4">
+        <span style="font-size:2.5rem; margin-right:0.75rem;">🎓</span>
+        <div>
+            <h2 class="mb-0">{{#str}} advisor_title, local_saipa {{/str}}</h2>
+            <p class="text-muted mb-0">{{#str}} help_subtitle, local_saipa {{/str}}</p>
+        </div>
+    </div>
+
+    {{! ── Tab 1: Resumen institucional ── }}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <strong>{{#str}} help_tab1_title, local_saipa {{/str}}</strong>
+        </div>
+        <div class="card-body">
+            <p>{{#str}} help_tab1_intro, local_saipa {{/str}}</p>
+            <table class="table table-sm table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>{{#str}} help_col_metric, local_saipa {{/str}}</th>
+                        <th>{{#str}} help_col_meaning, local_saipa {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>{{#str}} kpi_active_courses, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_active_courses, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_enrolled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_enrolled, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_saipa_users, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_saipa_users, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_messages, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_messages, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_feedback, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_feedback, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_alerts_sent, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_alerts_sent, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} kpi_alerts_resp, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_kpi_alerts_resp, local_saipa {{/str}}</td></tr>
+                </tbody>
+            </table>
+            <div class="alert alert-info mb-0">
+                <strong>{{#str}} help_sparkline_note_title, local_saipa {{/str}}</strong>
+                {{#str}} help_sparkline_note, local_saipa {{/str}}
+            </div>
+        </div>
+    </div>
+
+    {{! ── Tab 2: ROI Riesgo ── }}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <strong>{{#str}} help_tab2_title, local_saipa {{/str}}</strong>
+        </div>
+        <div class="card-body">
+            <p>{{#str}} help_tab2_intro, local_saipa {{/str}}</p>
+            <h6>{{#str}} help_funnel_title, local_saipa {{/str}}</h6>
+            <ol>
+                <li>{{#str}} help_funnel_step1, local_saipa {{/str}}</li>
+                <li>{{#str}} help_funnel_step2, local_saipa {{/str}}</li>
+                <li>{{#str}} help_funnel_step3, local_saipa {{/str}}</li>
+                <li>{{#str}} help_funnel_step4, local_saipa {{/str}}</li>
+                <li>{{#str}} help_funnel_step5, local_saipa {{/str}}</li>
+            </ol>
+            <h6>{{#str}} help_trend_title, local_saipa {{/str}}</h6>
+            <p>{{#str}} help_trend_desc, local_saipa {{/str}}</p>
+            <h6>{{#str}} help_effectiveness_title, local_saipa {{/str}}</h6>
+            <p>{{#str}} help_effectiveness_desc, local_saipa {{/str}}</p>
+        </div>
+    </div>
+
+    {{! ── Tab 3: Engagement ── }}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <strong>{{#str}} help_tab3_title, local_saipa {{/str}}</strong>
+        </div>
+        <div class="card-body">
+            <p>{{#str}} help_tab3_intro, local_saipa {{/str}}</p>
+            <h6>{{#str}} help_heatmap_title, local_saipa {{/str}}</h6>
+            <p>{{#str}} help_heatmap_desc, local_saipa {{/str}}</p>
+            <h6>{{#str}} help_depth_title, local_saipa {{/str}}</h6>
+            <p>{{#str}} help_depth_desc, local_saipa {{/str}}</p>
+        </div>
+    </div>
+
+    {{! ── Tab 4: Controles ── }}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <strong>{{#str}} help_tab4_title, local_saipa {{/str}}</strong>
+        </div>
+        <div class="card-body">
+            <p>{{#str}} help_tab4_intro, local_saipa {{/str}}</p>
+            <table class="table table-sm table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>{{#str}} help_col_toggle, local_saipa {{/str}}</th>
+                        <th>{{#str}} help_col_effect, local_saipa {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>{{#str}} ctrl_saipa_enabled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_toggle_saipa, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} ctrl_chat_enabled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_toggle_chat, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} ctrl_risk_enabled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_toggle_risk, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} ctrl_alerts_enabled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_toggle_alerts, local_saipa {{/str}}</td></tr>
+                    <tr><td><strong>{{#str}} ctrl_rag_enabled, local_saipa {{/str}}</strong></td>
+                        <td>{{#str}} help_toggle_rag, local_saipa {{/str}}</td></tr>
+                </tbody>
+            </table>
+            <div class="alert alert-warning mb-0">
+                {{#str}} help_tab4_warning, local_saipa {{/str}}
+            </div>
+        </div>
+    </div>
+
+    {{! ── Tab 5: Configuración ── }}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <strong>{{#str}} help_tab5_title, local_saipa {{/str}}</strong>
+        </div>
+        <div class="card-body">
+            <p>{{#str}} help_tab5_intro, local_saipa {{/str}}</p>
+            <table class="table table-sm table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>{{#str}} help_col_param, local_saipa {{/str}}</th>
+                        <th>{{#str}} help_col_default, local_saipa {{/str}}</th>
+                        <th>{{#str}} help_col_use, local_saipa {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{#str}} cfg_risk_medium, local_saipa {{/str}}</td>
+                        <td><code>0.40</code></td>
+                        <td>{{#str}} help_cfg_medium, local_saipa {{/str}}</td>
+                    </tr>
+                    <tr>
+                        <td>{{#str}} cfg_risk_high, local_saipa {{/str}}</td>
+                        <td><code>0.75</code></td>
+                        <td>{{#str}} help_cfg_high, local_saipa {{/str}}</td>
+                    </tr>
+                    <tr>
+                        <td>{{#str}} cfg_cooldown, local_saipa {{/str}}</td>
+                        <td><code>24h</code></td>
+                        <td>{{#str}} help_cfg_cooldown, local_saipa {{/str}}</td>
+                    </tr>
+                    <tr>
+                        <td>{{#str}} cfg_retention, local_saipa {{/str}}</td>
+                        <td><code>730 días</code></td>
+                        <td>{{#str}} help_cfg_retention, local_saipa {{/str}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="alert alert-info mb-0">
+                {{#str}} help_tab5_note, local_saipa {{/str}}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center text-muted small mt-4">
+        SAIPA v0.5.0 &nbsp;·&nbsp; Schaller &amp; Ponce &nbsp;·&nbsp;
+        <a href="{{#str}} help_support_url, local_saipa {{/str}}">{{#str}} help_support_link, local_saipa {{/str}}</a>
+    </div>
+
+</div>

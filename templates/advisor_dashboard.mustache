@@ -1,0 +1,508 @@
+{{!
+    @template local_saipa/advisor_dashboard
+
+    SAIPA Advisor Dashboard — 5-tab layout (Bootstrap nav-tabs).
+    All data loaded lazily via AMD (local_saipa/advisor_dashboard).
+
+    Context variables:
+    - wwwroot:    string
+    - is_manager: bool  (true = show Tab 5 institution config)
+    - help_url:   string (URL to contextual help page)
+}}
+<div id="saipa-advisor" data-wwwroot="{{wwwroot}}" data-is-manager="{{#is_manager}}1{{/is_manager}}{{^is_manager}}0{{/is_manager}}">
+
+    {{! ── Period selector + help button ──────────────────────────────────────── }}
+    <div class="d-flex align-items-center mb-3">
+        <label class="mr-2 mb-0 font-weight-bold" for="saipa-period">
+            {{#str}} advisor_period, local_saipa {{/str}}
+        </label>
+        <select id="saipa-period" class="form-control form-control-sm w-auto">
+            <option value="7d">{{#str}} period_7d, local_saipa {{/str}}</option>
+            <option value="30d" selected>{{#str}} period_30d, local_saipa {{/str}}</option>
+            <option value="semester">{{#str}} period_semester, local_saipa {{/str}}</option>
+            <option value="all">{{#str}} period_all, local_saipa {{/str}}</option>
+        </select>
+        <div id="saipa-adv-spinner" class="ml-2 text-muted" style="display:none;">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+        </div>
+        <a href="{{help_url}}" target="_blank"
+           class="btn btn-sm btn-outline-secondary ml-auto"
+           title="{{#str}} help_title, local_saipa {{/str}}">
+            &#63; {{#str}} help_btn, local_saipa {{/str}}
+        </a>
+    </div>
+
+    {{! ── Tab navigation ─────────────────────────────────────────────────────── }}
+    <ul class="nav nav-tabs mb-3" id="saipa-adv-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-summary-link" data-toggle="tab"
+               href="#tab-summary" role="tab" data-tab="summary">
+                &#128202; {{#str}} advisor_tab_summary, local_saipa {{/str}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-risk-link" data-toggle="tab"
+               href="#tab-risk" role="tab" data-tab="risk">
+                &#9888; {{#str}} advisor_tab_risk, local_saipa {{/str}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-engagement-link" data-toggle="tab"
+               href="#tab-engagement" role="tab" data-tab="engagement">
+                &#128172; {{#str}} advisor_tab_engagement, local_saipa {{/str}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-controls-link" data-toggle="tab"
+               href="#tab-controls" role="tab" data-tab="controls">
+                &#9881; {{#str}} advisor_tab_controls, local_saipa {{/str}}
+            </a>
+        </li>
+        {{#is_manager}}
+        <li class="nav-item">
+            <a class="nav-link" id="tab-config-link" data-toggle="tab"
+               href="#tab-config" role="tab" data-tab="config">
+                &#128295; {{#str}} advisor_tab_config, local_saipa {{/str}}
+            </a>
+        </li>
+        {{/is_manager}}
+    </ul>
+
+    {{! ── Tab content ─────────────────────────────────────────────────────────── }}
+    <div class="tab-content" id="saipa-adv-content">
+
+        {{! ── Tab 1: Institution summary ─────────────────────────────────────── }}
+        <div class="tab-pane fade show active" id="tab-summary" role="tabpanel">
+            <div id="tab-summary-loading" class="text-center py-4">
+                <div class="spinner-border text-secondary" role="status"></div>
+            </div>
+            <div id="tab-summary-content" style="display:none;">
+                {{! KPI cards row }}
+                <div class="row mb-4" id="adv-kpi-row">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_active_courses, local_saipa {{/str}}</div>
+                            <div id="kpi-active-courses" class="h3 font-weight-bold mb-0 text-primary">—</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_enrolled, local_saipa {{/str}}</div>
+                            <div id="kpi-enrolled" class="h3 font-weight-bold mb-0 text-primary">—</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_saipa_users, local_saipa {{/str}}</div>
+                            <div id="kpi-saipa-users" class="h3 font-weight-bold mb-0 text-success">—</div>
+                            <div id="kpi-adoption" class="text-muted" style="font-size:0.8rem;"></div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_messages, local_saipa {{/str}}</div>
+                            <div id="kpi-messages" class="h3 font-weight-bold mb-0 text-info">—</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_feedback, local_saipa {{/str}}</div>
+                            <div id="kpi-feedback" class="h3 font-weight-bold mb-0 text-warning">—</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_alerts_sent, local_saipa {{/str}}</div>
+                            <div id="kpi-alerts-sent" class="h3 font-weight-bold mb-0">—</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center py-3">
+                            <div class="text-muted small">{{#str}} kpi_alerts_resp, local_saipa {{/str}}</div>
+                            <div id="kpi-alerts-resp" class="h3 font-weight-bold mb-0">—</div>
+                            <div id="kpi-resp-rate" class="text-muted" style="font-size:0.8rem;"></div>
+                        </div>
+                    </div>
+                </div>
+                {{! Sparklines }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card p-3">
+                            <h6>{{#str}} sparkline_messages, local_saipa {{/str}}</h6>
+                            <canvas id="spark-messages" height="80"></canvas>
+                            <div class="spark-no-data text-muted small text-center mt-2" style="display:none;">
+                                {{#str}} no_data_yet, local_saipa {{/str}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card p-3">
+                            <h6>{{#str}} sparkline_users, local_saipa {{/str}}</h6>
+                            <canvas id="spark-users" height="80"></canvas>
+                            <div class="spark-no-data text-muted small text-center mt-2" style="display:none;">
+                                {{#str}} no_data_yet, local_saipa {{/str}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-summary-error" class="alert alert-danger" style="display:none;"></div>
+        </div>
+
+        {{! ── Tab 2: Risk ROI ─────────────────────────────────────────────────── }}
+        <div class="tab-pane fade" id="tab-risk" role="tabpanel">
+            <div id="tab-risk-loading" class="text-center py-4">
+                <div class="spinner-border text-secondary" role="status"></div>
+            </div>
+            <div id="tab-risk-content" style="display:none;">
+                {{! Funnel }}
+                <div class="card mb-4 p-3">
+                    <h6>{{#str}} funnel_title, local_saipa {{/str}}</h6>
+                    <div class="d-flex align-items-end text-center" id="adv-funnel" style="min-height:100px;">
+                    </div>
+                </div>
+                {{! Risk trend chart }}
+                <div class="card mb-4 p-3">
+                    <h6>{{#str}} risk_trend_title, local_saipa {{/str}}</h6>
+                    <canvas id="risk-trend-chart" height="120"></canvas>
+                </div>
+                {{! Intervention effectiveness table }}
+                <div class="card p-3">
+                    <h6>{{#str}} effectiveness_title, local_saipa {{/str}}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover" id="effectiveness-table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>{{#str}} eff_col_user, local_saipa {{/str}}</th>
+                                    <th>{{#str}} eff_col_course, local_saipa {{/str}}</th>
+                                    <th>{{#str}} eff_col_alert_date, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eff_col_risk_before, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eff_col_risk_after, local_saipa {{/str}}</th>
+                                    <th class="text-center">{{#str}} eff_col_improved, local_saipa {{/str}}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="effectiveness-tbody"></tbody>
+                        </table>
+                        <p id="effectiveness-empty" class="text-muted text-center" style="display:none;">
+                            {{#str}} eff_no_data, local_saipa {{/str}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-risk-error" class="alert alert-danger" style="display:none;"></div>
+        </div>
+
+        {{! ── Tab 3: Engagement ───────────────────────────────────────────────── }}
+        <div class="tab-pane fade" id="tab-engagement" role="tabpanel">
+            <div id="tab-engagement-loading" class="text-center py-4">
+                <div class="spinner-border text-secondary" role="status"></div>
+            </div>
+            <div id="tab-engagement-content" style="display:none;">
+                {{! Per-course usage table }}
+                <div class="card mb-4 p-3">
+                    <h6>{{#str}} eng_course_usage_title, local_saipa {{/str}}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>{{#str}} eng_col_course, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eng_col_msgs, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eng_col_users, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eng_col_avg_depth, local_saipa {{/str}}</th>
+                                    <th class="text-right">{{#str}} eng_col_feedback, local_saipa {{/str}}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eng-course-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                {{! Hourly heatmap }}
+                <div class="card mb-4 p-3">
+                    <h6>{{#str}} eng_heatmap_title, local_saipa {{/str}}</h6>
+                    <p class="text-muted small">{{#str}} eng_heatmap_desc, local_saipa {{/str}}</p>
+                    <div id="eng-heatmap" class="saipa-heatmap"></div>
+                </div>
+                {{! Session depth histogram }}
+                <div class="card p-3">
+                    <h6>{{#str}} eng_depth_title, local_saipa {{/str}}</h6>
+                    <canvas id="eng-depth-chart" height="120"></canvas>
+                </div>
+            </div>
+            <div id="tab-engagement-error" class="alert alert-danger" style="display:none;"></div>
+        </div>
+
+        {{! ── Tab 4: Course controls ──────────────────────────────────────────── }}
+        <div class="tab-pane fade" id="tab-controls" role="tabpanel">
+            <div id="tab-controls-loading" class="text-center py-4">
+                <div class="spinner-border text-secondary" role="status"></div>
+            </div>
+            <div id="tab-controls-content" style="display:none;">
+                <div class="mb-2 d-flex justify-content-end">
+                    <button id="ctrl-enable-all" class="btn btn-sm btn-outline-success mr-1" type="button">
+                        {{#str}} ctrl_enable_all, local_saipa {{/str}}
+                    </button>
+                    <button id="ctrl-disable-all" class="btn btn-sm btn-outline-danger" type="button">
+                        {{#str}} ctrl_disable_all, local_saipa {{/str}}
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" id="ctrl-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>{{#str}} ctrl_col_course, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_saipa, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_chat, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_risk, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_alerts, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_rag, local_saipa {{/str}}</th>
+                                <th class="text-center">{{#str}} ctrl_col_index, local_saipa {{/str}}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ctrl-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="ctrl-save-status" class="text-muted small mt-1"></div>
+            </div>
+            <div id="tab-controls-error" class="alert alert-danger" style="display:none;"></div>
+        </div>
+
+        {{! ── Tab 5: Institution config (managers only) ───────────────────────── }}
+        {{#is_manager}}
+        <div class="tab-pane fade" id="tab-config" role="tabpanel">
+            <div id="tab-config-loading" class="text-center py-4">
+                <div class="spinner-border text-secondary" role="status"></div>
+            </div>
+            <div id="tab-config-content" style="display:none;">
+                <form id="adv-config-form" class="needs-validation" novalidate>
+                    <div class="card p-3 mb-3">
+                        <h6>{{#str}} cfg_heading_thresholds, local_saipa {{/str}}</h6>
+                        <div class="form-row">
+                            <div class="col-md-4 mb-2">
+                                <label for="cfg-threshold-medium">
+                                    {{#str}} cfg_threshold_medium, local_saipa {{/str}}
+                                </label>
+                                <input id="cfg-threshold-medium" name="risk_threshold_medium"
+                                       type="number" class="form-control" step="0.01" min="0" max="1"
+                                       value="0.40" />
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="cfg-threshold-high">
+                                    {{#str}} cfg_threshold_high, local_saipa {{/str}}
+                                </label>
+                                <input id="cfg-threshold-high" name="risk_threshold_high"
+                                       type="number" class="form-control" step="0.01" min="0" max="1"
+                                       value="0.75" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-3 mb-3">
+                        <h6>{{#str}} cfg_heading_alerts, local_saipa {{/str}}</h6>
+                        <div class="form-row">
+                            <div class="col-md-4 mb-2">
+                                <label for="cfg-cooldown">
+                                    {{#str}} cfg_cooldown_hours, local_saipa {{/str}}
+                                </label>
+                                <input id="cfg-cooldown" name="alert_cooldown_hours"
+                                       type="number" class="form-control" min="1" value="24" />
+                            </div>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="cfg-alert-template">
+                                {{#str}} cfg_alert_template, local_saipa {{/str}}
+                            </label>
+                            <textarea id="cfg-alert-template" name="default_alert_template"
+                                      class="form-control" rows="4"></textarea>
+                            <small class="form-text text-muted">
+                                {{#str}} cfg_template_placeholders, local_saipa {{/str}}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card p-3 mb-3">
+                        <h6>{{#str}} cfg_heading_gdpr, local_saipa {{/str}}</h6>
+                        <div class="form-row">
+                            <div class="col-md-4 mb-2">
+                                <label for="cfg-retention">
+                                    {{#str}} cfg_retention_days, local_saipa {{/str}}
+                                </label>
+                                <input id="cfg-retention" name="data_retention_days"
+                                       type="number" class="form-control" min="30" value="730" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-3 mb-3">
+                        <h6>{{#str}} cfg_heading_features, local_saipa {{/str}}</h6>
+                        <div class="form-check mb-2">
+                            <input id="cfg-risk-eval" name="risk_eval_enabled" type="checkbox"
+                                   class="form-check-input" checked />
+                            <label class="form-check-label" for="cfg-risk-eval">
+                                {{#str}} cfg_risk_eval, local_saipa {{/str}}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input id="cfg-rag-global" name="rag_global_enabled" type="checkbox"
+                                   class="form-check-input" checked />
+                            <label class="form-check-label" for="cfg-rag-global">
+                                {{#str}} cfg_rag_global, local_saipa {{/str}}
+                            </label>
+                        </div>
+                    </div>
+                    <button id="cfg-save-btn" type="submit" class="btn btn-primary">
+                        {{#str}} cfg_save_btn, local_saipa {{/str}}
+                    </button>
+                    <span id="cfg-save-status" class="ml-2 text-muted small"></span>
+                </form>
+            </div>
+            <div id="tab-config-error" class="alert alert-danger" style="display:none;"></div>
+        </div>
+        {{/is_manager}}
+
+    </div>{{! /tab-content }}
+
+</div>{{! /saipa-advisor }}
+
+{{! Floating Assistant Button + Chat Panel }}
+<button id="saipa-fab" class="saipa-fab" title="Asistente SAIPA" aria-label="Abrir Asistente SAIPA">
+    <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA">
+</button>
+
+<div id="saipa-chat-panel" class="saipa-chat-panel" style="display:none;">
+    <div class="saipa-chat-header">
+        <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA" style="width:28px;height:28px;border-radius:50%;margin-right:8px;">
+        <span>Asistente SAIPA</span>
+        <button id="saipa-chat-close" class="saipa-chat-close" aria-label="Cerrar">&times;</button>
+    </div>
+    <div id="saipa-chat-messages" class="saipa-chat-messages">
+        <div class="saipa-msg saipa-msg--assistant">
+            <span>¡Hola! Soy el asistente de SAIPA. Podés preguntarme sobre las métricas del dashboard, los procedimientos del sistema o el estado de los alumnos. ¿En qué puedo ayudarte?</span>
+        </div>
+    </div>
+    <div class="saipa-chat-input-row">
+        <input id="saipa-chat-input" type="text" class="form-control form-control-sm"
+               placeholder="Escribí tu consulta…" autocomplete="off">
+        <button id="saipa-chat-send" class="btn btn-primary btn-sm ml-2">&#10148;</button>
+    </div>
+</div>
+
+{{! Heatmap + FAB styles }}
+<style>
+/* ── Floating Action Button ────────────────────────────────────────── */
+@keyframes saipa-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(13,110,253,0.65); }
+    70%  { box-shadow: 0 0 0 16px rgba(13,110,253,0); }
+    100% { box-shadow: 0 0 0 0 rgba(13,110,253,0); }
+}
+.saipa-fab {
+    position: fixed;
+    bottom: 110px;
+    right: 32px;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    cursor: grab;
+    z-index: 10000;
+    background: transparent;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    animation: saipa-pulse 2.2s ease-out infinite;
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.saipa-fab.saipa-fab--dragging { cursor: grabbing; animation: none; transform: scale(1.08); }
+.saipa-fab img { width: 100%; height: 100%; border-radius: 50%; display: block; pointer-events: none; }
+.saipa-fab:hover { transform: scale(1.12); animation: none; box-shadow: 0 6px 20px rgba(13,110,253,0.45); }
+.saipa-fab:focus { outline: 3px solid #0d6efd; }
+
+/* ── Chat Panel ────────────────────────────────────────────────────── */
+.saipa-chat-panel {
+    position: fixed;
+    bottom: 186px;
+    right: 32px;
+    width: 360px;
+    max-height: 500px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: saipa-slide-in 0.25s ease;
+}
+@keyframes saipa-slide-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.saipa-chat-header {
+    background: #0d6efd;
+    color: #fff;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.saipa-chat-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.85;
+}
+.saipa-chat-close:hover { opacity: 1; }
+.saipa-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.88rem;
+}
+.saipa-msg { max-width: 88%; }
+.saipa-msg span {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 12px;
+    line-height: 1.45;
+}
+.saipa-msg--assistant { align-self: flex-start; }
+.saipa-msg--assistant span { background: #f0f4ff; color: #1a1a2e; border-radius: 4px 12px 12px 12px; }
+.saipa-msg--user { align-self: flex-end; }
+.saipa-msg--user span { background: #0d6efd; color: #fff; border-radius: 12px 4px 12px 12px; }
+.saipa-msg--thinking span { background: #f8f9fa; color: #6c757d; font-style: italic; }
+.saipa-chat-input-row {
+    display: flex;
+    padding: 10px 12px;
+    border-top: 1px solid #e9ecef;
+    background: #fff;
+}
+.saipa-heatmap {
+    display: grid;
+    grid-template-columns: 40px repeat(24, 1fr);
+    grid-template-rows: 20px repeat(7, 1fr);
+    gap: 2px;
+    font-size: 0.65rem;
+}
+.saipa-heatmap .hm-header { text-align: center; color: #6c757d; }
+.saipa-heatmap .hm-row-label { display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; color: #6c757d; }
+.saipa-heatmap .hm-cell {
+    height: 24px;
+    border-radius: 2px;
+    background: #f0f0f0;
+    cursor: default;
+    transition: opacity 0.15s;
+}
+.saipa-heatmap .hm-cell:hover { opacity: 0.8; }
+</style>
+
+{{#js}}
+require(['local_saipa/advisor_dashboard'], function(A) {
+    A.init();
+});
+{{/js}}

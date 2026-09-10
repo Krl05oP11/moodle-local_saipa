@@ -1,0 +1,58 @@
+{{!
+    @template local_saipa/my_courses_dashboard
+
+    SAIPA — My Courses Dashboard: multi-course summary table.
+    All data loaded via AMD (local_saipa/my_courses_dashboard).
+
+    Context variables:
+    - wwwroot: string
+}}
+<div id="saipa-my-courses" data-wwwroot="{{wwwroot}}">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0">
+            <span class="mr-2">&#128218;</span>
+            {{#str}} my_courses_heading, local_saipa {{/str}}
+        </h4>
+        <div id="saipa-mc-spinner" class="text-muted small">
+            <div class="spinner-border spinner-border-sm mr-1" role="status"></div>
+            {{#str}} loading, core {{/str}}
+        </div>
+    </div>
+
+    <div id="saipa-mc-table-wrap" style="display:none;">
+        <div class="mb-2 text-right">
+            <input id="saipa-mc-search" type="text" class="form-control d-inline-block w-auto"
+                   placeholder="{{#str}} search, core {{/str}}" />
+        </div>
+        <div class="table-responsive">
+            <table id="saipa-mc-table" class="table table-sm table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="saipa-sortable" data-col="coursename">{{#str}} mc_col_course, local_saipa {{/str}} &#8597;</th>
+                        <th class="saipa-sortable text-right" data-col="enrolled_students">{{#str}} mc_col_enrolled, local_saipa {{/str}} &#8597;</th>
+                        <th class="saipa-sortable text-right" data-col="active_saipa_users">{{#str}} mc_col_active, local_saipa {{/str}} &#8597;</th>
+                        <th class="saipa-sortable text-right" data-col="adoption_rate">{{#str}} mc_col_adoption, local_saipa {{/str}} &#8597;</th>
+                        <th class="saipa-sortable text-right" data-col="messages_7d">{{#str}} mc_col_msgs7d, local_saipa {{/str}} &#8597;</th>
+                        <th class="text-center">{{#str}} mc_col_risk, local_saipa {{/str}}</th>
+                        <th class="text-center">{{#str}} mc_col_index, local_saipa {{/str}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="saipa-mc-tbody">
+                </tbody>
+            </table>
+        </div>
+        <p id="saipa-mc-empty" class="text-muted text-center py-3" style="display:none;">
+            {{#str}} mc_no_courses, local_saipa {{/str}}
+        </p>
+    </div>
+
+    <div id="saipa-mc-error" class="alert alert-danger" style="display:none;"></div>
+
+</div>
+{{#js}}
+require(['local_saipa/my_courses_dashboard'], function(M) {
+    M.init();
+});
+{{/js}}
