@@ -29,6 +29,15 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 - Engine connection docs and language strings renamed `ENGINE_SECRET` →
   `SAIPA_API_TOKEN` and marked it **required** (the engine now refuses to start
   with an empty token unless `SAIPA_DEV_MODE=true`).
+- **Corrected an inaccurate compliance claim.** The 0.5.1 changelog said "22
+  residual PHPCS errors". Measured under `phpcs --standard=moodle` (the
+  invocation CI and the plugins-directory prechecks use, which does *not* read
+  a plugin-local `phpcs.xml.dist`): **82 errors, all in `setup.php` (60 line
+  length + 5) and `status.php` (17)**. Of these, 22 `MissingDocblock.File` are
+  false positives — the sniff re-fires on every inline `<?php echo ?>` in the
+  HTML sections though both files have a correct file docblock. The remaining
+  60 are genuine over-long lines of templated HTML in the setup wizard. Fix
+  pending (line wrapping and/or extraction to Mustache templates).
 - Graceful degradation when `saipa-engine` is unreachable:
   - `index_course` stops after the first transport error instead of waiting a
     full timeout per remaining item, and records `status = 'error'` (was always
@@ -44,8 +53,9 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
   and auto-redirect from `teacher.php` on first run.
 - PHPUnit test suite: 86 tests covering critical web services, privacy API,
   scheduled tasks, and Moodle core compliance.
-- PHPCS compliance with Moodle coding standard — 22 residual errors confined
-  to mixed HTML/PHP files (`setup.php`, `status.php`).
+- PHPCS: the whole plugin is clean under `phpcs --standard=moodle` **except**
+  `setup.php` and `status.php`. See the [Unreleased] note for the accurate
+  count and the plan to resolve it.
 - Class and function docblocks across all external web service classes and
   scheduled task files.
 
