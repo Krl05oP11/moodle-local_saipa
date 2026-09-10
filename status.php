@@ -176,8 +176,10 @@ if (!$telegramenabled) {
 
 // ── Check 6: Web services enabled ────────────────────────────────────────
 
-$wsenabled    = !empty($CFG->enablewebservices);
-$wsdetail     = $wsenabled ? 'Web Services are enabled site-wide.' : 'Go to Site Administration → Advanced Features → Enable Web Services.';
+$wsenabled = !empty($CFG->enablewebservices);
+$wsdetail  = $wsenabled
+    ? 'Web Services are enabled site-wide.'
+    : 'Go to Site Administration → Advanced Features → Enable Web Services.';
 
 // ── Check 7: SAIPA External Service && token ────────────────────────────
 
@@ -270,7 +272,12 @@ $warnings = 0;
 $checks = [
     // [label, ok, detail, is_warning]
     ['Engine URL configured', $urlok, $urlok ? $engineurl : 'Not configured', false],
-    ['Engine API token configured', $tokenok, $tokenmsg ?: ($tokenok ? 'Token set (' . strlen($enginetoken) . ' chars)' : 'Token not set'), !empty($tokenmsg)],
+    [
+        'Engine API token configured',
+        $tokenok,
+        $tokenmsg ?: ($tokenok ? 'Token set (' . strlen($enginetoken) . ' chars)' : 'Token not set'),
+        !empty($tokenmsg),
+    ],
     ['Engine reachable (/health)', $enginereachable, $enginedetail, false],
     ['Ollama model available', $ollamaok, $ollamadetail, !$enginereachable],
     ['ChromaDB accessible', $chromaok, $chromadetail, !$enginereachable],
@@ -320,61 +327,25 @@ if ($issues === 0 && $warnings === 0) {
 
 echo $OUTPUT->header();
 
-?>
-<div class="container-fluid py-3" style="max-width:900px">
+// Build the status-table body in PHP so the markup below is a single string.
+// Inline PHP islands in HTML also make the file-docblock sniff misfire.
+$tablerows = saipa_section_header('saipa-engine Connection');
+foreach ($checks as $c) {
+    $tablerows .= saipa_status_row($c[0], $c[1], $c[2], $c[3]);
+}
+$tablerows .= saipa_section_header('Moodle Configuration');
+foreach ($adminchecks as $c) {
+    $tablerows .= saipa_status_row($c[0], $c[1], $c[2], $c[3]);
+}
 
-    <h2>SAIPA — Installation Status</h2>
-    <p class="text-muted">Comprehensive health check for all SAIPA components. Refresh this page after making changes.</p>
+$settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out();
+$tasksurl    = (new moodle_url('/admin/tool/task/scheduledtasks.php'))->out();
+$wsurl       = (new moodle_url('/admin/webservice/service.php', ['id' => $wsservice->id ?? 0]))->out();
+$messagesurl = (new moodle_url('/message/defaultoutputs.php'))->out();
+$healthurl   = (new moodle_url('/local/saipa/health_check.php'))->out();
 
-    <div class="alert <?php echo $bannerclass; ?> mb-4" role="alert">
-        <?php echo $bannertext; ?>
-    </div>
-
-    <table class="table table-bordered table-sm mb-4">
-        <thead class="thead-light">
-            <tr><th>Component</th><th class="text-right" style="width:140px">Status</th></tr>
-        </thead>
-        <tbody>
-            <?php echo saipa_section_header('saipa-engine Connection'); ?>
-            <?php foreach ($checks as $c) : ?>
-                <?php echo saipa_status_row($c[0], $c[1], $c[2], $c[3]); ?>
-            <?php endforeach; ?>
-
-            <?php echo saipa_section_header('Moodle Configuration'); ?>
-            <?php foreach ($adminchecks as $c) : ?>
-                <?php echo saipa_status_row($c[0], $c[1], $c[2], $c[3]); ?>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-
-    <h4 class="mt-4">Quick Actions</h4>
-    <div class="list-group mb-4">
-        <a href="<?php echo (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(); ?>"
-           class="list-group-item list-group-item-action">
-            &#9881; SAIPA Settings (engine URL &amp; token)
-        </a>
-        <a href="<?php echo (new moodle_url('/admin/tool/task/scheduledtasks.php'))->out(); ?>"
-           class="list-group-item list-group-item-action">
-            &#128336; Scheduled Tasks (enable/disable cron)
-        </a>
-        <a href="<?php echo (new moodle_url('/admin/webservice/service.php', ['id' => $wsservice->id ?? 0]))->out(); ?>"
-           class="list-group-item list-group-item-action">
-            &#128273; Web Services (manage tokens)
-        </a>
-        <a href="<?php echo (new moodle_url('/message/defaultoutputs.php'))->out(); ?>"
-           class="list-group-item list-group-item-action">
-            &#128276; Message Notification Settings
-        </a>
-        <a href="<?php echo (new moodle_url('/local/saipa/health_check.php'))->out(); ?>"
-           class="list-group-item list-group-item-action">
-            &#128268; Engine Basic Health Check
-        </a>
-    </div>
-
-    <h4 class="mt-4">Installation Commands Reference</h4>
-    <p class="text-muted small">Run these from the Moodle root directory inside the container:</p>
-    <pre class="bg-dark text-white p-3 rounded small"
-># Apply DB upgrades (run after plugin update)
+$clireference = <<<'CLI'
+# Apply DB upgrades (run after plugin update)
 php admin/cli/upgrade.php --non-interactive
 
 # Purge all caches
@@ -384,13 +355,58 @@ php admin/cli/purge_caches.php
 php admin/cli/cron.php
 
 # Run only the SAIPA risk evaluation task
-php admin/cli/scheduled_task.php --execute='\local_saipa\task\risk_evaluation'</pre>
+php admin/cli/scheduled_task.php --execute='\local_saipa\task\risk_evaluation'
+CLI;
+
+$pluginversiondisplay = htmlspecialchars((string) $plugindisk);
+
+echo <<<HTML
+<div class="container-fluid py-3" style="max-width:900px">
+
+    <h2>SAIPA — Installation Status</h2>
+    <p class="text-muted">Comprehensive health check for all SAIPA components. Refresh after making changes.</p>
+
+    <div class="alert {$bannerclass} mb-4" role="alert">
+        {$bannertext}
+    </div>
+
+    <table class="table table-bordered table-sm mb-4">
+        <thead class="thead-light">
+            <tr><th>Component</th><th class="text-right" style="width:140px">Status</th></tr>
+        </thead>
+        <tbody>
+            {$tablerows}
+        </tbody>
+    </table>
+
+    <h4 class="mt-4">Quick Actions</h4>
+    <div class="list-group mb-4">
+        <a href="{$settingsurl}" class="list-group-item list-group-item-action">
+            &#9881; SAIPA Settings (engine URL &amp; token)
+        </a>
+        <a href="{$tasksurl}" class="list-group-item list-group-item-action">
+            &#128336; Scheduled Tasks (enable/disable cron)
+        </a>
+        <a href="{$wsurl}" class="list-group-item list-group-item-action">
+            &#128273; Web Services (manage tokens)
+        </a>
+        <a href="{$messagesurl}" class="list-group-item list-group-item-action">
+            &#128276; Message Notification Settings
+        </a>
+        <a href="{$healthurl}" class="list-group-item list-group-item-action">
+            &#128268; Engine Basic Health Check
+        </a>
+    </div>
+
+    <h4 class="mt-4">Installation Commands Reference</h4>
+    <p class="text-muted small">Run these from the Moodle root directory inside the container:</p>
+    <pre class="bg-dark text-white p-3 rounded small">{$clireference}</pre>
 
     <p class="text-muted small mt-3">
-        SAIPA v<?php echo htmlspecialchars((string)$plugindisk); ?> &mdash;
+        SAIPA v{$pluginversiondisplay} &mdash;
         &copy; 2026 Schaller &amp; Ponce &lt;dev@schaller-ponce.com.ar&gt;
     </p>
 </div>
-<?php
+HTML;
 
 echo $OUTPUT->footer();

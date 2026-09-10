@@ -205,6 +205,11 @@ $phpverstr   = PHP_VERSION;
 $moodleverstr = $CFG->release ?? 'unknown';
 
 echo $OUTPUT->header();
+
+// phpcs:disable moodle.Commenting.MissingDocblock, moodle.Commenting.FileExpectedTags -- False
+// positives: both sniffs re-fire on every inline short-echo island in the HTML
+// template below, though the file docblock (with @package/@copyright/@license)
+// is present at the top of the file. Re-enabled at end of file.
 ?>
 <style>
 /* ════════════════════════════════════════════════════════
@@ -471,7 +476,14 @@ echo $OUTPUT->header();
               <strong><?= get_string('wizard_req_curl_title', 'local_saipa') ?></strong>
               <span><?= get_string('wizard_req_curl_desc', 'local_saipa') ?></span>
             </div>
-            <div class="req-value"><?= $curlok ? get_string('wizard_req_curl_enabled', 'local_saipa') : '<span class="text-danger">' . get_string('wizard_req_curl_missing', 'local_saipa') . '</span>' ?></div>
+            <div class="req-value">
+              <?php
+                echo $curlok
+                  ? get_string('wizard_req_curl_enabled', 'local_saipa')
+                  : '<span class="text-danger">' .
+                    get_string('wizard_req_curl_missing', 'local_saipa') . '</span>';
+              ?>
+            </div>
           </div>
 
           <div class="req-row">
@@ -564,7 +576,10 @@ echo $OUTPUT->header();
 
             <div class="ai-pcard pc-local">
               <div class="pc-head"><div class="pc-icon">🖥️</div>
-                <h6><?= get_string('wizard_prov_local_title', 'local_saipa') ?> <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span></h6></div>
+                <h6>
+                  <?= get_string('wizard_prov_local_title', 'local_saipa') ?>
+                  <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span>
+                </h6></div>
               <p><?= get_string('wizard_prov_local_desc', 'local_saipa') ?></p>
               <ul>
                 <li><?= get_string('wizard_prov_local_i1', 'local_saipa') ?></li>
@@ -575,7 +590,10 @@ echo $OUTPUT->header();
 
             <div class="ai-pcard pc-cloud">
               <div class="pc-head"><div class="pc-icon">☁️</div>
-                <h6><?= get_string('wizard_prov_cloud_title', 'local_saipa') ?> <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span></h6></div>
+                <h6>
+                  <?= get_string('wizard_prov_cloud_title', 'local_saipa') ?>
+                  <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span>
+                </h6></div>
               <p><?= get_string('wizard_prov_cloud_desc', 'local_saipa') ?></p>
               <ul>
                 <li><?= get_string('wizard_prov_cloud_i1', 'local_saipa') ?></li>
@@ -586,7 +604,10 @@ echo $OUTPUT->header();
 
             <div class="ai-pcard pc-saipa">
               <div class="pc-head"><div class="pc-icon">🌐</div>
-                <h6><?= get_string('wizard_prov_saipa_title', 'local_saipa') ?> <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span></h6></div>
+                <h6>
+                  <?= get_string('wizard_prov_saipa_title', 'local_saipa') ?>
+                  <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span>
+                </h6></div>
               <p><?= get_string('wizard_prov_saipa_desc', 'local_saipa') ?></p>
               <ul>
                 <li><?= get_string('wizard_prov_saipa_i1', 'local_saipa') ?></li>
@@ -596,7 +617,10 @@ echo $OUTPUT->header();
 
             <div class="ai-pcard pc-custom">
               <div class="pc-head"><div class="pc-icon">⚙️</div>
-                <h6><?= get_string('wizard_prov_custom_title', 'local_saipa') ?> <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span></h6></div>
+                <h6>
+                  <?= get_string('wizard_prov_custom_title', 'local_saipa') ?>
+                  <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span>
+                </h6></div>
               <p><?= get_string('wizard_prov_custom_desc', 'local_saipa') ?></p>
               <ul>
                 <li><?= get_string('wizard_prov_custom_i1', 'local_saipa') ?></li>
@@ -641,28 +665,40 @@ echo $OUTPUT->header();
           <input type="radio" name="engine_mode" id="sp-mode-local" value="local_ollama"
                  <?= ($cfgmode === 'local_ollama') ? 'checked' : '' ?>>
           <div class="mc-icon">🖥️</div>
-          <h5><?= get_string('wizard_prov_local_title', 'local_saipa') ?> <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span></h5>
+          <h5>
+            <?= get_string('wizard_prov_local_title', 'local_saipa') ?>
+            <span class="mode-badge badge-local"><?= get_string('wizard_prov_local_badge', 'local_saipa') ?></span>
+          </h5>
           <p><?= get_string('wizard_mode_local_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'cloud_api') ? 'selected' : '' ?>" for="sp-mode-cloud">
           <input type="radio" name="engine_mode" id="sp-mode-cloud" value="cloud_api"
                  <?= ($cfgmode === 'cloud_api') ? 'checked' : '' ?>>
           <div class="mc-icon">☁️</div>
-          <h5><?= get_string('wizard_prov_cloud_title', 'local_saipa') ?> <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span></h5>
+          <h5>
+            <?= get_string('wizard_prov_cloud_title', 'local_saipa') ?>
+            <span class="mode-badge badge-cloud"><?= get_string('wizard_prov_cloud_badge', 'local_saipa') ?></span>
+          </h5>
           <p><?= get_string('wizard_mode_cloud_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'saipa_cloud') ? 'selected' : '' ?>" for="sp-mode-saipa">
           <input type="radio" name="engine_mode" id="sp-mode-saipa" value="saipa_cloud"
                  <?= ($cfgmode === 'saipa_cloud') ? 'checked' : '' ?>>
           <div class="mc-icon">🌐</div>
-          <h5><?= get_string('wizard_prov_saipa_title', 'local_saipa') ?> <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span></h5>
+          <h5>
+            <?= get_string('wizard_prov_saipa_title', 'local_saipa') ?>
+            <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span>
+          </h5>
           <p><?= get_string('wizard_mode_saipa_desc', 'local_saipa') ?></p>
         </label>
         <label class="mode-card <?= ($cfgmode === 'custom') ? 'selected' : '' ?>" for="sp-mode-custom">
           <input type="radio" name="engine_mode" id="sp-mode-custom" value="custom"
                  <?= ($cfgmode === 'custom') ? 'checked' : '' ?>>
           <div class="mc-icon">⚙️</div>
-          <h5><?= get_string('wizard_prov_custom_title', 'local_saipa') ?> <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span></h5>
+          <h5>
+            <?= get_string('wizard_prov_custom_title', 'local_saipa') ?>
+            <span class="mode-badge badge-custom"><?= get_string('wizard_prov_custom_badge', 'local_saipa') ?></span>
+          </h5>
           <p><?= get_string('wizard_mode_custom_desc', 'local_saipa') ?></p>
         </label>
       </div>
@@ -779,7 +815,10 @@ echo $OUTPUT->header();
 
         <div class="row g-3 mb-3">
           <div class="col-md-7">
-            <label class="form-label fw-semibold" for="sp-tg-token"><?= get_string('wizard_tg_token_label', 'local_saipa') ?> <small class="text-muted fw-normal"><?= get_string('wizard_tg_token_note', 'local_saipa') ?></small></label>
+            <label class="form-label fw-semibold" for="sp-tg-token">
+              <?= get_string('wizard_tg_token_label', 'local_saipa') ?>
+              <small class="text-muted fw-normal"><?= get_string('wizard_tg_token_note', 'local_saipa') ?></small>
+            </label>
             <div class="input-group">
               <input type="password" class="form-control" id="sp-tg-token"
                      placeholder="<?= get_string('wizard_tg_token_placeholder', 'local_saipa') ?>"
@@ -1274,4 +1313,7 @@ echo $OUTPUT->header();
 }());
 </script>
 
-<?php echo $OUTPUT->footer(); ?>
+<?php
+// phpcs:enable moodle.Commenting.MissingDocblock, moodle.Commenting.FileExpectedTags
+echo $OUTPUT->footer();
+

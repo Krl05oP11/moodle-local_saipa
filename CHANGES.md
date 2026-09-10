@@ -29,15 +29,20 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 - Engine connection docs and language strings renamed `ENGINE_SECRET` →
   `SAIPA_API_TOKEN` and marked it **required** (the engine now refuses to start
   with an empty token unless `SAIPA_DEV_MODE=true`).
-- **Corrected an inaccurate compliance claim.** The 0.5.1 changelog said "22
-  residual PHPCS errors". Measured under `phpcs --standard=moodle` (the
-  invocation CI and the plugins-directory prechecks use, which does *not* read
-  a plugin-local `phpcs.xml.dist`): **82 errors, all in `setup.php` (60 line
-  length + 5) and `status.php` (17)**. Of these, 22 `MissingDocblock.File` are
-  false positives — the sniff re-fires on every inline `<?php echo ?>` in the
-  HTML sections though both files have a correct file docblock. The remaining
-  60 are genuine over-long lines of templated HTML in the setup wizard. Fix
-  pending (line wrapping and/or extraction to Mustache templates).
+- **PHPCS: the plugin is now clean under `phpcs --standard=moodle`** (0 errors,
+  the invocation CI and the plugins-directory prechecks use). The 0.5.1
+  changelog had claimed "22 residual errors"; the real figure under that
+  standard was 82, all in `setup.php` and `status.php`:
+  - `status.php`: the HTML tail is now emitted from one PHP block instead of
+    inline `<?php echo ?>` islands, which also stopped the `MissingDocblock`
+    sniff from misfiring. 17 errors → 0.
+  - `setup.php`: the 10 over-long lines of templated wizard HTML are wrapped;
+    the `MissingDocblock` / `FileExpectedTags` false positives (the sniffs
+    re-fire on every inline short-echo island though the file docblock is
+    present) are suppressed with a scoped `phpcs:disable` … `phpcs:enable`
+    pair around the template section only. 65 errors → 0.
+  - ~360 line-length **warnings** remain, mostly embedded `<style>` / `<script>`
+    blocks in the wizard — non-blocking, common for admin pages.
 - Graceful degradation when `saipa-engine` is unreachable:
   - `index_course` stops after the first transport error instead of waiting a
     full timeout per remaining item, and records `status = 'error'` (was always
@@ -53,9 +58,9 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
   and auto-redirect from `teacher.php` on first run.
 - PHPUnit test suite: 86 tests covering critical web services, privacy API,
   scheduled tasks, and Moodle core compliance.
-- PHPCS: the whole plugin is clean under `phpcs --standard=moodle` **except**
-  `setup.php` and `status.php`. See the [Unreleased] note for the accurate
-  count and the plan to resolve it.
+- PHPCS: 82 errors in `setup.php` and `status.php` under the plugins-directory
+  standard (the "22" figure here was measured with a local `phpcs.xml.dist`
+  that the prechecker does not read). Resolved in [Unreleased].
 - Class and function docblocks across all external web service classes and
   scheduled task files.
 
