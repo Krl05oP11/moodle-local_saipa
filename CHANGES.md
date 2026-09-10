@@ -36,13 +36,14 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
   - `status.php`: the HTML tail is now emitted from one PHP block instead of
     inline `<?php echo ?>` islands, which also stopped the `MissingDocblock`
     sniff from misfiring. 17 errors → 0.
-  - `setup.php`: the 10 over-long lines of templated wizard HTML are wrapped;
-    the `MissingDocblock` / `FileExpectedTags` false positives (the sniffs
-    re-fire on every inline short-echo island though the file docblock is
-    present) are suppressed with a scoped `phpcs:disable` … `phpcs:enable`
-    pair around the template section only. 65 errors → 0.
-  - ~360 line-length **warnings** remain, mostly embedded `<style>` / `<script>`
-    blocks in the wizard — non-blocking, common for admin pages.
+  - `setup.php`: the 10 over-long lines of templated wizard HTML are wrapped
+    (all now < 125 chars); the `MissingDocblock.File` false positive (the sniff
+    re-fires on every reopened `<?php` tag though the file docblock is present)
+    is suppressed with a scoped `phpcs:disable` … `phpcs:enable` pair around the
+    HTML template only. 65 errors → 0.
+  - 368 **warnings** remain plugin-wide (0 errors) — the bulk are line-length in
+    the wizard's embedded `<style>` / `<script>` blocks. Non-blocking; common
+    for admin pages.
 - Graceful degradation when `saipa-engine` is unreachable:
   - `index_course` stops after the first transport error instead of waiting a
     full timeout per remaining item, and records `status = 'error'` (was always

@@ -206,10 +206,9 @@ $moodleverstr = $CFG->release ?? 'unknown';
 
 echo $OUTPUT->header();
 
-// phpcs:disable moodle.Commenting.MissingDocblock, moodle.Commenting.FileExpectedTags -- False
-// positives: both sniffs re-fire on every inline short-echo island in the HTML
-// template below, though the file docblock (with @package/@copyright/@license)
-// is present at the top of the file. Re-enabled at end of file.
+// phpcs:disable moodle.Commenting.MissingDocblock.File -- False positive: this sniff
+// re-fires on every reopened PHP tag in the HTML template below, although the
+// file docblock is present at the top of the file. Re-enabled at end of file.
 ?>
 <style>
 /* ════════════════════════════════════════════════════════
@@ -1314,6 +1313,6 @@ echo $OUTPUT->header();
 </script>
 
 <?php
-// phpcs:enable moodle.Commenting.MissingDocblock, moodle.Commenting.FileExpectedTags
+// phpcs:enable moodle.Commenting.MissingDocblock.File
 echo $OUTPUT->footer();
 
