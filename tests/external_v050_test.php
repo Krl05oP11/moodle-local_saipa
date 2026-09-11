@@ -95,10 +95,13 @@ final class external_v050_test extends \advanced_testcase {
      */
     private function create_session(int $userid, int $courseid): int {
         global $DB;
+        $now = time();
         return (int) $DB->insert_record('saipa_sessions', (object) [
-            'userid'      => $userid,
-            'courseid'    => $courseid,
-            'timecreated' => time(),
+            'userid'       => $userid,
+            'courseid'     => $courseid,
+            'contextid'    => \context_course::instance($courseid)->id,
+            'timecreated'  => $now,
+            'timemodified' => $now,
         ]);
     }
 

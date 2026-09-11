@@ -50,8 +50,22 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
     `'ready'`, even when nothing was indexed).
   - the nightly risk-evaluation task probes `/health` first and skips the run
     (retrying next night) instead of spending one connect-timeout per course.
-
-## [0.5.1] - 2026-04-09
+- **`risk_threshold_medium` default (`0.40`) failed Moodle's own admin-setting
+  validation** on install (`admin_setting_configtext::validate()` round-trips
+  the default through `clean_param(PARAM_FLOAT)` and string-compares — `"0.40"`
+  cleans to `0.4`, so `"0.40" !== "0.4"` and the default was silently never
+  applied). Found running PHPUnit's `admin/tool/phpunit/cli/init.php` against a
+  real Moodle+PostgreSQL for the first time. Fixed by using `'0.4'` as the
+  default (`risk_threshold_high` at `0.75` round-trips fine). Not a functional
+  bug — `local_saipa_risk_thresholds()` already falls back to the same 0.40 when
+  the config value is unset — but the admin settings page showed an empty field.
+- **PHPUnit actually run for the first time** (real Moodle 4.4.12 + PostgreSQL
+  14, not just `php -l`): **73 tests, 196 assertions, all green**, after fixing
+  a test helper (`external_v050_test.php::create_session()`) that omitted the
+  `contextid`/`timemodified` columns `saipa_sessions` requires — production
+  code (`chat.php`, `get_history.php`) already sets both correctly; only the
+  test fixture was stale. The 0.5.1 changelog's "86 tests" figure was wrong;
+  73 is the real count.
 
 ### Added
 - Setup Wizard (`setup.php`): seven-step guided installer with real-time

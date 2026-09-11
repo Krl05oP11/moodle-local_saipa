@@ -159,7 +159,7 @@ if ($hassiteconfig) {
         'local_saipa/risk_threshold_medium',
         get_string('cfg_threshold_medium', 'local_saipa'),
         '',
-        '0.40',
+        '0.4',
         PARAM_FLOAT
     ));
 
