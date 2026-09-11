@@ -26,6 +26,28 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
   high 0.75.
 
 ### Fixed
+- **Engine connectivity fatal on installs where the engine runs on a private
+  address (`status.php` and the setup wizard's health check).** Moodle blocks
+  RFC1918/loopback ranges for outbound cURL by default
+  (`curlsecurityblockedhosts` — this is Moodle's own out-of-the-box default,
+  present since it ships with `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`,
+  `127.0.0.0/8`, `localhost` pre-populated). The engine is meant to run on
+  exactly such an address, so every install following the recommended
+  topology hit this: Moodle's own security layer raises a `debugging()` call
+  before the plugin's `catch (\GuzzleHttp\Exception\GuzzleException $e)` ever
+  runs, and on any Moodle whose error handler turns notices into exceptions
+  (this is normal in a `$CFG->debug`-heavy dev/staging environment), that
+  surfaces as an uncaught fatal instead of the graceful "engine unreachable"
+  message the code already had a path for. New `local_saipa\engine_security_helper`
+  (`classes/engine_security_helper.php`) narrows Moodle's SSRF protection to
+  allow exactly the one host configured in `engine_url` — not a blanket
+  bypass, and it does not touch the site-wide `curlsecurityblockedhosts` list,
+  so every other consumer of Moodle's HTTP client (repository plugins, the
+  core URL downloader, etc.) keeps exactly the protection it had. Covered by
+  7 new PHPUnit tests (`tests/engine_security_helper_test.php`) that assert
+  the helper narrows rather than opens: the configured host is allowed, a
+  *different* private-range host stays blocked, and unparsable URLs stay
+  blocked. Verified end-to-end against a live engine (not just unit tests).
 - Engine connection docs and language strings renamed `ENGINE_SECRET` →
   `SAIPA_API_TOKEN` and marked it **required** (the engine now refuses to start
   with an empty token unless `SAIPA_DEV_MODE=true`).

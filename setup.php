@@ -61,7 +61,13 @@ if ($action === 'health') {
 
     $url = rtrim($engineurl, '/') . '/health';
     try {
-        $client   = new \core\http_client(['timeout' => 10]);
+        // securityhelper: see local_saipa\engine_security_helper docblock —
+        // narrows Moodle's default private-IP block to exactly this host
+        // instead of widening the site-wide blocklist.
+        $client   = new \core\http_client([
+            'timeout'        => 10,
+            'securityhelper' => new \local_saipa\engine_security_helper($engineurl),
+        ]);
         $response = $client->get($url, [
             'headers' => [
                 'Accept'        => 'application/json',

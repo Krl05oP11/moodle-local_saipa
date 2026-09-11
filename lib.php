@@ -73,11 +73,18 @@ function local_saipa_engine_request(string $endpoint, ?array $data = null, int $
     }
 
     try {
-        $client   = new \core\http_client(['timeout' => $timeout]);
+        // securityhelper: Moodle blocks RFC1918/loopback ranges by default
+        // (curlsecurityblockedhosts), which the engine normally lives on by
+        // design. engine_security_helper narrows the exception to exactly
+        // this admin-configured host instead of widening Moodle's site-wide
+        // blocklist — see the class docblock.
+        $client   = new \core\http_client([
+            'timeout'        => $timeout,
+            'securityhelper' => new \local_saipa\engine_security_helper($engineurl),
+        ]);
         $response = $client->request($method, $url, $options);
     } catch (\GuzzleHttp\Exception\GuzzleException $e) {
-        // Connection refused / timeout / DNS failure / blocked by Moodle's HTTP
-        // security helper / too many redirects.
+        // Connection refused / timeout / DNS failure / too many redirects.
         return ['error' => 'Engine request failed: ' . $e->getMessage()];
     }
 
