@@ -5,6 +5,20 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 ## [Unreleased]
 
 ### Changed
+- **`pt_br` i18n completed — was 92% missing.** The Brazilian Portuguese pack
+  had only 36 of 444 live keys (the rest silently fell back to English); now
+  all 445 keys match `en`/`es` exactly. Along the way: removed 14 dead
+  `privacy:metadata:*` keys (pre-rename format, e.g. `privacy:metadata:risk`,
+  `:sessions`, `:whatsapp` — confirmed via grep that `classes/privacy/provider.php`
+  only ever references the current `saipa_*`-prefixed keys) from `en`/`es`, and
+  fixed 4 keys in `es` that had been left in English
+  (`privacy:metadata:risk_history:*`, `privacy:metadata:saipa_risk_history`).
+  Verified: `php -l` on all 3 files; a programmatic diff shows 0 key
+  mismatches and 0 `{$a}`/`{$a->prop}` placeholder mismatches across
+  `en`/`es`/`pt_br`; and a live check against the real Moodle install (this
+  repo's `docker/` stack, caches purged) confirms all 445 keys resolve via
+  `get_string_manager()` in all 3 languages with the expected content —
+  see `docs/PLAN_MARKETPLACE_20260910.md` Bloque C.
 - All calls to `saipa-engine` now go through Moodle's `\core\http_client`
   (Guzzle) instead of raw PHP `curl_*`, so they honour the site's proxy and
   HTTP-security settings. The transport error message has a stable prefix
