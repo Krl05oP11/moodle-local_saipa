@@ -128,7 +128,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'local_saipa/twilio_sid',
         get_string('settings:twilio_sid', 'local_saipa'),
-        '',
+        get_string('settings:twilio_sid_desc', 'local_saipa'),
         '',
         PARAM_TEXT
     ));
@@ -136,14 +136,14 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configpasswordunmask(
         'local_saipa/twilio_token',
         get_string('settings:twilio_token', 'local_saipa'),
-        '',
+        get_string('settings:twilio_token_desc', 'local_saipa'),
         ''
     ));
 
     $settings->add(new admin_setting_configtext(
         'local_saipa/twilio_from',
         get_string('settings:twilio_from', 'local_saipa'),
-        '',
+        get_string('settings:twilio_from_desc', 'local_saipa'),
         'whatsapp:+14155238886',
         PARAM_TEXT
     ));
@@ -158,7 +158,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'local_saipa/risk_threshold_medium',
         get_string('cfg_threshold_medium', 'local_saipa'),
-        '',
+        get_string('cfg_threshold_medium_desc', 'local_saipa'),
         '0.4',
         PARAM_FLOAT
     ));
@@ -166,7 +166,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'local_saipa/risk_threshold_high',
         get_string('cfg_threshold_high', 'local_saipa'),
-        '',
+        get_string('cfg_threshold_high_desc', 'local_saipa'),
         '0.75',
         PARAM_FLOAT
     ));
@@ -181,7 +181,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'local_saipa/alert_cooldown_hours',
         get_string('cfg_cooldown_hours', 'local_saipa'),
-        '',
+        get_string('cfg_cooldown_hours_desc', 'local_saipa'),
         '24',
         PARAM_INT
     ));
@@ -203,7 +203,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'local_saipa/data_retention_days',
         get_string('cfg_retention_days', 'local_saipa'),
-        '',
+        get_string('cfg_retention_days_desc', 'local_saipa'),
         '730',
         PARAM_INT
     ));
@@ -218,14 +218,14 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox(
         'local_saipa/risk_eval_enabled',
         get_string('cfg_risk_eval', 'local_saipa'),
-        '',
+        get_string('cfg_risk_eval_desc', 'local_saipa'),
         '1'
     ));
 
     $settings->add(new admin_setting_configcheckbox(
         'local_saipa/rag_global_enabled',
         get_string('cfg_rag_global', 'local_saipa'),
-        '',
+        get_string('cfg_rag_global_desc', 'local_saipa'),
         '1'
     ));
 }

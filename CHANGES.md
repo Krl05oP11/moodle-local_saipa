@@ -5,6 +5,17 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 ## [Unreleased]
 
 ### Changed
+- **`settings.php`: 9 settings had no admin-facing description at all** (not
+  a translation gap — the `_desc` string didn't exist in any language):
+  `twilio_sid`, `twilio_token`, `twilio_from`, `risk_threshold_medium`,
+  `risk_threshold_high`, `alert_cooldown_hours`, `data_retention_days`,
+  `risk_eval_enabled`, `rag_global_enabled`. Added a `*_desc` lang key for
+  each (en/es/pt_br) and wired it into `settings.php`'s 3rd constructor
+  argument. Verified: `php -l`; 0 key/placeholder mismatches across the 3
+  languages (454 keys each, up from 445); live check confirms
+  `settings.php` executes through Moodle's real `admin_settingpage`
+  machinery without a fatal, and all 9 new keys resolve with the expected
+  content in all 3 languages.
 - **`pt_br` i18n completed — was 92% missing.** The Brazilian Portuguese pack
   had only 36 of 444 live keys (the rest silently fell back to English); now
   all 445 keys match `en`/`es` exactly. Along the way: removed 14 dead
