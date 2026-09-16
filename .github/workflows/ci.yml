@@ -27,11 +27,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # TEMP (Bloque E debug): narrowed to 1 cell while chasing the
-        # --moodle-branch->--branch CLI fix; restore full matrix once
-        # the install step + pipeline pass on this cell.
-        php: ['8.1']
-        moodle-branch: ['MOODLE_404_STABLE']
+        php: ['8.1', '8.2', '8.3']
+        moodle-branch: ['MOODLE_404_STABLE', 'MOODLE_405_STABLE']
 
     steps:
       - name: Check out plugin
