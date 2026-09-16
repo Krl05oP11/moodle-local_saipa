@@ -370,13 +370,34 @@ echo $OUTPUT->header();
 <?php else : ?>
   <!-- Progress bar -->
   <div class="spwiz-progress" id="spwiz-progress">
-    <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label"><?= get_string('wizard_step_welcome', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="2"><div class="step-circle">2</div><div class="step-label"><?= get_string('wizard_step_requirements', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="3"><div class="step-circle">3</div><div class="step-label"><?= get_string('wizard_step_ai_mode', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="4"><div class="step-circle">4</div><div class="step-label"><?= get_string('wizard_step_engine', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="5"><div class="step-circle">5</div><div class="step-label"><?= get_string('wizard_step_telegram', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="6"><div class="step-circle">6</div><div class="step-label"><?= get_string('wizard_step_test', 'local_saipa') ?></div></div>
-    <div class="step"        data-step="7"><div class="step-circle">7</div><div class="step-label"><?= get_string('wizard_step_done', 'local_saipa') ?></div></div>
+    <div class="step active" data-step="1">
+      <div class="step-circle">1</div>
+      <div class="step-label"><?= get_string('wizard_step_welcome', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="2">
+      <div class="step-circle">2</div>
+      <div class="step-label"><?= get_string('wizard_step_requirements', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="3">
+      <div class="step-circle">3</div>
+      <div class="step-label"><?= get_string('wizard_step_ai_mode', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="4">
+      <div class="step-circle">4</div>
+      <div class="step-label"><?= get_string('wizard_step_engine', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="5">
+      <div class="step-circle">5</div>
+      <div class="step-label"><?= get_string('wizard_step_telegram', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="6">
+      <div class="step-circle">6</div>
+      <div class="step-label"><?= get_string('wizard_step_test', 'local_saipa') ?></div>
+    </div>
+    <div class="step" data-step="7">
+      <div class="step-circle">7</div>
+      <div class="step-label"><?= get_string('wizard_step_done', 'local_saipa') ?></div>
+    </div>
   </div>
 
   <div class="card shadow-sm">
@@ -530,7 +551,9 @@ echo $OUTPUT->header();
               <span><?= get_string('wizard_req_enginepy_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
-              <span class="badge bg-warning text-dark" style="font-size:.72rem;"><?= get_string('wizard_req_enginepy_value', 'local_saipa') ?></span>
+              <span class="badge bg-warning text-dark" style="font-size:.72rem;">
+                <?= get_string('wizard_req_enginepy_value', 'local_saipa') ?>
+              </span>
             </div>
           </div>
 
@@ -550,7 +573,9 @@ echo $OUTPUT->header();
               <span><?= get_string('wizard_req_llm_desc', 'local_saipa') ?></span>
             </div>
             <div class="req-value" style="white-space:normal;max-width:200px;text-align:right;">
-              <span class="badge bg-danger" style="font-size:.72rem;"><?= get_string('wizard_req_llm_value', 'local_saipa') ?></span>
+              <span class="badge bg-danger" style="font-size:.72rem;">
+                <?= get_string('wizard_req_llm_value', 'local_saipa') ?>
+              </span>
             </div>
           </div>
 
@@ -651,8 +676,12 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-3">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(1)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
-        <button class="btn btn-primary px-5" id="req-next-btn" disabled onclick="spwizGoto(3)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(1)">
+            <?= get_string('wizard_btn_back', 'local_saipa') ?>
+        </button>
+        <button class="btn btn-primary px-5" id="req-next-btn" disabled onclick="spwizGoto(3)">
+            <?= get_string('wizard_btn_next', 'local_saipa') ?>
+        </button>
       </div>
     </div><!-- /step 2 -->
 
@@ -709,7 +738,9 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(2)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(2)">
+            <?= get_string('wizard_btn_back', 'local_saipa') ?>
+        </button>
         <button class="btn btn-primary px-5" onclick="spwizGoto(4)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 3 -->
@@ -737,7 +768,8 @@ echo $OUTPUT->header();
       </div>
 
       <div class="mb-3">
-        <label class="form-label fw-semibold" for="sp-url"><?= get_string('wizard_url_label', 'local_saipa') ?> <span class="text-danger">*</span></label>
+        <label class="form-label fw-semibold" for="sp-url"><?= get_string('wizard_url_label', 'local_saipa') ?>
+            <span class="text-danger">*</span></label>
         <input type="url" class="form-control" id="sp-url"
                placeholder="<?= get_string('wizard_url_placeholder', 'local_saipa') ?>"
                value="<?= s($cfgurl) ?>">
@@ -753,7 +785,9 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(3)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(3)">
+            <?= get_string('wizard_btn_back', 'local_saipa') ?>
+        </button>
         <button class="btn btn-primary px-5" onclick="spwizGoto(5)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 4 -->
@@ -835,7 +869,8 @@ echo $OUTPUT->header();
             <div class="form-text"><?= get_string('wizard_tg_token_help', 'local_saipa') ?></div>
           </div>
           <div class="col-md-5">
-            <label class="form-label fw-semibold" for="sp-tg-username"><?= get_string('wizard_tg_username_label', 'local_saipa') ?> <span class="text-danger">*</span></label>
+            <label class="form-label fw-semibold" for="sp-tg-username"><?= get_string('wizard_tg_username_label', 'local_saipa') ?>
+                <span class="text-danger">*</span></label>
             <div class="input-group">
               <span class="input-group-text">@</span>
               <input type="text" class="form-control" id="sp-tg-username"
@@ -860,7 +895,9 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(4)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(4)">
+            <?= get_string('wizard_btn_back', 'local_saipa') ?>
+        </button>
         <button class="btn btn-primary px-5" onclick="spwizGoto(6)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 5 -->
@@ -883,7 +920,9 @@ echo $OUTPUT->header();
 
       <!-- Configuration summary (shown after test) -->
       <div id="sp-summary" style="display:none">
-        <h6 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;margin-bottom:10px;"><?= get_string('wizard_summary_heading', 'local_saipa') ?></h6>
+        <h6 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;margin-bottom:10px;">
+          <?= get_string('wizard_summary_heading', 'local_saipa') ?>
+        </h6>
         <div class="summary-grid mb-4">
 
           <div class="summary-card">
@@ -894,7 +933,11 @@ echo $OUTPUT->header();
             </div>
             <div class="summary-row">
               <span class="summary-label"><?= get_string('wizard_summary_url', 'local_saipa') ?></span>
-              <span class="summary-value" id="sum-url" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl">—</span>
+              <span
+                class="summary-value"
+                id="sum-url"
+                style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl"
+              >—</span>
             </div>
             <div class="summary-row">
               <span class="summary-label"><?= get_string('wizard_summary_token', 'local_saipa') ?></span>
@@ -934,11 +977,15 @@ echo $OUTPUT->header();
             <h6><?= get_string('wizard_summary_features', 'local_saipa') ?></h6>
             <div class="summary-row">
               <span class="summary-label"><?= get_string('wizard_summary_risk_eval', 'local_saipa') ?></span>
-              <span class="summary-value"><?= $cfgriskon ? get_string('wizard_enabled', 'local_saipa') : get_string('wizard_disabled', 'local_saipa') ?></span>
+              <span class="summary-value"><?= $cfgriskon
+                ? get_string('wizard_enabled', 'local_saipa')
+                : get_string('wizard_disabled', 'local_saipa') ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label"><?= get_string('wizard_summary_rag', 'local_saipa') ?></span>
-              <span class="summary-value"><?= $cfgragon ? get_string('wizard_enabled', 'local_saipa') : get_string('wizard_disabled', 'local_saipa') ?></span>
+              <span class="summary-value"><?= $cfgragon
+                ? get_string('wizard_enabled', 'local_saipa')
+                : get_string('wizard_disabled', 'local_saipa') ?></span>
             </div>
           </div>
 
@@ -946,7 +993,9 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-2">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(5)"><?= get_string('wizard_btn_back', 'local_saipa') ?></button>
+        <button class="btn btn-outline-secondary" onclick="spwizGoto(5)">
+            <?= get_string('wizard_btn_back', 'local_saipa') ?>
+        </button>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary" id="sp-retry-btn" style="display:none"
                   onclick="spRunTest()"><?= get_string('wizard_btn_retry', 'local_saipa') ?></button>
@@ -966,7 +1015,9 @@ echo $OUTPUT->header();
         <h3><?= get_string('wizard_done_inline_title', 'local_saipa') ?></h3>
         <p><?= get_string('wizard_done_inline_desc', 'local_saipa') ?></p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary"><?= get_string('wizard_btn_admin', 'local_saipa') ?></a>
+          <a href="<?= s($settingsurl) ?>" class="btn btn-outline-secondary">
+            <?= get_string('wizard_btn_admin', 'local_saipa') ?>
+          </a>
           <a href="<?= (new moodle_url('/course/index.php'))->out() ?>" class="btn btn-primary btn-lg px-5">
             <?= get_string('wizard_btn_courses', 'local_saipa') ?>
           </a>
@@ -1030,16 +1081,40 @@ echo $OUTPUT->header();
     var healthOk    = false;
 
     var modeLabels = {
-        local_ollama: <?= json_encode(get_string('wizard_js_mode_local', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        cloud_api:    <?= json_encode(get_string('wizard_js_mode_cloud', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        saipa_cloud:  <?= json_encode(get_string('wizard_js_mode_saipa', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        custom:       <?= json_encode(get_string('wizard_js_mode_custom', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+        local_ollama: <?= json_encode(
+            get_string('wizard_js_mode_local', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        cloud_api:    <?= json_encode(
+            get_string('wizard_js_mode_cloud', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        saipa_cloud:  <?= json_encode(
+            get_string('wizard_js_mode_saipa', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        custom:       <?= json_encode(
+            get_string('wizard_js_mode_custom', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>
     };
     var channelLabels = {
-        none:     <?= json_encode(get_string('wizard_js_ch_none', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        telegram: <?= json_encode(get_string('wizard_js_ch_telegram', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        whatsapp: <?= json_encode(get_string('wizard_js_ch_whatsapp', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        both:     <?= json_encode(get_string('wizard_js_ch_both', 'local_saipa'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+        none:     <?= json_encode(
+            get_string('wizard_js_ch_none', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        telegram: <?= json_encode(
+            get_string('wizard_js_ch_telegram', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        whatsapp: <?= json_encode(
+            get_string('wizard_js_ch_whatsapp', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>,
+        both:     <?= json_encode(
+            get_string('wizard_js_ch_both', 'local_saipa'),
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>
     };
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -1148,7 +1223,8 @@ echo $OUTPUT->header();
         var usernameEl = document.getElementById('sp-tg-username');
 
         if (!tokenEl || !tokenEl.value.trim()) {
-            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">' + he(L.enter_token) + '</div>';
+            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">'
+                + he(L.enter_token) + '</div>';
             return;
         }
 
