@@ -53,6 +53,13 @@ class telegram_unlink_by_id extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
+        // Server-to-server only: the caller's token must belong to an
+        // account explicitly granted the engine-bridge capability, not
+        // just any account with a saipa_service token.
+        $context = \context_system::instance();
+        self::validate_context($context);
+        require_capability('local/saipa:enginebridge', $context);
+
         $DB->delete_records('local_saipa_telegram_links', ['telegram_id' => $params['telegram_id']]);
 
         return ['success' => true];

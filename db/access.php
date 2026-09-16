@@ -77,4 +77,17 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+
+    // Server-to-server Telegram bridge (saipa-engine only): reads/writes any
+    // user's Telegram link by telegram_id, with no enrolment or ownership
+    // check possible at that layer. No archetype gets this by default --
+    // grant it only to the dedicated account whose token is configured as
+    // MOODLE_TOKEN on the engine, never to an admin/manager account, so a
+    // leaked engine token can't reach the rest of the site.
+    'local/saipa:enginebridge' => [
+        'captype'      => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'riskbitmask'  => RISK_PERSONAL | RISK_DATALOSS,
+        'archetypes'   => [],
+    ],
 ];

@@ -136,7 +136,7 @@ $functions = [
             . 'Telegram message (server-to-server)',
         'type'          => 'write',
         'ajax'          => false,
-        'capabilities'  => '',
+        'capabilities'  => 'local/saipa:enginebridge',
         'loginrequired' => false,
     ],
 
@@ -166,7 +166,7 @@ $functions = [
         'description'   => 'Resolves a Telegram chat_id to Moodle user + course context (server-to-server)',
         'type'          => 'read',
         'ajax'          => false,
-        'capabilities'  => '',
+        'capabilities'  => 'local/saipa:enginebridge',
         'loginrequired' => false,
     ],
 
@@ -186,7 +186,7 @@ $functions = [
         'description'   => 'Removes the Telegram link for a given telegram_id (server-to-server, called on /desconectar)',
         'type'          => 'write',
         'ajax'          => false,
-        'capabilities'  => '',
+        'capabilities'  => 'local/saipa:enginebridge',
         'loginrequired' => false,
     ],
 

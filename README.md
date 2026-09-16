@@ -60,7 +60,7 @@ Five-tab institutional overview for academic advisors and coordinators:
 
 ### SAIPA Engine
 The plugin requires a separate Python service (`saipa-engine`) that handles:
-- LLM inference via [Ollama](https://ollama.com) (local) or any OpenAI-compatible API
+- LLM inference via [Ollama](https://ollama.com) (local) or Anthropic's API
 - Vector search with ChromaDB
 - Telegram bot polling
 - Rule-based dropout-risk model
@@ -110,6 +110,17 @@ After installation, go to *Site administration → Plugins → Local plugins →
 |---------|-------------|
 | **Engine URL** | Base URL of the SAIPA Engine, e.g. `http://localhost:8052` |
 | **Engine token** | Bearer token configured in the engine (`.env` → `SAIPA_API_TOKEN`). Required — the engine rejects an empty token. |
+
+> **Security note — provision a dedicated Moodle account for the engine's
+> `MOODLE_TOKEN`.** The three server-to-server Telegram endpoints the
+> engine calls (`mark_alert_responded`, `telegram_get_session`,
+> `telegram_unlink_by_id`) are gated by a new capability,
+> `local/saipa:enginebridge`, granted to no role by default. Create a
+> dedicated low-privilege account, assign it a role with only that
+> capability at system context, and generate its webservice token from
+> that account — never from an admin or manager account. A token bound to
+> an over-privileged account defeats the point of the capability check if
+> it ever leaks.
 | **Telegram Bot Token** | Token from [@BotFather](https://t.me/BotFather) |
 | **Alert cooldown (hours)** | Minimum hours between alerts to the same student (default: 24) |
 | **Risk threshold — medium** | Probability threshold for 🟡 Medium risk (default: 0.4) |
@@ -119,7 +130,10 @@ After installation, go to *Site administration → Plugins → Local plugins →
 Before students can use the chat, a teacher must index the course materials:
 
 1. Open the course → *SAIPA → Teacher Dashboard → Index Course*.
-2. Supported formats: Moodle Pages, PDF files, PPTX presentations.
+2. Supported formats today: Moodle Pages only. (The engine exposes
+   PDF/PPTX indexing endpoints for `local_evalia`; `local_saipa`'s
+   `index_course.php` does not call them yet — PDF/PPTX support for the
+   course chat is on the roadmap, not shipped.)
 3. Indexing runs in the background; large courses may take a few minutes.
 
 ---

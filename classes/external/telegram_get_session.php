@@ -53,6 +53,13 @@ class telegram_get_session extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
+        // Server-to-server only: the caller's token must belong to an
+        // account explicitly granted the engine-bridge capability, not
+        // just any account with a saipa_service token.
+        $context = \context_system::instance();
+        self::validate_context($context);
+        require_capability('local/saipa:enginebridge', $context);
+
         $link = $DB->get_record('local_saipa_telegram_links', [
             'telegram_id' => $params['telegram_id'],
             'confirmed'   => 1,
@@ -62,8 +69,12 @@ class telegram_get_session extends external_api {
             return ['linked' => false, 'user_id' => 0, 'course_id' => 0, 'fullname' => ''];
         }
 
-        $user     = \core_user::get_user($link->userid, 'id, firstname, lastname', MUST_EXIST);
-        $fullname = fullname($user);
+        // The full name needs more than firstname/lastname (phonetic/middle/
+        // alternate name fields too) -- fetch the full set or fullname()
+        // fires a debugging() notice on every call.
+        $namefields = implode(', ', \core_user\fields::get_name_fields());
+        $user       = \core_user::get_user($link->userid, "id, {$namefields}", MUST_EXIST);
+        $fullname   = fullname($user);
 
         // Find the most recently active SAIPA session for this user.
         $session = $DB->get_record_sql(

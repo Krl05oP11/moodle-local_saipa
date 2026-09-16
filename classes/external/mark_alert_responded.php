@@ -61,6 +61,13 @@ class mark_alert_responded extends external_api {
             'timereceived' => $timereceived,
         ]);
 
+        // Server-to-server only: the caller's token must belong to an
+        // account explicitly granted the engine-bridge capability, not
+        // just any account with a saipa_service token.
+        $context = \context_system::instance();
+        self::validate_context($context);
+        require_capability('local/saipa:enginebridge', $context);
+
         if ($params['timereceived'] <= 0) {
             $params['timereceived'] = time();
         }

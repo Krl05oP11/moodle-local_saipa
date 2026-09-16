@@ -228,6 +228,7 @@ $string['risk_demo_button']         = 'Simulate';
 $string['risk_trend_title']     = 'Risk level trend by week';
 $string['saipa:advisor'] = 'Access the advisor dashboard';
 $string['saipa:chat']    = 'Use SAIPA chat assistant';
+$string['saipa:enginebridge'] = 'Act as the SAIPA Engine (server-to-server Telegram bridge) -- grant only to a dedicated account, never to an admin or teacher';
 $string['saipa:manage']  = 'Manage SAIPA settings';
 $string['saipa:view']    = 'View SAIPA dashboard';
 $string['saipa:viewall'] = 'View all student data across courses';
