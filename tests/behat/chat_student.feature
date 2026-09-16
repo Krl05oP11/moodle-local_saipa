@@ -1,7 +1,7 @@
 @local @local_saipa @local_saipa_chat
 Feature: SAIPA chat widget for students
   As a student enrolled in a course
-  I need to be able to open the SAIPA chat block
+  I need to be able to use the SAIPA chat widget
   So that I can ask questions about the course content
 
   Background:
@@ -18,23 +18,29 @@ Feature: SAIPA chat widget for students
       | teacher1 | SAIPATEST | editingteacher |
     And the following "blocks" exist:
       | blockname  | contextlevel | reference | pagetypepattern | defaultregion |
-      | saipa      | Course       | SAIPATEST | course-view-*   | side-post     |
+      | saipa      | Course       | SAIPATEST | course-view-*   | side-pre      |
 
   @javascript
   Scenario: Student sees SAIPA chat block when enrolled
     Given I am on the "SAIPATEST" "course" page logged in as "student1"
-    Then I should see "SAIPA" in the "side-post" "region"
+    Then "SAIPA Assistant" "block" should exist
 
   @javascript
-  Scenario: Student can open the chat interface
+  Scenario: Student can type into the chat input field
     Given I am on the "SAIPATEST" "course" page logged in as "student1"
-    When I click on "Abrir chat SAIPA" "link" in the "side-post" "region"
     Then I should see the SAIPA chat input field
+    When I type "How do I submit the assignment?" into the SAIPA chat input field
+    Then the SAIPA chat input field should contain "How do I submit the assignment?"
 
   @javascript
   Scenario: Teacher sees SAIPA dashboard link in the block
     Given I am on the "SAIPATEST" "course" page logged in as "teacher1"
-    Then I should see "Dashboard SAIPA" in the "side-post" "region"
+    Then I should see "Student panel" in the "SAIPA Assistant" "block"
+
+  @javascript
+  Scenario: Student does not see the teacher dashboard link
+    Given I am on the "SAIPATEST" "course" page logged in as "student1"
+    Then I should not see "Student panel" in the "SAIPA Assistant" "block"
 
   @javascript
   Scenario: Unenrolled user does not see SAIPA block
@@ -42,4 +48,4 @@ Feature: SAIPA chat widget for students
       | username  | firstname | lastname | email                 |
       | outsider1 | Pedro     | Foraneo  | outsider@example.com  |
     And I am on the "SAIPATEST" "course" page logged in as "outsider1"
-    Then I should not see "SAIPA" in the "side-post" "region"
+    Then "SAIPA Assistant" "block" should not exist

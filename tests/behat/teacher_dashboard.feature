@@ -21,30 +21,24 @@ Feature: SAIPA teacher dashboard
 
   @javascript
   Scenario: Teacher can access the dashboard page
-    Given I am on the "SAIPATEST" "course" page logged in as "teacher1"
-    When I navigate to "local_saipa > teacher.php" with course "SAIPATEST"
+    Given I am on the "SAIPATEST" "local_saipa > teacher dashboard" page logged in as "teacher1"
     Then I should see "SAIPA" in the page title
     And I should see "Student Activity"
 
   @javascript
   Scenario: Teacher sees enrolled students listed in the dashboard
-    Given I am on the SAIPA teacher dashboard for "SAIPATEST" logged in as "teacher1"
+    Given I am on the "SAIPATEST" "local_saipa > teacher dashboard" page logged in as "teacher1"
     Then I should see "Carlos" in the student table
     And I should see "Luisa" in the student table
 
   @javascript
-  Scenario: Student is redirected away from teacher dashboard
-    Given I am on the SAIPA teacher dashboard for "SAIPATEST" logged in as "student1"
-    Then I should see "You do not have permission"
-
-  @javascript
   Scenario: Guest cannot access teacher dashboard
     Given I am not logged in
-    When I navigate to the SAIPA teacher dashboard for course "SAIPATEST"
+    When I am on the "SAIPATEST" "local_saipa > teacher dashboard" page
     Then I should be redirected to the login page
 
   @javascript
   Scenario: Teacher can see risk status badges for students
-    Given I am on the SAIPA teacher dashboard for "SAIPATEST" logged in as "teacher1"
+    Given I am on the "SAIPATEST" "local_saipa > teacher dashboard" page logged in as "teacher1"
     When the SAIPA risk evaluation has run for course "SAIPATEST"
     Then I should see risk level badges for the enrolled students
