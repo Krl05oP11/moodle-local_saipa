@@ -33,7 +33,7 @@ $tasks = [
         'day'       => '*',
         'month'     => '*',
         'dayofweek' => '*',
-        'disabled'  => 1, // Admin enables after engine is configured
+        'disabled'  => 1, // Admin enables after engine is configured.
     ],
     [
         'classname' => 'local_saipa\task\aggregate_daily_stats',
@@ -43,6 +43,6 @@ $tasks = [
         'day'       => '*',
         'month'     => '*',
         'dayofweek' => '*',
-        'disabled'  => 1, // Admin enables after engine is configured
+        'disabled'  => 1, // Admin enables after engine is configured.
     ],
 ];

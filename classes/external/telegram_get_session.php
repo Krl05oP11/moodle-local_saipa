@@ -71,8 +71,8 @@ class telegram_get_session extends external_api {
               WHERE s.userid = :uid
               ORDER BY s.timemodified DESC",
             ['uid' => $link->userid],
-            0, // limitfrom
-            1   // limitnum
+            0, // Limitfrom.
+            1   // Limitnum.
         );
 
         $courseid = $session ? (int) $session->courseid : 0;

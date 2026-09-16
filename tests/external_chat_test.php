@@ -68,7 +68,7 @@ final class external_chat_test extends \advanced_testcase {
         set_config('engine_url', '', 'local_saipa');
     }
 
-    // ── Session handling ──────────────────────────────────────────────────────
+    // Session handling.
 
     /**
      * A new session row must be created for a fresh student/course combination.
@@ -126,7 +126,7 @@ final class external_chat_test extends \advanced_testcase {
         );
     }
 
-    // ── Message persistence ───────────────────────────────────────────────────
+    // Message persistence.
 
     /**
      * The user message must be persisted to saipa_messages before the engine
@@ -173,7 +173,7 @@ final class external_chat_test extends \advanced_testcase {
         $this->assertEquals(2, $count);
     }
 
-    // ── Engine error handling ─────────────────────────────────────────────────
+    // Engine error handling.
 
     /**
      * When the engine URL is empty the WS must return a graceful error reply,
@@ -209,7 +209,7 @@ final class external_chat_test extends \advanced_testcase {
         $this->assertArrayHasKey('session_id', $result);
     }
 
-    // ── Access control ────────────────────────────────────────────────────────
+    // Access control.
 
     /**
      * Unauthenticated access must be rejected.

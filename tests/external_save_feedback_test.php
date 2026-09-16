@@ -27,8 +27,6 @@
 
 namespace local_saipa\tests;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Tests for save_feedback web service.
  *
@@ -77,7 +75,7 @@ final class external_save_feedback_test extends \advanced_testcase {
         ]);
     }
 
-    // ── Happy path ────────────────────────────────────────────────────────────
+    // Happy path.
 
     /**
      * Test thumbs up saves rating 1.
@@ -153,7 +151,7 @@ final class external_save_feedback_test extends \advanced_testcase {
         $this->assertEquals(-1, (int) $row->rating, 'Rating should reflect last call');
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
+    // Validation.
 
     /**
      * Rating values other than 1 or -1 must be rejected.

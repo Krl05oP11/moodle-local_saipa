@@ -117,7 +117,7 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    // ── Telegram integration ──────────────────────────────────────────────────
+    // Telegram integration.
 
     'local_saipa_telegram_generate_link' => [
         'classname'     => 'local_saipa\external\telegram_generate_link',
@@ -199,7 +199,7 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    // ── WhatsApp integration ──────────────────────────────────────────────────
+    // WhatsApp integration.
 
     'local_saipa_whatsapp_start_verify' => [
         'classname'     => 'local_saipa\external\whatsapp_start_verify',
@@ -241,7 +241,7 @@ $functions = [
         'loginrequired' => true,
     ],
 
-    // ── v0.5.0 — Dashboard & multi-course services ────────────────────────────
+    // V0.5.0 — Dashboard & multi-course services.
 
     'local_saipa_get_course_summary' => [
         'classname'     => 'local_saipa\external\get_course_summary',

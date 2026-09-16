@@ -90,7 +90,7 @@ final class external_get_course_risk_test extends \advanced_testcase {
         );
     }
 
-    // ── Demo mode ─────────────────────────────────────────────────────────────
+    // Demo mode.
 
     /**
      * Demo mode must return one result per enrolled student without calling the engine.
@@ -208,7 +208,7 @@ final class external_get_course_risk_test extends \advanced_testcase {
         $this->assertEmpty($result['errors']);
     }
 
-    // ── Access control ────────────────────────────────────────────────────────
+    // Access control.
 
     /**
      * A student must not be able to call get_course_risk.

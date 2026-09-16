@@ -81,7 +81,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         ]);
     }
 
-    // ── Task metadata ─────────────────────────────────────────────────────────
+    // Task metadata.
 
     /**
      * Test task has name.
@@ -106,7 +106,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         $this->assertTrue($found, 'risk_evaluation must be registered in db/tasks.php');
     }
 
-    // ── No-activity guard ─────────────────────────────────────────────────────
+    // No-activity guard.
 
     /**
      * Task must exit cleanly when no SAIPA sessions exist.
@@ -124,7 +124,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         $this->assertStringContainsString('nothing to evaluate', $output);
     }
 
-    // ── Score persistence ─────────────────────────────────────────────────────
+    // Score persistence.
 
     /**
      * After a successful evaluation, saipa_risk_scores must contain one row
@@ -194,7 +194,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         $this->assertEquals($before + 1, $after, 'Must INSERT one new row');
     }
 
-    // ── Escalation detection ──────────────────────────────────────────────────
+    // Escalation detection.
 
     /**
      * get_previous_levels returns the correct prior risk level.

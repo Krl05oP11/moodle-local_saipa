@@ -66,7 +66,7 @@ class get_student_features extends external_api {
         $now  = time();
         $day  = 86400;
 
-        // ── 1. last_access_days ─────────────────────────────────────────────
+        // 1. last_access_days.
         $lastaccess = $DB->get_field(
             'user_lastaccess',
             'timeaccess',
@@ -76,7 +76,7 @@ class get_student_features extends external_api {
             ? round(($now - $lastaccess) / $day, 1)
             : 90.0;
 
-        // ── 2. submission_rate ──────────────────────────────────────────────
+        // 2. submission_rate.
         $totalassigns = (int) $DB->count_records('assign', ['course' => $cid]);
         if ($totalassigns > 0) {
             $sql = "SELECT COUNT(DISTINCT s.assignment)
@@ -88,10 +88,10 @@ class get_student_features extends external_api {
             $submitted = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
             $submissionrate = round($submitted / $totalassigns, 4);
         } else {
-            $submissionrate = 1.0;   // no assignments → neutral
+            $submissionrate = 1.0;   // No assignments → neutral.
         }
 
-        // ── 3 & 4. login counts ─────────────────────────────────────────────
+        // 3 & 4. login counts.
         $since7  = $now - 7 * $day;
         $since30 = $now - 30 * $day;
 
@@ -106,7 +106,7 @@ class get_student_features extends external_api {
             ['uid' => $uid, 'since' => $since30]
         );
 
-        // ── 5 & 6. SAIPA chat activity ──────────────────────────────────────
+        // 5 & 6. SAIPA chat activity.
         $session = $DB->get_record(
             'local_saipa_sessions',
             ['userid' => $uid, 'courseid' => $cid]
@@ -130,7 +130,7 @@ class get_student_features extends external_api {
             $saipadayssincelastchat = 99.0;
         }
 
-        // ── 7 & 8. quiz scores ──────────────────────────────────────────────
+        // 7 & 8. quiz scores.
         $sql = "SELECT qg.grade, q.grade AS maxgrade
                   FROM {quiz_grades} qg
                   JOIN {quiz} q ON q.id = qg.quiz
@@ -146,10 +146,10 @@ class get_student_features extends external_api {
             }
             $quizavgscore = round(array_sum($pcts) / count($pcts), 2);
         } else {
-            $quizavgscore = 50.0;   // neutral default
+            $quizavgscore = 50.0;   // Neutral default.
         }
 
-        // ── 9. forum posts ──────────────────────────────────────────────────
+        // 9. forum posts.
         $sql = "SELECT COUNT(fp.id)
                   FROM {forum_posts} fp
                   JOIN {forum_discussions} fd ON fd.id = fp.discussion
@@ -158,7 +158,7 @@ class get_student_features extends external_api {
                    AND fp.userid = :uid";
         $forumpostcount = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
 
-        // ── 10. positive_feedback_ratio ─────────────────────────────────────
+        // 10. positive_feedback_ratio.
         $totalfb = (int) $DB->count_records('local_saipa_feedback', ['userid' => $uid]);
         if ($totalfb > 0) {
             $posfb = (int) $DB->count_records(
@@ -167,10 +167,10 @@ class get_student_features extends external_api {
             );
             $positivefeedbackratio = round($posfb / $totalfb, 4);
         } else {
-            $positivefeedbackratio = 0.5;   // neutral
+            $positivefeedbackratio = 0.5;   // Neutral.
         }
 
-        // ── 11. completion_rate ─────────────────────────────────────────────
+        // 11. completion_rate.
         $sqltotal = "SELECT COUNT(*) FROM {course_modules}
                        WHERE course = :cid AND completion > 0";
         $totalcompletable = (int) $DB->get_field_sql($sqltotal, ['cid' => $cid]);
@@ -185,7 +185,7 @@ class get_student_features extends external_api {
             $done           = (int) $DB->get_field_sql($sqldone, ['cid' => $cid, 'uid' => $uid]);
             $completionrate = round($done / $totalcompletable, 4);
         } else {
-            $completionrate = 1.0;   // no tracked activities → neutral
+            $completionrate = 1.0;   // No tracked activities → neutral.
         }
 
         return [

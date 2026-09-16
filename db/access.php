@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
 
-    // Student capability: can use the chat widget
+    // Student capability: can use the chat widget.
     'local/saipa:chat' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_COURSE,
@@ -38,7 +38,7 @@ $capabilities = [
         ],
     ],
 
-    // Teacher capability: can view the SAIPA dashboard (risk scores, conversations)
+    // Teacher capability: can view the SAIPA dashboard (risk scores, conversations).
     'local/saipa:view' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_COURSE,
@@ -49,7 +49,7 @@ $capabilities = [
         ],
     ],
 
-    // Site admin capability: can manage global SAIPA settings
+    // Site admin capability: can manage global SAIPA settings.
     'local/saipa:manage' => [
         'captype'      => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -58,7 +58,7 @@ $capabilities = [
         ],
     ],
 
-    // Multi-course view: teacher can see summary across all their courses
+    // Multi-course view: teacher can see summary across all their courses.
     'local/saipa:viewall' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -69,7 +69,7 @@ $capabilities = [
         ],
     ],
 
-    // Pedagogical advisor: can view institution-wide metrics && course controls
+    // Pedagogical advisor: can view institution-wide metrics && course controls.
     'local/saipa:advisor' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_SYSTEM,

@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Extends the navigation bar. Used in Fase 1 to add a Teacher Dashboard link.
  *
@@ -73,7 +71,7 @@ function local_saipa_engine_request(string $endpoint, ?array $data = null, int $
     }
 
     try {
-        // securityhelper: Moodle blocks RFC1918/loopback ranges by default
+        // Securityhelper: Moodle blocks RFC1918/loopback ranges by default
         // (curlsecurityblockedhosts), which the engine normally lives on by
         // design. engine_security_helper narrows the exception to exactly
         // this admin-configured host instead of widening Moodle's site-wide

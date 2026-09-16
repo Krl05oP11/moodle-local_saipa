@@ -52,7 +52,7 @@ final class external_engine_request_test extends \advanced_testcase {
         $this->resetAfterTest();
     }
 
-    // ── No-network error paths ────────────────────────────────────────────────
+    // No-network error paths.
 
     /**
      * When engine_url is empty the function must return immediately with an error.
@@ -78,7 +78,7 @@ final class external_engine_request_test extends \advanced_testcase {
         $this->assertArrayHasKey('error', $result);
     }
 
-    // ── Network error paths ───────────────────────────────────────────────────
+    // Network error paths.
 
     /**
      * Connecting to a closed port must return an error array, not throw.
@@ -113,7 +113,7 @@ final class external_engine_request_test extends \advanced_testcase {
         );
     }
 
-    // ── Response parsing ──────────────────────────────────────────────────────
+    // Response parsing.
 
     /**
      * Trailing slash on engine_url must be normalised (no double slash in path).
@@ -157,7 +157,7 @@ final class external_engine_request_test extends \advanced_testcase {
         $this->assertArrayHasKey('error', $result);
     }
 
-    // ── local_saipa_clean_html ────────────────────────────────────────────────
+    // Local_saipa_clean_html.
 
     /**
      * HTML tags must be stripped from content.
@@ -194,7 +194,7 @@ final class external_engine_request_test extends \advanced_testcase {
         $this->assertEquals('', local_saipa_clean_html('<br/>'));
     }
 
-    // ── local_saipa_items_for_module ──────────────────────────────────────────
+    // Local_saipa_items_for_module.
 
     /**
      * An unknown module name must return an empty array, not an exception.

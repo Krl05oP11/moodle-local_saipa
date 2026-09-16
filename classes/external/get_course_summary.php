@@ -59,13 +59,13 @@ class get_course_summary extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
 
-        // ── Enrolled students ────────────────────────────────────────────────
+        // Enrolled students.
         $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id');
         $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
         $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
         $enrolled     = count($students);
 
-        // ── Active SAIPA users (at least 1 message sent) ─────────────────────
+        // Active SAIPA users (at least 1 message sent).
         $activeusers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT s.userid)
                FROM {local_saipa_messages} m
@@ -75,7 +75,7 @@ class get_course_summary extends external_api {
         );
         $adoptionrate = $enrolled > 0 ? round($activeusers / $enrolled, 4) : 0.0;
 
-        // ── Message counts ────────────────────────────────────────────────────
+        // Message counts.
         $msgcounts = $DB->get_record_sql(
             'SELECT COUNT(*) AS total,
                     SUM(CASE WHEN m.role = :user THEN 1 ELSE 0 END) AS user_msgs,
@@ -89,7 +89,7 @@ class get_course_summary extends external_api {
         $usermessages      = (int) ($msgcounts->user_msgs ?? 0);
         $assistantmessages = (int) ($msgcounts->asst_msgs ?? 0);
 
-        // ── Feedback ─────────────────────────────────────────────────────────
+        // Feedback.
         $fb = $DB->get_record_sql(
             'SELECT SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
                     SUM(CASE WHEN f.rating < 0 THEN 1 ELSE 0 END) AS neg
@@ -104,7 +104,7 @@ class get_course_summary extends external_api {
         $fbtotal          = $positivefeedback + $negativefeedback;
         $feedbackratio    = $fbtotal > 0 ? round($positivefeedback / $fbtotal, 4) : -1.0;
 
-        // ── Risk scores ───────────────────────────────────────────────────────
+        // Risk scores.
         $risk = $DB->get_record_sql(
             'SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS high_cnt,
                     SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS med_cnt,
@@ -119,13 +119,13 @@ class get_course_summary extends external_api {
         $lowriskcount    = (int) ($risk->low_cnt ?? 0);
         $lastriskcomputed = (int) ($risk->last_computed ?? 0);
 
-        // ── Course index status ───────────────────────────────────────────────
+        // Course index status.
         $idx = $DB->get_record('local_saipa_course_index', ['courseid' => $cid]);
         $indexstatus  = $idx ? $idx->status : 'pending';
         $lastindexed  = $idx ? (int) $idx->last_indexed : 0;
         $chunkcount   = $idx ? (int) $idx->chunk_count : 0;
 
-        // ── Alerts last 30 days ───────────────────────────────────────────────
+        // Alerts last 30 days.
         $since30d = time() - (30 * 86400);
         $alerts = $DB->get_record_sql(
             'SELECT COUNT(*) AS sent,

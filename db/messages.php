@@ -30,15 +30,15 @@ $messageproviders = [
     'risk_alert' => [
         'capability' => 'local/saipa:view',
         'defaults'   => [
-            'popup' => 5, // MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
-            'email' => 1, // MESSAGE_PERMITTED
+            'popup' => 5, // MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED.
+            'email' => 1, // MESSAGE_PERMITTED.
         ],
     ],
 
     'telegram_link' => [
         'capability' => 'local/saipa:chat',
         'defaults'   => [
-            'popup' => 5, // MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
+            'popup' => 5, // MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED.
         ],
     ],
 

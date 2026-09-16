@@ -86,7 +86,7 @@ class index_course extends external_api {
             $chunkcount += (int) ($response['chunk_count'] ?? 1);
         }
 
-        // 'ready' only if every item was indexed; 'error' if the engine went away
+        // Status is 'ready' only if every item was indexed; 'error' if the engine went away.
         // before we finished (partial index still counts as not-ready).
         $status = $enginedown ? 'error' : 'ready';
 

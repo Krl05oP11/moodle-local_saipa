@@ -292,7 +292,7 @@ $string['whatsapp:unlink_button']    = 'Desvincular';
 $string['whatsapp:verified_as']      = 'Número verificado: {$a}';
 $string['whatsapp:verified_title']   = 'WhatsApp vinculado';
 
-// ── Assistente de configuração ───────────────────────────────────────────────
+// Assistente de configuração.
 $string['wizard_page_title']   = 'SAIPA — Assistente de Configuração';
 $string['wizard_page_heading'] = 'Assistente de Configuração do SAIPA';
 

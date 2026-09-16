@@ -58,7 +58,7 @@ class get_engagement_stats extends external_api {
 
         $since = self::period_to_since($params['period']);
 
-        // ── Per-course usage table ─────────────────────────────────────────────
+        // Per-course usage table.
         $courserows = $DB->get_records_sql(
             'SELECT s.courseid,
                     COUNT(m.id) AS msg_count,
@@ -103,7 +103,7 @@ class get_engagement_stats extends external_api {
             ];
         }
 
-        // ── Hourly heatmap (7 days of week × 24 hours) ────────────────────────
+        // Hourly heatmap (7 days of week × 24 hours).
         // Returns 168 cells: {hour: 0-23, day_of_week: 0-6, count: N}.
         // day_of_week: 0=Monday … 6=Sunday (ISO standard).
         $heatmaprows = $DB->get_records_sql(
@@ -127,8 +127,8 @@ class get_engagement_stats extends external_api {
             ];
         }
 
-        // ── Session depth histogram ────────────────────────────────────────────
-        // Buckets: 1-3, 4-10, 11+
+        // Session depth histogram.
+        // Buckets: 1-3, 4-10, 11+.
         $depthrows = $DB->get_records_sql(
             'SELECT s.id, COUNT(m.id) AS msg_count
                FROM {local_saipa_sessions} s

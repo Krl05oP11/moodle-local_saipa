@@ -86,9 +86,8 @@ final class external_v050_test extends \advanced_testcase {
         set_config('engine_url', '', 'local_saipa');
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════.
 
     /**
      * Insert a SAIPA session row and return its ID.
@@ -118,7 +117,6 @@ final class external_v050_test extends \advanced_testcase {
         ]);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 1. get_course_summary
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -174,7 +172,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_course_summary::execute($this->course->id);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 2. get_my_courses
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -236,7 +233,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_my_courses::execute();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 3. get_institution_summary
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -284,7 +280,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_institution_summary::execute();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 4. get_risk_dashboard
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -342,7 +337,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_risk_dashboard::execute();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 5. get_engagement_stats
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -400,7 +394,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_engagement_stats::execute();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 6. get_course_settings
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -482,7 +475,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\get_course_settings::execute();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 7. set_course_settings
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -497,7 +489,7 @@ final class external_v050_test extends \advanced_testcase {
 
         $r = \local_saipa\external\set_course_settings::execute(
             $this->course->id,
-            false  // saipa_enabled = false
+            false  // Saipa_enabled = false.
         );
 
         $this->assertTrue($r['success']);
@@ -543,7 +535,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\set_course_settings::execute($this->course->id, true);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 8. save_institution_config
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -606,7 +597,7 @@ final class external_v050_test extends \advanced_testcase {
         $r = \local_saipa\external\save_institution_config::execute(null, null, null, 365);
         $this->assertTrue($r['success']);
 
-        // alert_cooldown_hours must be preserved.
+        // Alert_cooldown_hours must be preserved.
         $this->assertSame('12', get_config('local_saipa', 'alert_cooldown_hours'));
         $this->assertSame('365', get_config('local_saipa', 'data_retention_days'));
     }
@@ -622,7 +613,6 @@ final class external_v050_test extends \advanced_testcase {
         \local_saipa\external\save_institution_config::execute(0.3, 0.7);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // 9. admin_chat
     // ═══════════════════════════════════════════════════════════════════════════
 

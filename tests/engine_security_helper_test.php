@@ -31,8 +31,6 @@
 
 namespace local_saipa\tests;
 
-defined('MOODLE_INTERNAL') || die();
-
 use local_saipa\engine_security_helper;
 
 /**

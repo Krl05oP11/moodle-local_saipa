@@ -24,7 +24,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-// ── First-run wizard redirect ─────────────────────────────────────────────────
+// First-run wizard redirect.
 if (!get_config('local_saipa', 'setup_complete') && has_capability('moodle/site:config', context_system::instance())) {
     redirect(new moodle_url('/local/saipa/setup.php'));
 }

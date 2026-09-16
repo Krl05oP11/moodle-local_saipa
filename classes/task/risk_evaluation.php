@@ -60,7 +60,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         $start = time();
         mtrace('SAIPA: Starting nightly risk evaluation…');
 
-        // ── 1. Find active courses (have at least one SAIPA session) ──────────
+        // 1. Find active courses (have at least one SAIPA session).
         $sql = "SELECT DISTINCT courseid FROM {local_saipa_sessions}";
         $courseids = $DB->get_fieldset_sql($sql);
 
@@ -109,7 +109,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         ));
     }
 
-    // ── Per-course logic ──────────────────────────────────────────────────────
+    // Per-course logic.
 
     /**
      * Evaluates risk for all students in one course.
@@ -174,7 +174,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         $now       = time();
         $evaluated = 0;
         $escalated = 0;
-        $newhigh  = [];   // [userid => fullname]
+        $newhigh  = [];   // Format: [userid => fullname].
 
         foreach ($response['results'] ?? [] as $r) {
             $uid        = (int) $r['user_id'];
@@ -210,7 +210,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         return [$evaluated, $escalated];
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // Helpers.
 
     /**
 

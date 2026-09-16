@@ -292,7 +292,7 @@ $string['whatsapp:unlink_button']     = 'Unlink';
 $string['whatsapp:verified_as']       = 'Verified number: {$a}';
 $string['whatsapp:verified_title']    = 'WhatsApp linked';
 
-// ── Setup wizard ─────────────────────────────────────────────────────────────
+// Setup wizard.
 $string['wizard_page_title']   = 'SAIPA — Setup Wizard';
 $string['wizard_page_heading'] = 'SAIPA Setup Wizard';
 

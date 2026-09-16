@@ -40,7 +40,7 @@ $PAGE->set_title('SAIPA — Installation Status');
 $PAGE->set_heading('SAIPA — Installation Status');
 $PAGE->set_pagelayout('admin');
 
-// ── Helper: render a status row ────────────────────────────────────────────
+// Helper: render a status row.
 
 /**
  * Saipa status row.
@@ -65,7 +65,7 @@ function saipa_section_header(string $title): string {
     return '<tr class="table-secondary"><th colspan="2" class="py-2 px-3">' . htmlspecialchars($title) . '</th></tr>';
 }
 
-// ── Check 1: Engine URL configured ────────────────────────────────────────
+// Check 1: Engine URL configured.
 
 $engineurl   = get_config('local_saipa', 'engine_url');
 $enginetoken = get_config('local_saipa', 'engine_token');
@@ -77,7 +77,7 @@ if (!empty($enginetoken) && strlen($enginetoken) < 16) {
     $tokenmsg = 'Token is too short (< 16 chars) — use a strong random token in production';
 }
 
-// ── Check 2: Engine reachable + /health response ──────────────────────────
+// Check 2: Engine reachable + /health response.
 
 $enginereachable = false;
 $engineversion   = '';
@@ -98,7 +98,7 @@ if ($urlok) {
     $enginedetail = 'Engine URL is not configured. Go to Site Administration → Plugins → SAIPA → Settings.';
 }
 
-// ── Check 3: Ollama reachable ──────────────────────────────────────────────
+// Check 3: Ollama reachable.
 
 $ollamaok     = false;
 $ollamadetail = '';
@@ -119,7 +119,7 @@ if ($enginereachable) {
     $ollamadetail = 'Cannot check — engine is not reachable.';
 }
 
-// ── Check 4: ChromaDB writable ─────────────────────────────────────────────
+// Check 4: ChromaDB writable.
 
 $chromaok     = false;
 $chromadetail = '';
@@ -139,7 +139,7 @@ if ($enginereachable) {
     $chromadetail = 'Cannot check — engine is not reachable.';
 }
 
-// ── Check 5: Telegram bot status ─────────────────────────────────────────
+// Check 5: Telegram bot status.
 
 $channel          = get_config('local_saipa', 'messaging_channel') ?: 'none';
 $telegramenabled = in_array($channel, ['telegram', 'both'], true);
@@ -148,7 +148,7 @@ $telegramdetail  = '';
 $telegramwarn    = false;
 
 if (!$telegramenabled) {
-    $telegramok   = true;   // disabled = not an error
+    $telegramok   = true;   // Disabled = not an error.
     $telegramwarn = false;
     $telegramdetail = 'Telegram integration is disabled — active channel: ' . htmlspecialchars($channel) . '.';
 } else if ($enginereachable) {
@@ -160,7 +160,7 @@ if (!$telegramenabled) {
             $botusername    = $tgresp['username'] ?? '';
             $telegramdetail = 'Bot connected: ' . $botname . ' (@' . $botusername . ')';
         } else if ($tgresp['status'] === 'disabled') {
-            $telegramok     = true;    // token not set in engine .env — warning, not fatal
+            $telegramok     = true;    // Token not set in engine .env — warning, not fatal.
             $telegramwarn   = true;
             $telegramdetail = 'Telegram enabled in Moodle settings but TELEGRAM_BOT_TOKEN is not set in engine .env';
         } else {
@@ -174,14 +174,14 @@ if (!$telegramenabled) {
     $telegramdetail = 'Cannot check — engine is not reachable.';
 }
 
-// ── Check 6: Web services enabled ────────────────────────────────────────
+// Check 6: Web services enabled.
 
 $wsenabled = !empty($CFG->enablewebservices);
 $wsdetail  = $wsenabled
     ? 'Web Services are enabled site-wide.'
     : 'Go to Site Administration → Advanced Features → Enable Web Services.';
 
-// ── Check 7: SAIPA External Service && token ────────────────────────────
+// Check 7: SAIPA External Service && token.
 
 global $DB;
 
@@ -202,7 +202,7 @@ if (!$wsservice) {
     }
 }
 
-// ── Check 8: Cron task registered && enabled ────────────────────────────
+// Check 8: Cron task registered && enabled.
 
 $crontask   = $DB->get_record(
     'task_scheduled',
@@ -223,7 +223,7 @@ if (!$crontask) {
     $crondetail = 'Last run: ' . $last . ' | Next run: ' . $next;
 }
 
-// ── Check 9: Message provider registered ─────────────────────────────────
+// Check 9: Message provider registered.
 
 $msgprovider = $DB->get_record(
     'message_providers',
@@ -235,7 +235,7 @@ $msgdetail = $msgok
     ? 'Provider "risk_alert" registered (id=' . $msgprovider->id . ')'
     : 'Provider not found. Run: php admin/cli/upgrade.php --non-interactive';
 
-// ── Check 10: DB tables present ───────────────────────────────────────────
+// Check 10: DB tables present.
 
 $requiredtables = [
     'local_saipa_sessions', 'local_saipa_messages', 'local_saipa_feedback',
@@ -252,7 +252,7 @@ $tablesdetail = $tablesok
     ? 'All ' . count($requiredtables) . ' tables present: ' . implode(', ', $requiredtables)
     : 'MISSING: ' . implode(', ', $missingtables) . ' — Run: php admin/cli/upgrade.php --non-interactive';
 
-// ── Check 11: Plugin version ──────────────────────────────────────────────
+// Check 11: Plugin version.
 
 $pluginmanager  = \core_plugin_manager::instance();
 $plugininfo    = $pluginmanager->get_plugin_info('local_saipa');
@@ -264,13 +264,13 @@ if (!$versionok) {
     $versiondetail .= ' — RUN UPGRADE';
 }
 
-// ── Render page ───────────────────────────────────────────────────────────
+// Render page.
 
 $issues = 0;
 $warnings = 0;
 
 $checks = [
-    // [label, ok, detail, is_warning]
+    // Format: [label, ok, detail, is_warning].
     ['Engine URL configured', $urlok, $urlok ? $engineurl : 'Not configured', false],
     [
         'Engine API token configured',
@@ -313,7 +313,7 @@ foreach ($adminchecks as $c) {
     }
 }
 
-// Overall status banner
+// Overall status banner.
 if ($issues === 0 && $warnings === 0) {
     $bannerclass = 'alert-success';
     $bannertext  = '&#10003; All checks passed — SAIPA is correctly installed && operational.';

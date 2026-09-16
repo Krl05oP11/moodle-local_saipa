@@ -45,7 +45,7 @@ $PAGE->set_heading(get_string('wizard_page_heading', 'local_saipa'));
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
-// ── AJAX: engine health check ─────────────────────────────────────────────────
+// AJAX: engine health check.
 if ($action === 'health') {
     require_sesskey();
     header('Content-Type: application/json');
@@ -61,7 +61,7 @@ if ($action === 'health') {
 
     $url = rtrim($engineurl, '/') . '/health';
     try {
-        // securityhelper: see local_saipa\engine_security_helper docblock —
+        // Securityhelper: see local_saipa\engine_security_helper docblock —
         // narrows Moodle's default private-IP block to exactly this host
         // instead of widening the site-wide blocklist.
         $client   = new \core\http_client([
@@ -102,7 +102,7 @@ if ($action === 'health') {
     die();
 }
 
-// ── AJAX: Telegram bot token validation ──────────────────────────────────────
+// AJAX: Telegram bot token validation.
 if ($action === 'testbot') {
     require_sesskey();
     header('Content-Type: application/json');
@@ -141,7 +141,7 @@ if ($action === 'testbot') {
     die();
 }
 
-// ── POST: save all configuration ──────────────────────────────────────────────
+// POST: save all configuration.
 if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     require_sesskey();
 
@@ -185,7 +185,7 @@ if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 }
 
-// ── Page render setup ─────────────────────────────────────────────────────────
+// Page render setup.
 $done         = optional_param('done', 0, PARAM_INT);
 $sesskey      = sesskey();
 $settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(false);
@@ -213,7 +213,7 @@ $moodleverstr = $CFG->release ?? 'unknown';
 echo $OUTPUT->header();
 
 // phpcs:disable moodle.Commenting.MissingDocblock.File -- False positive: this sniff
-// re-fires on every reopened PHP tag in the HTML template below, although the
+// Re-fires on every reopened PHP tag in the HTML template below, although the
 // file docblock is present at the top of the file. Re-enabled at end of file.
 ?>
 <style>

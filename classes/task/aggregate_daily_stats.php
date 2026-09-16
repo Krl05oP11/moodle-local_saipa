@@ -91,7 +91,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
     private function aggregate_course(int $cid, int $daystart, int $dayend): void {
         global $DB;
 
-        // ── Active users: distinct users who sent at least 1 message ──────────
+        // Active users: distinct users who sent at least 1 message.
         $activeusers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT m.sessionid) FROM {local_saipa_messages} m
                JOIN {local_saipa_sessions} s ON s.id = m.sessionid
@@ -108,14 +108,14 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
             ['cid' => $cid, 'role' => 'user', 'ts' => $daystart, 'te' => $dayend]
         );
 
-        // ── New sessions created yesterday ────────────────────────────────────
+        // New sessions created yesterday.
         $newsessions = (int) $DB->count_records_select(
             'local_saipa_sessions',
             'courseid = :cid AND timecreated >= :ts AND timecreated < :te',
             ['cid' => $cid, 'ts' => $daystart, 'te' => $dayend]
         );
 
-        // ── Message counts ────────────────────────────────────────────────────
+        // Message counts.
         $msgcounts = $DB->get_record_sql(
             'SELECT
                COUNT(*) AS total,
@@ -131,7 +131,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
         $usermessages      = (int) ($msgcounts->user_msgs ?? 0);
         $assistantmessages = (int) ($msgcounts->asst_msgs ?? 0);
 
-        // ── Feedback ─────────────────────────────────────────────────────────
+        // Feedback.
         $fbcounts = $DB->get_record_sql(
             'SELECT
                SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
@@ -145,7 +145,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
         $positivefeedback = (int) ($fbcounts->pos ?? 0);
         $negativefeedback = (int) ($fbcounts->neg ?? 0);
 
-        // ── Alerts sent && responded ─────────────────────────────────────────
+        // Alerts sent && responded.
         $alertcounts = $DB->get_record_sql(
             'SELECT
                COUNT(*) AS sent,
@@ -160,7 +160,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
         $alertssent      = (int) ($alertcounts->sent ?? 0);
         $alertsresponded = (int) ($alertcounts->responded ?? 0);
 
-        // ── Risk level snapshot (most recent per student as of day_end) ───────
+        // Risk level snapshot (most recent per student as of day_end).
         $risksnap = $DB->get_records_sql(
             'SELECT risk_level, COUNT(*) AS cnt
                FROM {local_saipa_risk_scores}
@@ -181,7 +181,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
             }
         }
 
-        // ── Avg alert response delay (in minutes) ─────────────────────────────
+        // Avg alert response delay (in minutes).
         $delayrow = $DB->get_record_sql(
             'SELECT AVG((n.responded_at - n.timesent) / 60.0) AS avg_delay
                FROM {local_saipa_notifications} n
@@ -194,7 +194,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
         );
         $avgresponsedelaymin = round((float) ($delayrow->avg_delay ?? 0), 2);
 
-        // ── Upsert into saipa_daily_stats ─────────────────────────────────────
+        // Upsert into saipa_daily_stats.
         $existing = $DB->get_record(
             'local_saipa_daily_stats',
             ['courseid' => $cid, 'stat_date' => $daystart]

@@ -69,7 +69,7 @@ class get_risk_dashboard extends external_api {
             : '';
         $paramscid = $cid > 0 ? ['cid' => $cid] : [];
 
-        // ── Alert funnel ──────────────────────────────────────────────────────
+        // Alert funnel.
         // Students evaluated (have at least one risk score).
         $evaluated = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT userid) FROM {local_saipa_risk_scores}" .
@@ -109,7 +109,7 @@ class get_risk_dashboard extends external_api {
             array_merge(['since' => $since], $paramscid)
         );
 
-        // ── Risk trend by week (from saipa_risk_history) ──────────────────────
+        // Risk trend by week (from saipa_risk_history).
         $weekseconds = 7 * 86400;
         $trendrows = $DB->get_records_sql(
             "SELECT FLOOR(timecomputed / :wk) AS week_bucket,
@@ -136,7 +136,7 @@ class get_risk_dashboard extends external_api {
             ];
         }
 
-        // ── Intervention effectiveness ─────────────────────────────────────────
+        // Intervention effectiveness.
         // For each student who received a high-risk alert, compare risk score
         // at alert time vs 14 days later using saipa_risk_history.
         $effectiveness = [];

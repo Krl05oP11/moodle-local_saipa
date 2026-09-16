@@ -87,7 +87,7 @@ class telegram_confirm_link extends external_api {
             'id'                => $record->id,
             'telegram_id'       => $params['telegram_id'],
             'telegram_username' => $params['telegram_username'],
-            'link_token'        => null, // consume the token
+            'link_token'        => null, // Consume the token.
             'token_expires'     => null,
             'confirmed'         => 1,
             'timemodified'      => $now,

@@ -32,7 +32,7 @@ if ($hassiteconfig) {
 
     $ADMIN->add('localplugins', $settings);
 
-    // === Setup Wizard link ===
+    // Setup Wizard link.
     $setupurl = new moodle_url('/local/saipa/setup.php');
     $settings->add(new admin_setting_heading(
         'local_saipa_wizard_heading',
@@ -45,14 +45,14 @@ if ($hassiteconfig) {
         )
     ));
 
-    // === Installation Status page link ===
+    // Installation Status page link.
     $ADMIN->add('localplugins', new admin_externalpage(
         'local_saipa_status',
         get_string('settings:status_page', 'local_saipa'),
         new moodle_url('/local/saipa/status.php')
     ));
 
-    // === Advisor Dashboard page link ===
+    // Advisor Dashboard page link.
     $ADMIN->add('localplugins', new admin_externalpage(
         'local_saipa_advisor',
         get_string('advisor_title', 'local_saipa'),
@@ -60,7 +60,7 @@ if ($hassiteconfig) {
         'local/saipa:advisor'
     ));
 
-    // === Section: Engine Connection ===
+    // Section: Engine Connection.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_engine',
         get_string('settings:heading_engine', 'local_saipa'),
@@ -82,7 +82,7 @@ if ($hassiteconfig) {
         ''
     ));
 
-    // === Section: Messaging Channels ===
+    // Section: Messaging Channels.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_messaging',
         get_string('settings:heading_messaging', 'local_saipa'),
@@ -110,7 +110,7 @@ if ($hassiteconfig) {
         PARAM_ALPHANUMEXT
     ));
 
-    // === Section: WhatsApp ===
+    // Section: WhatsApp.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_whatsapp',
         get_string('settings:heading_whatsapp', 'local_saipa'),
@@ -148,7 +148,7 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // === Section: Risk Thresholds ===
+    // Section: Risk Thresholds.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_thresholds',
         get_string('cfg_heading_thresholds', 'local_saipa'),
@@ -171,7 +171,7 @@ if ($hassiteconfig) {
         PARAM_FLOAT
     ));
 
-    // === Section: Alerts ===
+    // Section: Alerts.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_alerts',
         get_string('cfg_heading_alerts', 'local_saipa'),
@@ -193,7 +193,7 @@ if ($hassiteconfig) {
         ''
     ));
 
-    // === Section: GDPR / Data Retention ===
+    // Section: GDPR / Data Retention.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_gdpr',
         get_string('cfg_heading_gdpr', 'local_saipa'),
@@ -208,7 +208,7 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
-    // === Section: Feature Flags ===
+    // Section: Feature Flags.
     $settings->add(new admin_setting_heading(
         'local_saipa/heading_features',
         get_string('cfg_heading_features', 'local_saipa'),

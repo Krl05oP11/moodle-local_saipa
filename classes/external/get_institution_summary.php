@@ -58,14 +58,14 @@ class get_institution_summary extends external_api {
 
         $since = self::period_to_since($params['period']);
 
-        // ── Active courses ────────────────────────────────────────────────────
+        // Active courses.
         $activecourses = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT courseid) FROM {local_saipa_sessions}
               WHERE timecreated >= :since',
             ['since' => $since]
         );
 
-        // ── Total enrolled students across SAIPA-enabled courses ─────────────
+        // Total enrolled students across SAIPA-enabled courses.
         $totalenrolled = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT ue.userid)
                FROM {user_enrolments} ue
@@ -79,7 +79,7 @@ class get_institution_summary extends external_api {
             ['role' => 'student']
         );
 
-        // ── Unique SAIPA users who sent at least 1 message ───────────────────
+        // Unique SAIPA users who sent at least 1 message.
         $totalsaipausers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT s.userid)
                FROM {local_saipa_messages} m
@@ -90,14 +90,14 @@ class get_institution_summary extends external_api {
         $adoptionrate = $totalenrolled > 0
             ? round($totalsaipausers / $totalenrolled, 4) : 0.0;
 
-        // ── Total messages ────────────────────────────────────────────────────
+        // Total messages.
         $totalmessages = (int) $DB->count_records_select(
             'local_saipa_messages',
             'timecreated >= :since',
             ['since' => $since]
         );
 
-        // ── Feedback ratio ────────────────────────────────────────────────────
+        // Feedback ratio.
         $fb = $DB->get_record_sql(
             'SELECT SUM(CASE WHEN rating > 0 THEN 1 ELSE 0 END) AS pos,
                     SUM(CASE WHEN rating < 0 THEN 1 ELSE 0 END) AS neg
@@ -110,7 +110,7 @@ class get_institution_summary extends external_api {
         $positivefeedbackpct = ($posfb + $negfb) > 0
             ? round($posfb / ($posfb + $negfb), 4) : 0.0;
 
-        // ── Alerts ────────────────────────────────────────────────────────────
+        // Alerts.
         $alerts = $DB->get_record_sql(
             'SELECT COUNT(*) AS sent,
                     SUM(CASE WHEN responded_at > 0 THEN 1 ELSE 0 END) AS responded
@@ -123,7 +123,7 @@ class get_institution_summary extends external_api {
         $alertresponserate = $alertssent > 0
             ? round($alertsresponded / $alertssent, 4) : 0.0;
 
-        // ── Trend sparklines (last 30 days from saipa_daily_stats) ───────────
+        // Trend sparklines (last 30 days from saipa_daily_stats).
         $trendsince  = time() - (30 * 86400);
         $trendrows   = $DB->get_records_sql(
             'SELECT stat_date,
