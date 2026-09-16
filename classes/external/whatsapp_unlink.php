@@ -51,7 +51,7 @@ class whatsapp_unlink extends external_api {
 
         require_login();
 
-        $DB->delete_records('saipa_phone_verify', ['userid' => (int) $USER->id]);
+        $DB->delete_records('local_saipa_phone_verify', ['userid' => (int) $USER->id]);
 
         return ['success' => true];
     }

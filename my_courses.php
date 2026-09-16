@@ -36,7 +36,7 @@ $coursesqs = [];
 
 if ($isadmin) {
     $coursesqs = $DB->get_fieldset_sql(
-        'SELECT DISTINCT courseid FROM {saipa_sessions} ORDER BY courseid'
+        'SELECT DISTINCT courseid FROM {local_saipa_sessions} ORDER BY courseid'
     );
 } else {
     $enrolled = enrol_get_users_courses($USER->id, true, ['id']);

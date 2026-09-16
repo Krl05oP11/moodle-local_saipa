@@ -62,7 +62,7 @@ class get_history extends external_api {
         $now = time();
 
         // Find or create session for this user+course.
-        $session = $DB->get_record('saipa_sessions', [
+        $session = $DB->get_record('local_saipa_sessions', [
             'userid'   => (int) $USER->id,
             'courseid' => $params['course_id'],
         ]);
@@ -75,12 +75,12 @@ class get_history extends external_api {
                 'timecreated'  => $now,
                 'timemodified' => $now,
             ];
-            $session->id = $DB->insert_record('saipa_sessions', $session);
+            $session->id = $DB->insert_record('local_saipa_sessions', $session);
         }
 
         // Fetch last 20 messages ordered chronologically.
         $rows = $DB->get_records(
-            'saipa_messages',
+            'local_saipa_messages',
             ['sessionid' => $session->id],
             'timecreated ASC',
             'role,content',

@@ -65,35 +65,35 @@ class get_risk_dashboard extends external_api {
 
         $coursefilter       = $cid > 0 ? 'AND s.courseid = :cid' : '';
         $coursefilternotif = $cid > 0
-            ? 'AND n.userid IN (SELECT DISTINCT userid FROM {saipa_sessions} WHERE courseid = :cid)'
+            ? 'AND n.userid IN (SELECT DISTINCT userid FROM {local_saipa_sessions} WHERE courseid = :cid)'
             : '';
         $paramscid = $cid > 0 ? ['cid' => $cid] : [];
 
         // ── Alert funnel ──────────────────────────────────────────────────────
         // Students evaluated (have at least one risk score).
         $evaluated = (int) $DB->count_records_sql(
-            "SELECT COUNT(DISTINCT userid) FROM {saipa_risk_scores}" .
+            "SELECT COUNT(DISTINCT userid) FROM {local_saipa_risk_scores}" .
             ($cid > 0 ? ' WHERE courseid = :cid' : ''),
             $cid > 0 ? ['cid' => $cid] : []
         );
 
         // Identified high risk (current level).
         $identifiedhigh = (int) $DB->count_records_sql(
-            "SELECT COUNT(DISTINCT userid) FROM {saipa_risk_scores}
+            "SELECT COUNT(DISTINCT userid) FROM {local_saipa_risk_scores}
               WHERE risk_level = :level" . ($cid > 0 ? ' AND courseid = :cid' : ''),
             array_merge(['level' => 'high'], $cid > 0 ? ['cid' => $cid] : [])
         );
 
         // Received alert (sent since period start, scoped to course if requested).
         $receivedalert = (int) $DB->count_records_sql(
-            "SELECT COUNT(DISTINCT n.userid) FROM {saipa_notifications} n
+            "SELECT COUNT(DISTINCT n.userid) FROM {local_saipa_notifications} n
               WHERE n.timesent >= :since {$coursefilternotif}",
             array_merge(['since' => $since], $paramscid)
         );
 
         // Responded to alert.
         $respondedalert = (int) $DB->count_records_sql(
-            "SELECT COUNT(DISTINCT n.userid) FROM {saipa_notifications} n
+            "SELECT COUNT(DISTINCT n.userid) FROM {local_saipa_notifications} n
               WHERE n.timesent >= :since AND n.responded_at > 0 {$coursefilternotif}",
             array_merge(['since' => $since], $paramscid)
         );
@@ -101,8 +101,8 @@ class get_risk_dashboard extends external_api {
         // Accessed Moodle after alert (had a new SAIPA session after responded_at).
         $accessedafter = (int) $DB->count_records_sql(
             "SELECT COUNT(DISTINCT s.userid)
-               FROM {saipa_sessions} s
-               JOIN {saipa_notifications} n ON n.userid = s.userid
+               FROM {local_saipa_sessions} s
+               JOIN {local_saipa_notifications} n ON n.userid = s.userid
               WHERE n.responded_at > 0
                 AND s.timecreated > n.responded_at
                 AND n.timesent >= :since {$coursefilter}",
@@ -117,7 +117,7 @@ class get_risk_dashboard extends external_api {
                     SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS med_cnt,
                     SUM(CASE WHEN risk_level = :l THEN 1 ELSE 0 END) AS low_cnt,
                     COUNT(*) AS total
-               FROM {saipa_risk_history}
+               FROM {local_saipa_risk_history}
               WHERE timecomputed >= :since" .
             ($cid > 0 ? ' AND courseid = :cid' : '') .
             " GROUP BY week_bucket ORDER BY week_bucket",
@@ -142,11 +142,11 @@ class get_risk_dashboard extends external_api {
         $effectiveness = [];
         $alertrows = $DB->get_records_sql(
             "SELECT DISTINCT n.userid, n.timesent, s.courseid
-               FROM {saipa_notifications} n
-               JOIN {saipa_sessions} s ON s.userid = n.userid
+               FROM {local_saipa_notifications} n
+               JOIN {local_saipa_sessions} s ON s.userid = n.userid
               WHERE n.timesent >= :since {$coursefilter}
                 AND EXISTS (
-                    SELECT 1 FROM {saipa_risk_history} rh
+                    SELECT 1 FROM {local_saipa_risk_history} rh
                      WHERE rh.userid = n.userid AND rh.risk_level = :level
                        AND rh.timecomputed BETWEEN n.timesent - 86400 AND n.timesent + 86400
                 )
@@ -164,7 +164,7 @@ class get_risk_dashboard extends external_api {
 
             // Score closest to alert time (before).
             $before = $DB->get_record_sql(
-                'SELECT score FROM {saipa_risk_history}
+                'SELECT score FROM {local_saipa_risk_history}
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed <= :ts
                   ORDER BY timecomputed DESC LIMIT 1',
@@ -173,7 +173,7 @@ class get_risk_dashboard extends external_api {
 
             // Score closest to 14 days after.
             $after = $DB->get_record_sql(
-                'SELECT score FROM {saipa_risk_history}
+                'SELECT score FROM {local_saipa_risk_history}
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed >= :ts
                   ORDER BY timecomputed ASC LIMIT 1',

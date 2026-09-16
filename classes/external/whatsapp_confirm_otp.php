@@ -55,7 +55,7 @@ class whatsapp_confirm_otp extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['otp' => $otp]);
 
-        $record = $DB->get_record('saipa_phone_verify', ['userid' => (int) $USER->id]);
+        $record = $DB->get_record('local_saipa_phone_verify', ['userid' => (int) $USER->id]);
 
         if (!$record) {
             return ['success' => false, 'error' => 'no_pending_verification'];
@@ -75,7 +75,7 @@ class whatsapp_confirm_otp extends external_api {
         }
 
         // Mark as verified.
-        $DB->set_field('saipa_phone_verify', 'verified', 1, ['id' => $record->id]);
+        $DB->set_field('local_saipa_phone_verify', 'verified', 1, ['id' => $record->id]);
 
         return ['success' => true, 'phone' => $record->phone, 'error' => ''];
     }

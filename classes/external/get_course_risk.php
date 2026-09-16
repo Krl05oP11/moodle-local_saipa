@@ -166,12 +166,12 @@ class get_course_risk extends external_api {
             $factors    = json_encode($r['factors'] ?? []);
 
             $existing = $DB->get_record(
-                'saipa_risk_scores',
+                'local_saipa_risk_scores',
                 ['userid' => $uid, 'courseid' => $cid]
             );
 
             if ($existing) {
-                $DB->update_record('saipa_risk_scores', (object) [
+                $DB->update_record('local_saipa_risk_scores', (object) [
                     'id'           => $existing->id,
                     'score'        => $score,
                     'risk_level'   => $risklevel,
@@ -179,7 +179,7 @@ class get_course_risk extends external_api {
                     'timecomputed' => $now,
                 ]);
             } else {
-                $DB->insert_record('saipa_risk_scores', (object) [
+                $DB->insert_record('local_saipa_risk_scores', (object) [
                     'userid'       => $uid,
                     'courseid'     => $cid,
                     'score'        => $score,

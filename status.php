@@ -238,8 +238,8 @@ $msgdetail = $msgok
 // ── Check 10: DB tables present ───────────────────────────────────────────
 
 $requiredtables = [
-    'saipa_sessions', 'saipa_messages', 'saipa_feedback',
-    'saipa_risk_scores', 'saipa_course_index', 'saipa_telegram_links',
+    'local_saipa_sessions', 'local_saipa_messages', 'local_saipa_feedback',
+    'local_saipa_risk_scores', 'local_saipa_course_index', 'local_saipa_telegram_links',
 ];
 $missingtables = [];
 foreach ($requiredtables as $t) {

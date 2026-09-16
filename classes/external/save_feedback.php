@@ -67,11 +67,11 @@ class save_feedback extends external_api {
         }
 
         // Verify the message belongs to a session owned by this user in this course.
-        $message = $DB->get_record('saipa_messages', ['id' => $params['message_id'], 'role' => 'assistant'], 'id,sessionid', IGNORE_MISSING);
+        $message = $DB->get_record('local_saipa_messages', ['id' => $params['message_id'], 'role' => 'assistant'], 'id,sessionid', IGNORE_MISSING);
         if (!$message) {
             throw new \invalid_parameter_exception('message not found');
         }
-        $session = $DB->get_record('saipa_sessions', [
+        $session = $DB->get_record('local_saipa_sessions', [
             'id'       => $message->sessionid,
             'userid'   => (int) $USER->id,
             'courseid' => $params['course_id'],
@@ -81,16 +81,16 @@ class save_feedback extends external_api {
         }
 
         // Upsert: one rating per user per message.
-        $existing = $DB->get_record('saipa_feedback', [
+        $existing = $DB->get_record('local_saipa_feedback', [
             'messageid' => $params['message_id'],
             'userid'    => (int) $USER->id,
         ]);
         if ($existing) {
             $existing->rating      = $params['rating'];
             $existing->timecreated = time();
-            $DB->update_record('saipa_feedback', $existing);
+            $DB->update_record('local_saipa_feedback', $existing);
         } else {
-            $DB->insert_record('saipa_feedback', (object) [
+            $DB->insert_record('local_saipa_feedback', (object) [
                 'messageid'   => $params['message_id'],
                 'userid'      => (int) $USER->id,
                 'rating'      => $params['rating'],

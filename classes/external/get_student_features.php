@@ -108,17 +108,17 @@ class get_student_features extends external_api {
 
         // ── 5 & 6. SAIPA chat activity ──────────────────────────────────────
         $session = $DB->get_record(
-            'saipa_sessions',
+            'local_saipa_sessions',
             ['userid' => $uid, 'courseid' => $cid]
         );
 
         if ($session) {
             $saipamsgcount = (int) $DB->count_records(
-                'saipa_messages',
+                'local_saipa_messages',
                 ['sessionid' => $session->id, 'role' => 'user']
             );
             $lastchatts    = $DB->get_field_sql(
-                "SELECT MAX(timecreated) FROM {saipa_messages}
+                "SELECT MAX(timecreated) FROM {local_saipa_messages}
                   WHERE sessionid = :sid AND role = 'user'",
                 ['sid' => $session->id]
             );
@@ -159,10 +159,10 @@ class get_student_features extends external_api {
         $forumpostcount = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
 
         // ── 10. positive_feedback_ratio ─────────────────────────────────────
-        $totalfb = (int) $DB->count_records('saipa_feedback', ['userid' => $uid]);
+        $totalfb = (int) $DB->count_records('local_saipa_feedback', ['userid' => $uid]);
         if ($totalfb > 0) {
             $posfb = (int) $DB->count_records(
-                'saipa_feedback',
+                'local_saipa_feedback',
                 ['userid' => $uid, 'rating' => 1]
             );
             $positivefeedbackratio = round($posfb / $totalfb, 4);

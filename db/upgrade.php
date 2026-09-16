@@ -40,7 +40,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
 
     if ($oldversion < 2026031902) {
         // Create saipa_telegram_links table for Telegram account binding.
-        $table = new xmldb_table('saipa_telegram_links');
+        $table = new xmldb_table('local_saipa_telegram_links');
 
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
@@ -93,7 +93,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
 
         // This column was missing from the original install.xml && must be added for
         // mark_alert_responded WS to work on fresh installations.
-        $table = new xmldb_table('saipa_notifications');
+        $table = new xmldb_table('local_saipa_notifications');
         $field = new xmldb_field(
             'responded_at',
             XMLDB_TYPE_INTEGER,
@@ -114,7 +114,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
 
     if ($oldversion < 2026032401) {
         // Create saipa_course_settings: per-course feature flags for admin control.
-        $table = new xmldb_table('saipa_course_settings');
+        $table = new xmldb_table('local_saipa_course_settings');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_field('saipa_enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
@@ -132,7 +132,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         }
 
         // Create saipa_daily_stats: pre-aggregated daily metrics for advisor dashboard.
-        $table = new xmldb_table('saipa_daily_stats');
+        $table = new xmldb_table('local_saipa_daily_stats');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_field('stat_date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
@@ -159,7 +159,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         }
 
         // Create saipa_risk_history: append-only risk score log for trend analysis / research.
-        $table = new xmldb_table('saipa_risk_history');
+        $table = new xmldb_table('local_saipa_risk_history');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
@@ -181,10 +181,10 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
 
         // Backfill saipa_risk_history from current saipa_risk_scores so trend charts
         // have at least one data point from day one.
-        if ($dbman->table_exists(new xmldb_table('saipa_risk_scores'))) {
+        if ($dbman->table_exists(new xmldb_table('local_saipa_risk_scores'))) {
             $DB->execute(
-                'INSERT INTO {saipa_risk_history} (userid, courseid, score, risk_level, timecomputed)
-                 SELECT userid, courseid, score, risk_level, timecomputed FROM {saipa_risk_scores}'
+                'INSERT INTO {local_saipa_risk_history} (userid, courseid, score, risk_level, timecomputed)
+                 SELECT userid, courseid, score, risk_level, timecomputed FROM {local_saipa_risk_scores}'
             );
         }
 
@@ -217,6 +217,33 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
             }
         }
         upgrade_plugin_savepoint(true, 2026041902, 'local', 'saipa');
+    }
+
+    if ($oldversion < 2026091501) {
+        // Bloque E (Marketplace readiness): db/install.xml previously created
+        // tables without the required frankenstyle prefix (saipa_* instead
+        // of local_saipa_*), which moodle-plugin-ci's validate step rejects.
+        // Rename in place to preserve existing data on already-installed sites.
+        $renames = [
+            'saipa_sessions'        => 'local_saipa_sessions',
+            'saipa_messages'        => 'local_saipa_messages',
+            'saipa_risk_scores'     => 'local_saipa_risk_scores',
+            'saipa_phone_verify'    => 'local_saipa_phone_verify',
+            'saipa_notifications'   => 'local_saipa_notifications',
+            'saipa_feedback'        => 'local_saipa_feedback',
+            'saipa_course_index'    => 'local_saipa_course_index',
+            'saipa_telegram_links'  => 'local_saipa_telegram_links',
+            'saipa_course_settings' => 'local_saipa_course_settings',
+            'saipa_daily_stats'     => 'local_saipa_daily_stats',
+            'saipa_risk_history'    => 'local_saipa_risk_history',
+        ];
+        foreach ($renames as $oldname => $newname) {
+            $table = new xmldb_table($oldname);
+            if ($dbman->table_exists($table) && !$dbman->table_exists(new xmldb_table($newname))) {
+                $dbman->rename_table($table, $newname);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026091501, 'local', 'saipa');
     }
 
     return true;

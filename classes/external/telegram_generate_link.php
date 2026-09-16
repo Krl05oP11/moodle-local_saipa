@@ -65,7 +65,7 @@ class telegram_generate_link extends external_api {
         $token   = hash_hmac('sha256', $payload, $secret);
 
         // Upsert the link record (one row per user).
-        $existing = $DB->get_record('saipa_telegram_links', ['userid' => (int) $USER->id]);
+        $existing = $DB->get_record('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
         if ($existing) {
             // If already confirmed, return current status — don't overwrite.
             if ($existing->confirmed) {
@@ -79,14 +79,14 @@ class telegram_generate_link extends external_api {
                 ];
             }
             // Update pending token.
-            $DB->update_record('saipa_telegram_links', (object) [
+            $DB->update_record('local_saipa_telegram_links', (object) [
                 'id'           => $existing->id,
                 'link_token'   => $token,
                 'token_expires' => $expires,
                 'timemodified' => $now,
             ]);
         } else {
-            $DB->insert_record('saipa_telegram_links', (object) [
+            $DB->insert_record('local_saipa_telegram_links', (object) [
                 'userid'            => (int) $USER->id,
                 'telegram_id'       => null,
                 'telegram_username' => null,

@@ -60,7 +60,7 @@ class get_institution_summary extends external_api {
 
         // ── Active courses ────────────────────────────────────────────────────
         $activecourses = (int) $DB->count_records_sql(
-            'SELECT COUNT(DISTINCT courseid) FROM {saipa_sessions}
+            'SELECT COUNT(DISTINCT courseid) FROM {local_saipa_sessions}
               WHERE timecreated >= :since',
             ['since' => $since]
         );
@@ -70,7 +70,7 @@ class get_institution_summary extends external_api {
             'SELECT COUNT(DISTINCT ue.userid)
                FROM {user_enrolments} ue
                JOIN {enrol} e ON ue.enrolid = e.id
-               JOIN {saipa_course_settings} scs ON scs.courseid = e.courseid
+               JOIN {local_saipa_course_settings} scs ON scs.courseid = e.courseid
                JOIN {role_assignments} ra ON ra.userid = ue.userid
                JOIN {context} ctx ON ctx.id = ra.contextid
                     AND ctx.contextlevel = 50 AND ctx.instanceid = e.courseid
@@ -82,8 +82,8 @@ class get_institution_summary extends external_api {
         // ── Unique SAIPA users who sent at least 1 message ───────────────────
         $totalsaipausers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT s.userid)
-               FROM {saipa_messages} m
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+               FROM {local_saipa_messages} m
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE m.role = :role AND m.timecreated >= :since',
             ['role' => 'user', 'since' => $since]
         );
@@ -92,7 +92,7 @@ class get_institution_summary extends external_api {
 
         // ── Total messages ────────────────────────────────────────────────────
         $totalmessages = (int) $DB->count_records_select(
-            'saipa_messages',
+            'local_saipa_messages',
             'timecreated >= :since',
             ['since' => $since]
         );
@@ -101,7 +101,7 @@ class get_institution_summary extends external_api {
         $fb = $DB->get_record_sql(
             'SELECT SUM(CASE WHEN rating > 0 THEN 1 ELSE 0 END) AS pos,
                     SUM(CASE WHEN rating < 0 THEN 1 ELSE 0 END) AS neg
-               FROM {saipa_feedback}
+               FROM {local_saipa_feedback}
               WHERE timecreated >= :since',
             ['since' => $since]
         );
@@ -114,7 +114,7 @@ class get_institution_summary extends external_api {
         $alerts = $DB->get_record_sql(
             'SELECT COUNT(*) AS sent,
                     SUM(CASE WHEN responded_at > 0 THEN 1 ELSE 0 END) AS responded
-               FROM {saipa_notifications}
+               FROM {local_saipa_notifications}
               WHERE timesent >= :since',
             ['since' => $since]
         );
@@ -129,7 +129,7 @@ class get_institution_summary extends external_api {
             'SELECT stat_date,
                     SUM(total_messages) AS msgs,
                     SUM(active_users) AS users
-               FROM {saipa_daily_stats}
+               FROM {local_saipa_daily_stats}
               WHERE stat_date >= :since
               GROUP BY stat_date
               ORDER BY stat_date',

@@ -47,7 +47,7 @@ class send_telegram_alert extends external_api {
         'completion_rate'    => 'progreso general del curso',
         'forum_posts'        => 'participaciones en foros',
         'resource_views'     => 'materiales vistos',
-        'saipa_sessions'     => 'consultas a SAIPA',
+        'local_saipa_sessions'     => 'consultas a SAIPA',
         'grade_avg'          => 'promedio de calificaciones',
         'days_enrolled'      => 'días inscripto',
     ];
@@ -112,7 +112,7 @@ class send_telegram_alert extends external_api {
         require_capability('local/saipa:view', $context);
 
         // Look up student's confirmed Telegram link.
-        $link = $DB->get_record('saipa_telegram_links', [
+        $link = $DB->get_record('local_saipa_telegram_links', [
             'userid'    => $params['student_id'],
             'confirmed' => 1,
         ]);
@@ -129,7 +129,7 @@ class send_telegram_alert extends external_api {
         $text = trim($params['message']);
         if ($text === '') {
             // Look up last risk score for contextualised default message.
-            $risk = $DB->get_record('saipa_risk_scores', [
+            $risk = $DB->get_record('local_saipa_risk_scores', [
                 'userid'   => $params['student_id'],
                 'courseid' => $params['course_id'],
             ]);
@@ -158,7 +158,7 @@ class send_telegram_alert extends external_api {
 
         // Log the notification.
         if ($sent) {
-            $DB->insert_record('saipa_notifications', (object) [
+            $DB->insert_record('local_saipa_notifications', (object) [
                 'userid'    => $params['student_id'],
                 'template'  => 'teacher_alert',
                 'payload'   => json_encode([

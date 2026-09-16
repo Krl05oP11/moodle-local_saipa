@@ -56,13 +56,13 @@ class get_course_settings extends external_api {
         // Get all courses that have SAIPA activity.
         $sql = 'SELECT DISTINCT c.id AS courseid, c.fullname, c.shortname
                   FROM {course} c
-                  JOIN {saipa_sessions} s ON s.courseid = c.id
+                  JOIN {local_saipa_sessions} s ON s.courseid = c.id
                  ORDER BY c.fullname';
         $courses = $DB->get_records_sql($sql);
 
         // Get existing settings rows.
         $settingsmap = [];
-        $rows = $DB->get_records('saipa_course_settings');
+        $rows = $DB->get_records('local_saipa_course_settings');
         foreach ($rows as $row) {
             $settingsmap[(int) $row->courseid] = $row;
         }
@@ -73,7 +73,7 @@ class get_course_settings extends external_api {
             $s   = $settingsmap[$cid] ?? null;
 
             // Get index status.
-            $idx = $DB->get_record('saipa_course_index', ['courseid' => $cid]);
+            $idx = $DB->get_record('local_saipa_course_index', ['courseid' => $cid]);
 
             $result[] = [
                 'courseid'       => $cid,

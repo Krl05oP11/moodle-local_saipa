@@ -64,7 +64,7 @@ class get_student_history extends external_api {
             throw new \moodle_exception('notenrolled', 'local_saipa');
         }
 
-        $session = $DB->get_record('saipa_sessions', [
+        $session = $DB->get_record('local_saipa_sessions', [
             'userid'   => $params['student_id'],
             'courseid' => $params['course_id'],
         ]);
@@ -76,7 +76,7 @@ class get_student_history extends external_api {
         $user = $DB->get_record('user', ['id' => $params['student_id']], 'id,firstname,lastname');
 
         $rows = $DB->get_records(
-            'saipa_messages',
+            'local_saipa_messages',
             ['sessionid' => $session->id],
             'timecreated ASC',
             'role,content,timecreated'

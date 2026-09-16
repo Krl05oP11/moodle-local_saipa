@@ -51,7 +51,7 @@ class whatsapp_get_status extends external_api {
 
         require_login();
 
-        $record = $DB->get_record('saipa_phone_verify', ['userid' => (int) $USER->id]);
+        $record = $DB->get_record('local_saipa_phone_verify', ['userid' => (int) $USER->id]);
 
         if (!$record || !$record->verified) {
             return ['verified' => false, 'phone' => ''];

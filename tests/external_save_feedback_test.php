@@ -61,7 +61,7 @@ final class external_save_feedback_test extends \advanced_testcase {
         );
 
         // Seed a session and an assistant message.
-        $this->sessionid = $DB->insert_record('saipa_sessions', (object) [
+        $this->sessionid = $DB->insert_record('local_saipa_sessions', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'contextid'    => \context_course::instance($this->course->id)->id,
@@ -69,7 +69,7 @@ final class external_save_feedback_test extends \advanced_testcase {
             'timemodified' => time(),
         ]);
 
-        $this->messageid = $DB->insert_record('saipa_messages', (object) [
+        $this->messageid = $DB->insert_record('local_saipa_messages', (object) [
             'sessionid'   => $this->sessionid,
             'role'        => 'assistant',
             'content'     => 'Test assistant response',
@@ -94,7 +94,7 @@ final class external_save_feedback_test extends \advanced_testcase {
 
         $this->assertEquals('ok', $result['status']);
         $row = $DB->get_record(
-            'saipa_feedback',
+            'local_saipa_feedback',
             ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertNotFalse($row);
@@ -115,7 +115,7 @@ final class external_save_feedback_test extends \advanced_testcase {
         );
 
         $row = $DB->get_record(
-            'saipa_feedback',
+            'local_saipa_feedback',
             ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertEquals(-1, (int) $row->rating);
@@ -140,14 +140,14 @@ final class external_save_feedback_test extends \advanced_testcase {
             -1
         );
 
-        $count = $DB->count_records('saipa_feedback', [
+        $count = $DB->count_records('local_saipa_feedback', [
             'userid'    => $this->student->id,
             'messageid' => $this->messageid,
         ]);
         $this->assertEquals(1, $count, 'Should be exactly one row after two calls');
 
         $row = $DB->get_record(
-            'saipa_feedback',
+            'local_saipa_feedback',
             ['userid' => $this->student->id, 'messageid' => $this->messageid]
         );
         $this->assertEquals(-1, (int) $row->rating, 'Rating should reflect last call');
@@ -179,12 +179,12 @@ final class external_save_feedback_test extends \advanced_testcase {
         $other = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($other->id, $this->course->id, 'student');
 
-        $othersession = $DB->insert_record('saipa_sessions', (object) [
+        $othersession = $DB->insert_record('local_saipa_sessions', (object) [
             'userid' => $other->id, 'courseid' => $this->course->id,
             'contextid' => \context_course::instance($this->course->id)->id,
             'timecreated' => time(), 'timemodified' => time(),
         ]);
-        $othermessage = $DB->insert_record('saipa_messages', (object) [
+        $othermessage = $DB->insert_record('local_saipa_messages', (object) [
             'sessionid' => $othersession, 'role' => 'assistant',
             'content' => 'Other response', 'timecreated' => time(),
         ]);

@@ -51,7 +51,7 @@ class telegram_get_status extends external_api {
 
         require_login();
 
-        $record = $DB->get_record('saipa_telegram_links', ['userid' => (int) $USER->id]);
+        $record = $DB->get_record('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
 
         if (!$record) {
             return ['linked' => false, 'telegram_username' => ''];

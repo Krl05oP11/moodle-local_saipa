@@ -60,7 +60,7 @@ class get_my_courses extends external_api {
         if ($isadmin) {
             $sql = 'SELECT DISTINCT c.id, c.fullname, c.shortname
                       FROM {course} c
-                      JOIN {saipa_sessions} s ON s.courseid = c.id
+                      JOIN {local_saipa_sessions} s ON s.courseid = c.id
                      ORDER BY c.fullname';
             $courses = $DB->get_records_sql($sql);
         } else {
@@ -77,11 +77,11 @@ class get_my_courses extends external_api {
 
         // Prefetch settings && index rows.
         $settingsmap = [];
-        foreach ($DB->get_records('saipa_course_settings') as $row) {
+        foreach ($DB->get_records('local_saipa_course_settings') as $row) {
             $settingsmap[(int) $row->courseid] = $row;
         }
         $indexmap = [];
-        foreach ($DB->get_records('saipa_course_index') as $row) {
+        foreach ($DB->get_records('local_saipa_course_index') as $row) {
             $indexmap[(int) $row->courseid] = $row;
         }
 
@@ -99,8 +99,8 @@ class get_my_courses extends external_api {
             // Active SAIPA users.
             $active = (int) $DB->count_records_sql(
                 'SELECT COUNT(DISTINCT s.userid)
-                   FROM {saipa_messages} m
-                   JOIN {saipa_sessions} s ON s.id = m.sessionid
+                   FROM {local_saipa_messages} m
+                   JOIN {local_saipa_sessions} s ON s.id = m.sessionid
                   WHERE s.courseid = :cid AND m.role = :role',
                 ['cid' => $cid, 'role' => 'user']
             );
@@ -110,8 +110,8 @@ class get_my_courses extends external_api {
             $since7d    = time() - (7 * 86400);
             $msgs7d    = (int) $DB->count_records_sql(
                 'SELECT COUNT(*)
-                   FROM {saipa_messages} m
-                   JOIN {saipa_sessions} s ON s.id = m.sessionid
+                   FROM {local_saipa_messages} m
+                   JOIN {local_saipa_sessions} s ON s.id = m.sessionid
                   WHERE s.courseid = :cid AND m.timecreated >= :since',
                 ['cid' => $cid, 'since' => $since7d]
             );
@@ -121,7 +121,7 @@ class get_my_courses extends external_api {
                 'SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS hi,
                         SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS me,
                         SUM(CASE WHEN risk_level = :l THEN 1 ELSE 0 END) AS lo
-                   FROM {saipa_risk_scores}
+                   FROM {local_saipa_risk_scores}
                   WHERE courseid = :cid',
                 ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low']
             );

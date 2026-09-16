@@ -92,15 +92,15 @@ class index_course extends external_api {
 
         // Upsert saipa_course_index record.
         $now    = time();
-        $record = $DB->get_record('saipa_course_index', ['courseid' => $params['course_id']]);
+        $record = $DB->get_record('local_saipa_course_index', ['courseid' => $params['course_id']]);
         if ($record) {
             $record->last_indexed  = $now;
             $record->chunk_count   = $chunkcount;
             $record->status        = $status;
             $record->timemodified  = $now;
-            $DB->update_record('saipa_course_index', $record);
+            $DB->update_record('local_saipa_course_index', $record);
         } else {
-            $DB->insert_record('saipa_course_index', (object) [
+            $DB->insert_record('local_saipa_course_index', (object) [
                 'courseid'     => $params['course_id'],
                 'last_indexed' => $now,
                 'chunk_count'  => $chunkcount,

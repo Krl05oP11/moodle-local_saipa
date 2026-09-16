@@ -61,7 +61,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         mtrace('SAIPA: Starting nightly risk evaluation…');
 
         // ── 1. Find active courses (have at least one SAIPA session) ──────────
-        $sql = "SELECT DISTINCT courseid FROM {saipa_sessions}";
+        $sql = "SELECT DISTINCT courseid FROM {local_saipa_sessions}";
         $courseids = $DB->get_fieldset_sql($sql);
 
         if (empty($courseids)) {
@@ -226,7 +226,7 @@ class risk_evaluation extends \core\task\scheduled_task {
 
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'uid');
         $rows = $DB->get_records_select(
-            'saipa_risk_scores',
+            'local_saipa_risk_scores',
             "courseid = :cid AND userid {$insql}",
             array_merge(['cid' => $cid], $inparams),
             '',
@@ -273,10 +273,10 @@ class risk_evaluation extends \core\task\scheduled_task {
     ): void {
         global $DB;
 
-        $existing = $DB->get_record('saipa_risk_scores', ['userid' => $uid, 'courseid' => $cid]);
+        $existing = $DB->get_record('local_saipa_risk_scores', ['userid' => $uid, 'courseid' => $cid]);
 
         if ($existing) {
-            $DB->update_record('saipa_risk_scores', (object) [
+            $DB->update_record('local_saipa_risk_scores', (object) [
                 'id'           => $existing->id,
                 'score'        => $score,
                 'risk_level'   => $risklevel,
@@ -284,7 +284,7 @@ class risk_evaluation extends \core\task\scheduled_task {
                 'timecomputed' => $now,
             ]);
         } else {
-            $DB->insert_record('saipa_risk_scores', (object) [
+            $DB->insert_record('local_saipa_risk_scores', (object) [
                 'userid'       => $uid,
                 'courseid'     => $cid,
                 'score'        => $score,
@@ -295,7 +295,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         }
 
         // Append to saipa_risk_history for longitudinal trend analysis.
-        $DB->insert_record('saipa_risk_history', (object) [
+        $DB->insert_record('local_saipa_risk_history', (object) [
             'userid'       => $uid,
             'courseid'     => $cid,
             'score'        => $score,
@@ -317,7 +317,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         $coursename = format_string($course->fullname);
 
         foreach ($newhigh as $uid => $name) {
-            $link = $DB->get_record('saipa_telegram_links', ['userid' => $uid, 'confirmed' => 1]);
+            $link = $DB->get_record('local_saipa_telegram_links', ['userid' => $uid, 'confirmed' => 1]);
             if (!$link || !$link->telegram_id) {
                 continue;
             }

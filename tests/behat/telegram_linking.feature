@@ -1,4 +1,4 @@
-@local_saipa @local_saipa_telegram
+@local @local_saipa @local_saipa_telegram
 Feature: SAIPA Telegram account linking
   As a student
   I need to be able to link my Telegram account to SAIPA

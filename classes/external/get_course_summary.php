@@ -68,8 +68,8 @@ class get_course_summary extends external_api {
         // ── Active SAIPA users (at least 1 message sent) ─────────────────────
         $activeusers = (int) $DB->count_records_sql(
             'SELECT COUNT(DISTINCT s.userid)
-               FROM {saipa_messages} m
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+               FROM {local_saipa_messages} m
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE s.courseid = :cid AND m.role = :role',
             ['cid' => $cid, 'role' => 'user']
         );
@@ -80,8 +80,8 @@ class get_course_summary extends external_api {
             'SELECT COUNT(*) AS total,
                     SUM(CASE WHEN m.role = :user THEN 1 ELSE 0 END) AS user_msgs,
                     SUM(CASE WHEN m.role = :assistant THEN 1 ELSE 0 END) AS asst_msgs
-               FROM {saipa_messages} m
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+               FROM {local_saipa_messages} m
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE s.courseid = :cid',
             ['cid' => $cid, 'user' => 'user', 'assistant' => 'assistant']
         );
@@ -93,9 +93,9 @@ class get_course_summary extends external_api {
         $fb = $DB->get_record_sql(
             'SELECT SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
                     SUM(CASE WHEN f.rating < 0 THEN 1 ELSE 0 END) AS neg
-               FROM {saipa_feedback} f
-               JOIN {saipa_messages} m ON m.id = f.messageid
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+               FROM {local_saipa_feedback} f
+               JOIN {local_saipa_messages} m ON m.id = f.messageid
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE s.courseid = :cid',
             ['cid' => $cid]
         );
@@ -110,7 +110,7 @@ class get_course_summary extends external_api {
                     SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS med_cnt,
                     SUM(CASE WHEN risk_level = :l THEN 1 ELSE 0 END) AS low_cnt,
                     MAX(timecomputed) AS last_computed
-               FROM {saipa_risk_scores}
+               FROM {local_saipa_risk_scores}
               WHERE courseid = :cid',
             ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low']
         );
@@ -120,7 +120,7 @@ class get_course_summary extends external_api {
         $lastriskcomputed = (int) ($risk->last_computed ?? 0);
 
         // ── Course index status ───────────────────────────────────────────────
-        $idx = $DB->get_record('saipa_course_index', ['courseid' => $cid]);
+        $idx = $DB->get_record('local_saipa_course_index', ['courseid' => $cid]);
         $indexstatus  = $idx ? $idx->status : 'pending';
         $lastindexed  = $idx ? (int) $idx->last_indexed : 0;
         $chunkcount   = $idx ? (int) $idx->chunk_count : 0;
@@ -130,9 +130,9 @@ class get_course_summary extends external_api {
         $alerts = $DB->get_record_sql(
             'SELECT COUNT(*) AS sent,
                     SUM(CASE WHEN n.responded_at > 0 THEN 1 ELSE 0 END) AS responded
-               FROM {saipa_notifications} n
+               FROM {local_saipa_notifications} n
               WHERE n.userid IN (
-                SELECT DISTINCT userid FROM {saipa_sessions} WHERE courseid = :cid
+                SELECT DISTINCT userid FROM {local_saipa_sessions} WHERE courseid = :cid
               )
               AND n.timesent >= :since',
             ['cid' => $cid, 'since' => $since30d]

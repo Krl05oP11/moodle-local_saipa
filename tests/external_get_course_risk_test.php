@@ -160,9 +160,9 @@ final class external_get_course_risk_test extends \advanced_testcase {
         global $DB;
         $this->setUser($this->teacher);
 
-        $before = $DB->count_records('saipa_risk_scores', ['courseid' => $this->course->id]);
+        $before = $DB->count_records('local_saipa_risk_scores', ['courseid' => $this->course->id]);
         \local_saipa\external\get_course_risk::execute($this->course->id, true);
-        $after  = $DB->count_records('saipa_risk_scores', ['courseid' => $this->course->id]);
+        $after  = $DB->count_records('local_saipa_risk_scores', ['courseid' => $this->course->id]);
 
         $this->assertEquals(
             $before,

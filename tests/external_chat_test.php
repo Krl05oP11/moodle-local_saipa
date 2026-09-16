@@ -77,7 +77,7 @@ final class external_chat_test extends \advanced_testcase {
         global $DB;
         $this->setUser($this->student);
 
-        $before = $DB->count_records('saipa_sessions', [
+        $before = $DB->count_records('local_saipa_sessions', [
             'userid'   => $this->student->id,
             'courseid' => $this->course->id,
         ]);
@@ -85,7 +85,7 @@ final class external_chat_test extends \advanced_testcase {
 
         \local_saipa\external\chat::execute($this->course->id, 'Hola', 0);
 
-        $after = $DB->count_records('saipa_sessions', [
+        $after = $DB->count_records('local_saipa_sessions', [
             'userid'   => $this->student->id,
             'courseid' => $this->course->id,
         ]);
@@ -102,7 +102,7 @@ final class external_chat_test extends \advanced_testcase {
         \local_saipa\external\chat::execute($this->course->id, 'Primero', 0);
         \local_saipa\external\chat::execute($this->course->id, 'Segundo', 0);
 
-        $count = $DB->count_records('saipa_sessions', [
+        $count = $DB->count_records('local_saipa_sessions', [
             'userid'   => $this->student->id,
             'courseid' => $this->course->id,
         ]);
@@ -138,13 +138,13 @@ final class external_chat_test extends \advanced_testcase {
 
         $result = \local_saipa\external\chat::execute($this->course->id, 'Test message', 0);
 
-        $session = $DB->get_record('saipa_sessions', [
+        $session = $DB->get_record('local_saipa_sessions', [
             'userid'   => $this->student->id,
             'courseid' => $this->course->id,
         ]);
         $this->assertNotFalse($session);
 
-        $usermsgs = $DB->get_records('saipa_messages', [
+        $usermsgs = $DB->get_records('local_saipa_messages', [
             'sessionid' => $session->id,
             'role'      => 'user',
         ]);
@@ -162,11 +162,11 @@ final class external_chat_test extends \advanced_testcase {
         $first = \local_saipa\external\chat::execute($this->course->id, 'Uno', 0);
         \local_saipa\external\chat::execute($this->course->id, 'Dos', $first['session_id']);
 
-        $session = $DB->get_record('saipa_sessions', [
+        $session = $DB->get_record('local_saipa_sessions', [
             'userid'   => $this->student->id,
             'courseid' => $this->course->id,
         ]);
-        $count = $DB->count_records('saipa_messages', [
+        $count = $DB->count_records('local_saipa_messages', [
             'sessionid' => $session->id,
             'role'      => 'user',
         ]);

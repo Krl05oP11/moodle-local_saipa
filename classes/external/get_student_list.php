@@ -73,8 +73,8 @@ class get_student_list extends external_api {
                        COUNT(m.id)        AS message_count,
                        MAX(m.timecreated) AS last_message,
                        s.id               AS session_id
-                  FROM {saipa_sessions} s
-             LEFT JOIN {saipa_messages} m ON m.sessionid = s.id AND m.role = 'user'
+                  FROM {local_saipa_sessions} s
+             LEFT JOIN {local_saipa_messages} m ON m.sessionid = s.id AND m.role = 'user'
                  WHERE s.courseid = :courseid
                    AND s.userid $insql
               GROUP BY s.userid, s.id";
@@ -90,7 +90,7 @@ class get_student_list extends external_api {
         $tglinks = [];
         if (!empty($studentids)) {
             $tgrows = $DB->get_records_select(
-                'saipa_telegram_links',
+                'local_saipa_telegram_links',
                 "userid $insql AND confirmed = 1",
                 $inparams,
                 '',
@@ -107,7 +107,7 @@ class get_student_list extends external_api {
         if (!empty($studentids)) {
             // Get most recent teacher_alert per student.
             $alertrows = $DB->get_records_select(
-                'saipa_notifications',
+                'local_saipa_notifications',
                 "userid $insql AND template = 'teacher_alert' AND timesent >= :since",
                 array_merge($inparams, ['since' => $since30d]),
                 'timesent DESC',

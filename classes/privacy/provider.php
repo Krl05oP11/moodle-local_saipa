@@ -48,19 +48,19 @@ class provider implements
      */
     public static function get_metadata(collection $collection): collection {
 
-        $collection->add_database_table('saipa_sessions', [
+        $collection->add_database_table('local_saipa_sessions', [
             'userid'       => 'privacy:metadata:saipa_sessions:userid',
             'courseid'     => 'privacy:metadata:saipa_sessions:courseid',
             'timecreated'  => 'privacy:metadata:saipa_sessions:timecreated',
         ], 'privacy:metadata:saipa_sessions');
 
-        $collection->add_database_table('saipa_messages', [
+        $collection->add_database_table('local_saipa_messages', [
             'content'      => 'privacy:metadata:saipa_messages:content',
             'role'         => 'privacy:metadata:saipa_messages:role',
             'timecreated'  => 'privacy:metadata:saipa_messages:timecreated',
         ], 'privacy:metadata:saipa_messages');
 
-        $collection->add_database_table('saipa_risk_scores', [
+        $collection->add_database_table('local_saipa_risk_scores', [
             'userid'       => 'privacy:metadata:saipa_risk_scores:userid',
             'score'        => 'privacy:metadata:saipa_risk_scores:score',
             'risk_level'   => 'privacy:metadata:saipa_risk_scores:risk_level',
@@ -68,13 +68,13 @@ class provider implements
             'timecomputed' => 'privacy:metadata:saipa_risk_scores:timecomputed',
         ], 'privacy:metadata:saipa_risk_scores');
 
-        $collection->add_database_table('saipa_phone_verify', [
+        $collection->add_database_table('local_saipa_phone_verify', [
             'userid'       => 'privacy:metadata:saipa_phone_verify:userid',
             'phone'        => 'privacy:metadata:saipa_phone_verify:phone',
             'verified'     => 'privacy:metadata:saipa_phone_verify:verified',
         ], 'privacy:metadata:saipa_phone_verify');
 
-        $collection->add_database_table('saipa_notifications', [
+        $collection->add_database_table('local_saipa_notifications', [
             'userid'       => 'privacy:metadata:saipa_notifications:userid',
             'template'     => 'privacy:metadata:saipa_notifications:template',
             'payload'      => 'privacy:metadata:saipa_notifications:payload',
@@ -82,14 +82,14 @@ class provider implements
             'timesent'     => 'privacy:metadata:saipa_notifications:timesent',
         ], 'privacy:metadata:saipa_notifications');
 
-        $collection->add_database_table('saipa_feedback', [
+        $collection->add_database_table('local_saipa_feedback', [
             'userid'       => 'privacy:metadata:saipa_feedback:userid',
             'rating'       => 'privacy:metadata:saipa_feedback:rating',
             'comment'      => 'privacy:metadata:saipa_feedback:comment',
             'timecreated'  => 'privacy:metadata:saipa_feedback:timecreated',
         ], 'privacy:metadata:saipa_feedback');
 
-        $collection->add_database_table('saipa_telegram_links', [
+        $collection->add_database_table('local_saipa_telegram_links', [
             'userid'             => 'privacy:metadata:saipa_telegram_links:userid',
             'telegram_id'        => 'privacy:metadata:saipa_telegram_links:telegram_id',
             'telegram_username'  => 'privacy:metadata:saipa_telegram_links:telegram_username',
@@ -101,7 +101,7 @@ class provider implements
             'message' => 'privacy:metadata:saipa_engine:message',
         ], 'privacy:metadata:saipa_engine');
 
-        $collection->add_database_table('saipa_risk_history', [
+        $collection->add_database_table('local_saipa_risk_history', [
             'userid'    => 'privacy:metadata:risk_history:userid',
             'score'     => 'privacy:metadata:risk_history:score',
             'risk_level' => 'privacy:metadata:risk_history:risk_level',
@@ -123,7 +123,7 @@ class provider implements
         $sql = 'SELECT ctx.id
                   FROM {context} ctx
                   JOIN {course} c ON c.id = ctx.instanceid AND ctx.contextlevel = :ctxlevel
-                  JOIN {saipa_sessions} s ON s.courseid = c.id
+                  JOIN {local_saipa_sessions} s ON s.courseid = c.id
                  WHERE s.userid = :userid';
         $contextlist->add_from_sql($sql, ['ctxlevel' => CONTEXT_COURSE, 'userid' => $userid]);
 
@@ -144,20 +144,20 @@ class provider implements
         if ($context->contextlevel == CONTEXT_COURSE) {
             $userlist->add_from_sql(
                 'userid',
-                'SELECT userid FROM {saipa_sessions} WHERE courseid = :courseid',
+                'SELECT userid FROM {local_saipa_sessions} WHERE courseid = :courseid',
                 ['courseid' => $context->instanceid]
             );
             $userlist->add_from_sql(
                 'userid',
-                'SELECT userid FROM {saipa_risk_scores} WHERE courseid = :courseid',
+                'SELECT userid FROM {local_saipa_risk_scores} WHERE courseid = :courseid',
                 ['courseid' => $context->instanceid]
             );
         }
 
         if ($context->contextlevel == CONTEXT_SYSTEM) {
-            $userlist->add_from_sql('userid', 'SELECT userid FROM {saipa_phone_verify}', []);
-            $userlist->add_from_sql('userid', 'SELECT userid FROM {saipa_notifications}', []);
-            $userlist->add_from_sql('userid', 'SELECT userid FROM {saipa_telegram_links}', []);
+            $userlist->add_from_sql('userid', 'SELECT userid FROM {local_saipa_phone_verify}', []);
+            $userlist->add_from_sql('userid', 'SELECT userid FROM {local_saipa_notifications}', []);
+            $userlist->add_from_sql('userid', 'SELECT userid FROM {local_saipa_telegram_links}', []);
         }
     }
 
@@ -187,9 +187,9 @@ class provider implements
         global $DB;
         $subcontext = [get_string('pluginname', 'local_saipa')];
 
-        $sessions = $DB->get_records('saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
+        $sessions = $DB->get_records('local_saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
         foreach ($sessions as $session) {
-            $messages = $DB->get_records('saipa_messages', ['sessionid' => $session->id], 'timecreated ASC');
+            $messages = $DB->get_records('local_saipa_messages', ['sessionid' => $session->id], 'timecreated ASC');
             writer::with_context($context)->export_data(
                 array_merge($subcontext, ['session_' . $session->id]),
                 (object) [
@@ -205,7 +205,7 @@ class provider implements
             );
         }
 
-        $scores = $DB->get_records('saipa_risk_scores', ['userid' => $userid, 'courseid' => $context->instanceid]);
+        $scores = $DB->get_records('local_saipa_risk_scores', ['userid' => $userid, 'courseid' => $context->instanceid]);
         if ($scores) {
             writer::with_context($context)->export_data(
                 array_merge($subcontext, ['risk_scores']),
@@ -221,9 +221,9 @@ class provider implements
         }
 
         $feedback = $DB->get_records_sql(
-            'SELECT f.* FROM {saipa_feedback} f
-               JOIN {saipa_messages} m ON m.id = f.messageid
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+            'SELECT f.* FROM {local_saipa_feedback} f
+               JOIN {local_saipa_messages} m ON m.id = f.messageid
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE f.userid = :userid AND s.courseid = :courseid',
             ['userid' => $userid, 'courseid' => $context->instanceid]
         );
@@ -251,7 +251,7 @@ class provider implements
         global $DB;
         $subcontext = [get_string('pluginname', 'local_saipa')];
 
-        if ($row = $DB->get_record('saipa_phone_verify', ['userid' => $userid])) {
+        if ($row = $DB->get_record('local_saipa_phone_verify', ['userid' => $userid])) {
             writer::with_context($context)->export_data(
                 array_merge($subcontext, ['phone_verify']),
                 (object) [
@@ -262,7 +262,7 @@ class provider implements
             );
         }
 
-        $notifications = $DB->get_records('saipa_notifications', ['userid' => $userid], 'timesent ASC');
+        $notifications = $DB->get_records('local_saipa_notifications', ['userid' => $userid], 'timesent ASC');
         if ($notifications) {
             writer::with_context($context)->export_data(
                 array_merge($subcontext, ['notifications']),
@@ -276,7 +276,7 @@ class provider implements
             );
         }
 
-        if ($row = $DB->get_record('saipa_telegram_links', ['userid' => $userid])) {
+        if ($row = $DB->get_record('local_saipa_telegram_links', ['userid' => $userid])) {
             writer::with_context($context)->export_data(
                 array_merge($subcontext, ['telegram_link']),
                 (object) [
@@ -300,17 +300,17 @@ class provider implements
     public static function delete_data_for_all_users_in_context(\context $context): void {
         global $DB;
         if ($context->contextlevel == CONTEXT_COURSE) {
-            $sessions = $DB->get_records('saipa_sessions', ['courseid' => $context->instanceid]);
+            $sessions = $DB->get_records('local_saipa_sessions', ['courseid' => $context->instanceid]);
             foreach ($sessions as $session) {
-                $messages = $DB->get_records('saipa_messages', ['sessionid' => $session->id]);
+                $messages = $DB->get_records('local_saipa_messages', ['sessionid' => $session->id]);
                 foreach ($messages as $message) {
-                    $DB->delete_records('saipa_feedback', ['messageid' => $message->id]);
+                    $DB->delete_records('local_saipa_feedback', ['messageid' => $message->id]);
                 }
-                $DB->delete_records('saipa_messages', ['sessionid' => $session->id]);
+                $DB->delete_records('local_saipa_messages', ['sessionid' => $session->id]);
             }
-            $DB->delete_records('saipa_sessions', ['courseid' => $context->instanceid]);
-            $DB->delete_records('saipa_risk_scores', ['courseid' => $context->instanceid]);
-            $DB->delete_records('saipa_risk_history', ['courseid' => $context->instanceid]);
+            $DB->delete_records('local_saipa_sessions', ['courseid' => $context->instanceid]);
+            $DB->delete_records('local_saipa_risk_scores', ['courseid' => $context->instanceid]);
+            $DB->delete_records('local_saipa_risk_history', ['courseid' => $context->instanceid]);
         }
     }
 
@@ -324,21 +324,21 @@ class provider implements
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
             if ($context->contextlevel == CONTEXT_COURSE) {
-                $sessions = $DB->get_records('saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
+                $sessions = $DB->get_records('local_saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
                 foreach ($sessions as $session) {
-                    $messages = $DB->get_records('saipa_messages', ['sessionid' => $session->id]);
+                    $messages = $DB->get_records('local_saipa_messages', ['sessionid' => $session->id]);
                     foreach ($messages as $message) {
-                        $DB->delete_records('saipa_feedback', ['messageid' => $message->id]);
+                        $DB->delete_records('local_saipa_feedback', ['messageid' => $message->id]);
                     }
-                    $DB->delete_records('saipa_messages', ['sessionid' => $session->id]);
+                    $DB->delete_records('local_saipa_messages', ['sessionid' => $session->id]);
                 }
-                $DB->delete_records('saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
-                $DB->delete_records('saipa_risk_scores', ['userid' => $userid, 'courseid' => $context->instanceid]);
-                $DB->delete_records('saipa_risk_history', ['userid' => $userid, 'courseid' => $context->instanceid]);
+                $DB->delete_records('local_saipa_sessions', ['userid' => $userid, 'courseid' => $context->instanceid]);
+                $DB->delete_records('local_saipa_risk_scores', ['userid' => $userid, 'courseid' => $context->instanceid]);
+                $DB->delete_records('local_saipa_risk_history', ['userid' => $userid, 'courseid' => $context->instanceid]);
             } else if ($context->contextlevel == CONTEXT_SYSTEM) {
-                $DB->delete_records('saipa_phone_verify', ['userid' => $userid]);
-                $DB->delete_records('saipa_notifications', ['userid' => $userid]);
-                $DB->delete_records('saipa_telegram_links', ['userid' => $userid]);
+                $DB->delete_records('local_saipa_phone_verify', ['userid' => $userid]);
+                $DB->delete_records('local_saipa_notifications', ['userid' => $userid]);
+                $DB->delete_records('local_saipa_telegram_links', ['userid' => $userid]);
             }
         }
     }
@@ -359,36 +359,36 @@ class provider implements
 
         if ($context->contextlevel == CONTEXT_COURSE) {
             $sessions = $DB->get_records_select(
-                'saipa_sessions',
+                'local_saipa_sessions',
                 "userid $insql AND courseid = :courseid",
                 $inparams + ['courseid' => $context->instanceid]
             );
             foreach ($sessions as $session) {
-                $messages = $DB->get_records('saipa_messages', ['sessionid' => $session->id]);
+                $messages = $DB->get_records('local_saipa_messages', ['sessionid' => $session->id]);
                 foreach ($messages as $message) {
-                    $DB->delete_records('saipa_feedback', ['messageid' => $message->id]);
+                    $DB->delete_records('local_saipa_feedback', ['messageid' => $message->id]);
                 }
-                $DB->delete_records('saipa_messages', ['sessionid' => $session->id]);
+                $DB->delete_records('local_saipa_messages', ['sessionid' => $session->id]);
             }
             $DB->delete_records_select(
-                'saipa_sessions',
+                'local_saipa_sessions',
                 "userid $insql AND courseid = :courseid",
                 $inparams + ['courseid' => $context->instanceid]
             );
             $DB->delete_records_select(
-                'saipa_risk_scores',
+                'local_saipa_risk_scores',
                 "userid $insql AND courseid = :courseid",
                 $inparams + ['courseid' => $context->instanceid]
             );
             $DB->delete_records_select(
-                'saipa_risk_history',
+                'local_saipa_risk_history',
                 "userid $insql AND courseid = :courseid",
                 $inparams + ['courseid' => $context->instanceid]
             );
         } else if ($context->contextlevel == CONTEXT_SYSTEM) {
-            $DB->delete_records_select('saipa_phone_verify', "userid $insql", $inparams);
-            $DB->delete_records_select('saipa_notifications', "userid $insql", $inparams);
-            $DB->delete_records_select('saipa_telegram_links', "userid $insql", $inparams);
+            $DB->delete_records_select('local_saipa_phone_verify', "userid $insql", $inparams);
+            $DB->delete_records_select('local_saipa_notifications', "userid $insql", $inparams);
+            $DB->delete_records_select('local_saipa_telegram_links', "userid $insql", $inparams);
         }
     }
 }

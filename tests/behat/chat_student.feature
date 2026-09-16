@@ -1,4 +1,4 @@
-@local_saipa @local_saipa_chat
+@local @local_saipa @local_saipa_chat
 Feature: SAIPA chat widget for students
   As a student enrolled in a course
   I need to be able to open the SAIPA chat block

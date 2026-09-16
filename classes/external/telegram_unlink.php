@@ -51,7 +51,7 @@ class telegram_unlink extends external_api {
 
         require_login();
 
-        $DB->delete_records('saipa_telegram_links', ['userid' => (int) $USER->id]);
+        $DB->delete_records('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
 
         return ['success' => true];
     }

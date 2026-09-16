@@ -72,7 +72,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         );
 
         // Seed a SAIPA session so the task finds this course.
-        $DB->insert_record('saipa_sessions', (object) [
+        $DB->insert_record('local_saipa_sessions', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'contextid'    => \context_course::instance($this->course->id)->id,
@@ -113,7 +113,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
      */
     public function test_execute_with_no_sessions(): void {
         global $DB;
-        $DB->delete_records('saipa_sessions');
+        $DB->delete_records('local_saipa_sessions');
 
         $task = new \local_saipa\task\risk_evaluation();
         // Should not throw.
@@ -136,7 +136,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         global $DB;
 
         // Seed a previous score.
-        $existingid = $DB->insert_record('saipa_risk_scores', (object) [
+        $existingid = $DB->insert_record('local_saipa_risk_scores', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'score'        => 0.3,
@@ -160,7 +160,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
         );
 
         $row = $DB->get_record(
-            'saipa_risk_scores',
+            'local_saipa_risk_scores',
             ['userid' => $this->student->id, 'courseid' => $this->course->id]
         );
 
@@ -175,7 +175,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
     public function test_new_score_is_inserted(): void {
         global $DB;
 
-        $before = $DB->count_records('saipa_risk_scores');
+        $before = $DB->count_records('local_saipa_risk_scores');
 
         $task = new \local_saipa\task\risk_evaluation();
         $method = new \ReflectionMethod($task, 'upsert_score');
@@ -190,7 +190,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
             time()
         );
 
-        $after = $DB->count_records('saipa_risk_scores');
+        $after = $DB->count_records('local_saipa_risk_scores');
         $this->assertEquals($before + 1, $after, 'Must INSERT one new row');
     }
 
@@ -202,7 +202,7 @@ final class task_risk_evaluation_test extends \advanced_testcase {
     public function test_get_previous_levels(): void {
         global $DB;
 
-        $DB->insert_record('saipa_risk_scores', (object) [
+        $DB->insert_record('local_saipa_risk_scores', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'score'        => 0.4,

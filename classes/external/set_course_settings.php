@@ -77,7 +77,7 @@ class set_course_settings extends external_api {
 
         $cid      = (int) $params['courseid'];
         $now      = time();
-        $existing = $DB->get_record('saipa_course_settings', ['courseid' => $cid]);
+        $existing = $DB->get_record('local_saipa_course_settings', ['courseid' => $cid]);
 
         if ($existing) {
             $record = clone $existing;
@@ -97,9 +97,9 @@ class set_course_settings extends external_api {
             if ($params['rag_enabled'] !== null) {
                 $record->rag_enabled    = (int) $params['rag_enabled'];
             }
-            $DB->update_record('saipa_course_settings', $record);
+            $DB->update_record('local_saipa_course_settings', $record);
         } else {
-            $DB->insert_record('saipa_course_settings', (object) [
+            $DB->insert_record('local_saipa_course_settings', (object) [
                 'courseid'       => $cid,
                 'saipa_enabled'  => (int) ($params['saipa_enabled'] ?? true),
                 'chat_enabled'   => (int) ($params['chat_enabled'] ?? true),

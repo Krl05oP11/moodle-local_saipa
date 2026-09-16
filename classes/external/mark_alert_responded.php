@@ -66,7 +66,7 @@ class mark_alert_responded extends external_api {
         }
 
         // Resolve Moodle user from Telegram ID.
-        $link = $DB->get_record('saipa_telegram_links', [
+        $link = $DB->get_record('local_saipa_telegram_links', [
             'telegram_id' => $params['telegram_id'],
             'confirmed'   => 1,
         ]);
@@ -80,7 +80,7 @@ class mark_alert_responded extends external_api {
         // Find the most recent unresponded teacher_alert sent in the last 7 days.
         $since = time() - (7 * DAYSECS);
         $alert = $DB->get_record_select(
-            'saipa_notifications',
+            'local_saipa_notifications',
             'userid = :uid AND template = :tpl AND responded_at IS NULL AND timesent >= :since',
             ['uid' => $userid, 'tpl' => 'teacher_alert', 'since' => $since],
             '*',
@@ -108,7 +108,7 @@ class mark_alert_responded extends external_api {
         $payload['delay_minutes']   = $delayminutes;
         $payload['moodle_accessed'] = $moodleaccessed;
 
-        $DB->update_record('saipa_notifications', (object) [
+        $DB->update_record('local_saipa_notifications', (object) [
             'id'           => $alert->id,
             'status'       => 'responded',
             'responded_at' => $params['timereceived'],

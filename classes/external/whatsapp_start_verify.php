@@ -69,9 +69,9 @@ class whatsapp_start_verify extends external_api {
         $otp     = (string) random_int(100000, 999999);
 
         // Upsert into saipa_phone_verify (one row per user).
-        $existing = $DB->get_record('saipa_phone_verify', ['userid' => (int) $USER->id]);
+        $existing = $DB->get_record('local_saipa_phone_verify', ['userid' => (int) $USER->id]);
         if ($existing) {
-            $DB->update_record('saipa_phone_verify', (object) [
+            $DB->update_record('local_saipa_phone_verify', (object) [
                 'id'          => $existing->id,
                 'phone'       => $phoneclean,
                 'otp'         => $otp,
@@ -79,7 +79,7 @@ class whatsapp_start_verify extends external_api {
                 'timeexpires' => $expires,
             ]);
         } else {
-            $DB->insert_record('saipa_phone_verify', (object) [
+            $DB->insert_record('local_saipa_phone_verify', (object) [
                 'userid'      => (int) $USER->id,
                 'phone'       => $phoneclean,
                 'otp'         => $otp,

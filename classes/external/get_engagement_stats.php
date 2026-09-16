@@ -64,8 +64,8 @@ class get_engagement_stats extends external_api {
                     COUNT(m.id) AS msg_count,
                     COUNT(DISTINCT s.userid) AS unique_users,
                     COUNT(DISTINCT s.id) AS session_count
-               FROM {saipa_messages} m
-               JOIN {saipa_sessions} s ON s.id = m.sessionid
+               FROM {local_saipa_messages} m
+               JOIN {local_saipa_sessions} s ON s.id = m.sessionid
               WHERE m.timecreated >= :since
               GROUP BY s.courseid',
             ['since' => $since]
@@ -80,9 +80,9 @@ class get_engagement_stats extends external_api {
             $fb = $DB->get_record_sql(
                 'SELECT SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
                         SUM(CASE WHEN f.rating < 0 THEN 1 ELSE 0 END) AS neg
-                   FROM {saipa_feedback} f
-                   JOIN {saipa_messages} m ON m.id = f.messageid
-                   JOIN {saipa_sessions} s ON s.id = m.sessionid
+                   FROM {local_saipa_feedback} f
+                   JOIN {local_saipa_messages} m ON m.id = f.messageid
+                   JOIN {local_saipa_sessions} s ON s.id = m.sessionid
                   WHERE s.courseid = :cid AND f.timecreated >= :since',
                 ['cid' => $cid, 'since' => $since]
             );
@@ -111,7 +111,7 @@ class get_engagement_stats extends external_api {
                EXTRACT(HOUR FROM TO_TIMESTAMP(m.timecreated)) AS hour,
                EXTRACT(ISODOW FROM TO_TIMESTAMP(m.timecreated)) - 1 AS dow,
                COUNT(*) AS cnt
-             FROM {saipa_messages} m
+             FROM {local_saipa_messages} m
             WHERE m.timecreated >= :since AND m.role = :role
             GROUP BY hour, dow
             ORDER BY dow, hour",
@@ -131,8 +131,8 @@ class get_engagement_stats extends external_api {
         // Buckets: 1-3, 4-10, 11+
         $depthrows = $DB->get_records_sql(
             'SELECT s.id, COUNT(m.id) AS msg_count
-               FROM {saipa_sessions} s
-               JOIN {saipa_messages} m ON m.sessionid = s.id
+               FROM {local_saipa_sessions} s
+               JOIN {local_saipa_messages} m ON m.sessionid = s.id
               WHERE m.timecreated >= :since
               GROUP BY s.id',
             ['since' => $since]

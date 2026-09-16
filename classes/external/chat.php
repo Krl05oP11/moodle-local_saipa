@@ -72,14 +72,14 @@ class chat extends external_api {
 
         // Find or create session.
         if ($params['session_id'] > 0) {
-            $session = $DB->get_record('saipa_sessions', [
+            $session = $DB->get_record('local_saipa_sessions', [
                 'id'       => $params['session_id'],
                 'userid'   => (int) $USER->id,
                 'courseid' => $params['course_id'],
             ]);
         }
         if (empty($session)) {
-            $session = $DB->get_record('saipa_sessions', [
+            $session = $DB->get_record('local_saipa_sessions', [
                 'userid'   => (int) $USER->id,
                 'courseid' => $params['course_id'],
             ]);
@@ -92,12 +92,12 @@ class chat extends external_api {
                 'timecreated'  => $now,
                 'timemodified' => $now,
             ];
-            $session->id = $DB->insert_record('saipa_sessions', $session);
+            $session->id = $DB->insert_record('local_saipa_sessions', $session);
         }
 
         // Fetch last 10 messages for history.
         $prev = $DB->get_records(
-            'saipa_messages',
+            'local_saipa_messages',
             ['sessionid' => $session->id],
             'timecreated ASC',
             'role,content',
@@ -107,7 +107,7 @@ class chat extends external_api {
         $history = array_values(array_map(fn($r) => ['role' => $r->role, 'content' => $r->content], $prev));
 
         // Persist the user message.
-        $DB->insert_record('saipa_messages', (object) [
+        $DB->insert_record('local_saipa_messages', (object) [
             'sessionid'   => $session->id,
             'role'        => 'user',
             'content'     => $params['message'],
@@ -115,7 +115,7 @@ class chat extends external_api {
         ]);
 
         // Update session timestamp.
-        $DB->set_field('saipa_sessions', 'timemodified', $now, ['id' => $session->id]);
+        $DB->set_field('local_saipa_sessions', 'timemodified', $now, ['id' => $session->id]);
 
         $userrole = has_capability('local/saipa:view', $context) ? 'teacher' : 'student';
 
@@ -141,7 +141,7 @@ class chat extends external_api {
         $reply = $response['reply'] ?? '';
 
         // Persist the assistant reply.
-        $messageid = $DB->insert_record('saipa_messages', (object) [
+        $messageid = $DB->insert_record('local_saipa_messages', (object) [
             'sessionid'   => $session->id,
             'role'        => 'assistant',
             'content'     => $reply,

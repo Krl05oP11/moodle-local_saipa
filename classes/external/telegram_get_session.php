@@ -53,7 +53,7 @@ class telegram_get_session extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
-        $link = $DB->get_record('saipa_telegram_links', [
+        $link = $DB->get_record('local_saipa_telegram_links', [
             'telegram_id' => $params['telegram_id'],
             'confirmed'   => 1,
         ]);
@@ -67,7 +67,7 @@ class telegram_get_session extends external_api {
 
         // Find the most recently active SAIPA session for this user.
         $session = $DB->get_record_sql(
-            "SELECT s.courseid FROM {saipa_sessions} s
+            "SELECT s.courseid FROM {local_saipa_sessions} s
               WHERE s.userid = :uid
               ORDER BY s.timemodified DESC",
             ['uid' => $link->userid],

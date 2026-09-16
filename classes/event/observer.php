@@ -85,15 +85,15 @@ class observer {
 
         // Upsert saipa_course_index.
         $now    = time();
-        $record = $DB->get_record('saipa_course_index', ['courseid' => $courseid]);
+        $record = $DB->get_record('local_saipa_course_index', ['courseid' => $courseid]);
         if ($record) {
             $record->last_indexed  = $now;
             $record->chunk_count   = $record->chunk_count + $totalchunks;
             $record->status        = 'ready';
             $record->timemodified  = $now;
-            $DB->update_record('saipa_course_index', $record);
+            $DB->update_record('local_saipa_course_index', $record);
         } else {
-            $DB->insert_record('saipa_course_index', (object) [
+            $DB->insert_record('local_saipa_course_index', (object) [
                 'courseid'     => $courseid,
                 'last_indexed' => $now,
                 'chunk_count'  => $totalchunks,

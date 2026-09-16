@@ -96,7 +96,7 @@ final class external_v050_test extends \advanced_testcase {
     private function create_session(int $userid, int $courseid): int {
         global $DB;
         $now = time();
-        return (int) $DB->insert_record('saipa_sessions', (object) [
+        return (int) $DB->insert_record('local_saipa_sessions', (object) [
             'userid'       => $userid,
             'courseid'     => $courseid,
             'contextid'    => \context_course::instance($courseid)->id,
@@ -110,7 +110,7 @@ final class external_v050_test extends \advanced_testcase {
      */
     private function create_message(int $sessionid, string $role, string $content): int {
         global $DB;
-        return (int) $DB->insert_record('saipa_messages', (object) [
+        return (int) $DB->insert_record('local_saipa_messages', (object) [
             'sessionid'   => $sessionid,
             'role'        => $role,
             'content'     => $content,
@@ -316,7 +316,7 @@ final class external_v050_test extends \advanced_testcase {
         $this->setUser($this->manager);
 
         // Insert a risk score.
-        $DB->insert_record('saipa_risk_scores', (object) [
+        $DB->insert_record('local_saipa_risk_scores', (object) [
             'userid'       => $this->student->id,
             'courseid'     => $this->course->id,
             'score'        => 0.85,
@@ -446,7 +446,7 @@ final class external_v050_test extends \advanced_testcase {
         $this->create_session($this->student->id, $this->course->id);
 
         // Insert custom settings.
-        $DB->insert_record('saipa_course_settings', (object) [
+        $DB->insert_record('local_saipa_course_settings', (object) [
             'courseid'       => $this->course->id,
             'saipa_enabled'  => 1,
             'chat_enabled'   => 0,
@@ -502,7 +502,7 @@ final class external_v050_test extends \advanced_testcase {
 
         $this->assertTrue($r['success']);
 
-        $row = $DB->get_record('saipa_course_settings', ['courseid' => $this->course->id]);
+        $row = $DB->get_record('local_saipa_course_settings', ['courseid' => $this->course->id]);
         $this->assertNotFalse($row);
         $this->assertEquals(0, (int) $row->saipa_enabled);
         // Other flags default to true on insert.
@@ -526,7 +526,7 @@ final class external_v050_test extends \advanced_testcase {
         $r = \local_saipa\external\set_course_settings::execute($this->course->id, null, false);
         $this->assertTrue($r['success']);
 
-        $row = $DB->get_record('saipa_course_settings', ['courseid' => $this->course->id]);
+        $row = $DB->get_record('local_saipa_course_settings', ['courseid' => $this->course->id]);
         $this->assertEquals(1, (int) $row->saipa_enabled, 'saipa_enabled must be preserved');
         $this->assertEquals(0, (int) $row->chat_enabled, 'chat_enabled must be updated to false');
         $this->assertEquals(1, (int) $row->risk_enabled, 'risk_enabled must be preserved');

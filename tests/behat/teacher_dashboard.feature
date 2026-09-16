@@ -1,4 +1,4 @@
-@local_saipa @local_saipa_dashboard
+@local @local_saipa @local_saipa_dashboard
 Feature: SAIPA teacher dashboard
   As a teacher enrolled in a course
   I need to access the SAIPA teacher dashboard

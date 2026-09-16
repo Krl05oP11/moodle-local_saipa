@@ -62,7 +62,7 @@ class telegram_confirm_link extends external_api {
         $now = time();
 
         // Look up the pending link record.
-        $record = $DB->get_record('saipa_telegram_links', ['link_token' => $params['token']]);
+        $record = $DB->get_record('local_saipa_telegram_links', ['link_token' => $params['token']]);
 
         if (!$record) {
             throw new \invalid_parameter_exception('Invalid || already used token.');
@@ -77,13 +77,13 @@ class telegram_confirm_link extends external_api {
         }
 
         // Guard: if another user already has this telegram_id, refuse.
-        $clash = $DB->get_record('saipa_telegram_links', ['telegram_id' => $params['telegram_id']]);
+        $clash = $DB->get_record('local_saipa_telegram_links', ['telegram_id' => $params['telegram_id']]);
         if ($clash && $clash->userid !== $record->userid) {
             throw new \invalid_parameter_exception('This Telegram account is already linked to another Moodle user.');
         }
 
         // Confirm the link.
-        $DB->update_record('saipa_telegram_links', (object) [
+        $DB->update_record('local_saipa_telegram_links', (object) [
             'id'                => $record->id,
             'telegram_id'       => $params['telegram_id'],
             'telegram_username' => $params['telegram_username'],

@@ -53,7 +53,7 @@ class telegram_unlink_by_id extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
-        $DB->delete_records('saipa_telegram_links', ['telegram_id' => $params['telegram_id']]);
+        $DB->delete_records('local_saipa_telegram_links', ['telegram_id' => $params['telegram_id']]);
 
         return ['success' => true];
     }

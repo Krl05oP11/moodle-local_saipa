@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="saipa_sessions" COMMENT="Chat sessions between a student and the SAIPA assistant">
+    <TABLE NAME="local_saipa_sessions" COMMENT="Chat sessions between a student and the SAIPA assistant">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -22,7 +22,7 @@
         <INDEX NAME="idx_userid_courseid" UNIQUE="false" FIELDS="userid, courseid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="saipa_messages" COMMENT="Individual messages within a SAIPA chat session">
+    <TABLE NAME="local_saipa_messages" COMMENT="Individual messages within a SAIPA chat session">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -32,13 +32,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="fk_sessionid" TYPE="foreign" FIELDS="sessionid" REFTABLE="saipa_sessions" REFFIELDS="id"/>
+        <KEY NAME="fk_sessionid" TYPE="foreign" FIELDS="sessionid" REFTABLE="local_saipa_sessions" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="idx_sessionid_time" UNIQUE="false" FIELDS="sessionid, timecreated"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="saipa_risk_scores" COMMENT="Daily dropout risk scores per student per course">
+    <TABLE NAME="local_saipa_risk_scores" COMMENT="Daily dropout risk scores per student per course">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -57,7 +57,7 @@
         <INDEX NAME="idx_userid_courseid_time" UNIQUE="false" FIELDS="userid, courseid, timecomputed"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="saipa_phone_verify" COMMENT="WhatsApp phone number verification records">
+    <TABLE NAME="local_saipa_phone_verify" COMMENT="WhatsApp phone number verification records">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -73,7 +73,7 @@
         <KEY NAME="uq_userid" TYPE="unique" FIELDS="userid"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_notifications" COMMENT="Log of WhatsApp messages sent by SAIPA">
+    <TABLE NAME="local_saipa_notifications" COMMENT="Log of WhatsApp messages sent by SAIPA">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -89,7 +89,7 @@
         <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_feedback" COMMENT="Thumbs up/down feedback on assistant responses">
+    <TABLE NAME="local_saipa_feedback" COMMENT="Thumbs up/down feedback on assistant responses">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="messageid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -100,11 +100,11 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="fk_message" TYPE="foreign" FIELDS="messageid" REFTABLE="saipa_messages" REFFIELDS="id"/>
+        <KEY NAME="fk_message" TYPE="foreign" FIELDS="messageid" REFTABLE="local_saipa_messages" REFFIELDS="id"/>
         <KEY NAME="uq_message_user" TYPE="unique" FIELDS="messageid, userid"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_course_index" COMMENT="RAG indexing state per course">
+    <TABLE NAME="local_saipa_course_index" COMMENT="RAG indexing state per course">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -120,7 +120,7 @@
         <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_telegram_links" COMMENT="Telegram account links: one row per Moodle user">
+    <TABLE NAME="local_saipa_telegram_links" COMMENT="Telegram account links: one row per Moodle user">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -142,7 +142,7 @@
         <INDEX NAME="idx_link_token" UNIQUE="true" FIELDS="link_token"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="saipa_course_settings" COMMENT="Per-course feature flags for advisor dashboard control">
+    <TABLE NAME="local_saipa_course_settings" COMMENT="Per-course feature flags for advisor dashboard control">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -160,7 +160,7 @@
         <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_daily_stats" COMMENT="Pre-aggregated daily metrics per course for advisor dashboard performance">
+    <TABLE NAME="local_saipa_daily_stats" COMMENT="Pre-aggregated daily metrics per course for advisor dashboard performance">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -186,7 +186,7 @@
         <KEY NAME="fk_courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="saipa_risk_history" COMMENT="Append-only risk score log for longitudinal research and trend analysis">
+    <TABLE NAME="local_saipa_risk_history" COMMENT="Append-only risk score log for longitudinal research and trend analysis">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
