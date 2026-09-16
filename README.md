@@ -5,7 +5,7 @@
 [![Moodle 4.4+](https://img.shields.io/badge/Moodle-4.4%2B-orange)](https://moodle.org)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue)](https://php.net)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-green)](LICENSE)
-[![Maturity: Beta](https://img.shields.io/badge/Maturity-Beta-yellow)]()
+[![Maturity: Stable](https://img.shields.io/badge/Maturity-Stable-brightgreen)]()
 
 ---
 
@@ -177,14 +177,17 @@ block_saipa/                          index.py, chat.py, risk.py
 
 | Table | Purpose |
 |-------|---------|
-| `saipa_sessions` | Chat session state per user per course |
-| `saipa_messages` | Full conversation history |
-| `saipa_risk_scores` | Latest risk score per student per course |
-| `saipa_risk_history` | Weekly risk snapshots |
-| `saipa_alerts` | Alert log (sent, responded, ignored) |
-| `saipa_telegram_links` | Moodle user ↔ Telegram chat_id mapping |
-| `saipa_daily_stats` | Aggregated daily engagement metrics |
-| `saipa_course_settings` | Per-course AI configuration overrides |
+| `local_saipa_sessions` | Chat session state per user per course |
+| `local_saipa_messages` | Full conversation history |
+| `local_saipa_feedback` | Thumbs up/down feedback on assistant responses |
+| `local_saipa_risk_scores` | Latest risk score per student per course |
+| `local_saipa_risk_history` | Weekly risk snapshots |
+| `local_saipa_notifications` | Alert log (sent, responded, ignored) |
+| `local_saipa_telegram_links` | Moodle user ↔ Telegram chat_id mapping |
+| `local_saipa_phone_verify` | WhatsApp phone number verification |
+| `local_saipa_course_index` | RAG indexing state per course |
+| `local_saipa_course_settings` | Per-course feature flags for the advisor dashboard |
+| `local_saipa_daily_stats` | Pre-aggregated daily metrics per course |
 
 ---
 
