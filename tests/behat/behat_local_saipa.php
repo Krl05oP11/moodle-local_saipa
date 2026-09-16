@@ -39,7 +39,6 @@ use Behat\Mink\Exception\ExpectationException;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_local_saipa extends behat_base {
-
     /**
      * Converts page names to URLs for the 'I am on the "..." "local_saipa > ..." page' steps.
      *
@@ -67,6 +66,8 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
+     * Asserts the chat widget's input field is visible.
+     *
      * @Then /^I should see the SAIPA chat input field$/
      */
     public function i_should_see_the_saipa_chat_input_field() {
@@ -74,7 +75,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @When /^I type "(?P<text_string>(?:[^"]|\\")*)" into the SAIPA chat input field$/
+     * Types text into the chat widget's input field.
+     *
+     * @When /^I type "(?P<text>(?:[^"]|\\")*)" into the SAIPA chat input field$/
      * @param string $text
      */
     public function i_type_into_the_saipa_chat_input_field($text) {
@@ -83,7 +86,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Then /^the SAIPA chat input field should contain "(?P<text_string>(?:[^"]|\\")*)"$/
+     * Asserts the chat input field's current value.
+     *
+     * @Then /^the SAIPA chat input field should contain "(?P<text>(?:[^"]|\\")*)"$/
      * @param string $text
      */
     public function the_saipa_chat_input_field_should_contain($text) {
@@ -99,7 +104,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)" in the page title$/
+     * Asserts the browser page title contains the given text.
+     *
+     * @Then /^I should see "(?P<text>(?:[^"]|\\")*)" in the page title$/
      * @param string $text
      */
     public function i_should_see_in_the_page_title($text) {
@@ -116,7 +123,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)" in the student table$/
+     * Asserts the teacher dashboard's student list contains the given text.
+     *
+     * @Then /^I should see "(?P<text>(?:[^"]|\\")*)" in the student table$/
      * @param string $text
      */
     public function i_should_see_in_the_student_table($text) {
@@ -132,6 +141,8 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
+     * Asserts the current page is Moodle's login page.
+     *
      * @Then /^I should be redirected to the login page$/
      */
     public function i_should_be_redirected_to_the_login_page() {
@@ -160,15 +171,19 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
+     * Asserts risk badges are rendered for the enrolled students.
+     *
      * @Then /^I should see risk level badges for the enrolled students$/
      */
     public function i_should_see_risk_level_badges_for_the_enrolled_students() {
         $this->wait_for_pending_js();
-        // find_all() polls and throws automatically if nothing matches before timeout.
+        // Polling via find_all(), which throws automatically if nothing matches in time.
         $this->find_all('css', '#saipa-student-list .badge');
     }
 
     /**
+     * Enables the Telegram messaging channel in local_saipa settings.
+     *
      * @Given /^the SAIPA Telegram channel is enabled in settings$/
      */
     public function the_saipa_telegram_channel_is_enabled_in_settings() {
@@ -176,7 +191,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Given /^the SAIPA messaging channel is set to "(?P<value_string>(?:[^"]|\\")*)"$/
+     * Sets local_saipa's messaging channel setting to the given value.
+     *
+     * @Given /^the SAIPA messaging channel is set to "(?P<value>(?:[^"]|\\")*)"$/
      * @param string $value one of 'none', 'telegram', 'whatsapp', 'both'.
      */
     public function the_saipa_messaging_channel_is_set_to($value) {
@@ -184,6 +201,8 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
+     * Ensures no Telegram link record exists for student1.
+     *
      * @Given /^the student has not linked Telegram$/
      */
     public function the_student_has_not_linked_telegram() {
@@ -195,7 +214,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Given /^the student "(?P<username_string>(?:[^"]|\\")*)" has a confirmed Telegram link with username "(?P<tgusername_string>(?:[^"]|\\")*)"$/
+     * Creates a confirmed Telegram link record for the given user.
+     *
+     * @Given /^the student "(?P<username>(?:[^"]|\\")*)" has a confirmed Telegram link with username "(?P<tg>(?:[^"]|\\")*)"$/
      * @param string $username Moodle username.
      * @param string $tgusername Telegram username (without the leading @).
      */
@@ -231,7 +252,9 @@ class behat_local_saipa extends behat_base {
     }
 
     /**
-     * @Then /^I should see a Telegram deep-link starting with "(?P<prefix_string>(?:[^"]|\\")*)"$/
+     * Asserts the stubbed deep-link listener captured a URL with the given prefix.
+     *
+     * @Then /^I should see a Telegram deep-link starting with "(?P<prefix>(?:[^"]|\\")*)"$/
      * @param string $prefix
      */
     public function i_should_see_a_telegram_deep_link_starting_with($prefix) {
