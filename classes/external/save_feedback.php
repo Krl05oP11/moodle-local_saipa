@@ -67,7 +67,12 @@ class save_feedback extends external_api {
         }
 
         // Verify the message belongs to a session owned by this user in this course.
-        $message = $DB->get_record('local_saipa_messages', ['id' => $params['message_id'], 'role' => 'assistant'], 'id,sessionid', IGNORE_MISSING);
+        $message = $DB->get_record(
+            'local_saipa_messages',
+            ['id' => $params['message_id'], 'role' => 'assistant'],
+            'id,sessionid',
+            IGNORE_MISSING
+        );
         if (!$message) {
             throw new \invalid_parameter_exception('message not found');
         }

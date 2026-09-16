@@ -132,7 +132,8 @@ $functions = [
     'local_saipa_mark_alert_responded' => [
         'classname'     => 'local_saipa\external\mark_alert_responded',
         'methodname'    => 'execute',
-        'description'   => 'Marks a pending teacher_alert as responded when the student sends a Telegram message (server-to-server)',
+        'description'   => 'Marks a pending teacher_alert as responded when the student sends a '
+            . 'Telegram message (server-to-server)',
         'type'          => 'write',
         'ajax'          => false,
         'capabilities'  => '',

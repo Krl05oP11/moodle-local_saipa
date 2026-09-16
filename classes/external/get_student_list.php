@@ -169,11 +169,26 @@ class get_student_list extends external_api {
                     'message_count' => new external_value(PARAM_INT, 'Number of messages sent by student'),
                     'last_message'  => new external_value(PARAM_INT, 'Timestamp of last message (0 if none)'),
                     'has_session'                 => new external_value(PARAM_BOOL, 'Whether student has started a chat'),
-                    'telegram_linked'             => new external_value(PARAM_BOOL, 'Whether student has a confirmed Telegram account linked'),
-                    'last_alert_sent'             => new external_value(PARAM_INT, 'Unix timestamp of last teacher alert sent (0 if none in last 30 days)'),
-                    'alert_responded'             => new external_value(PARAM_BOOL, 'True if student replied to bot after last alert'),
-                    'alert_response_delay_min'    => new external_value(PARAM_INT, 'Minutes between alert && first student response (0 if not yet responded)'),
-                    'moodle_accessed_after_alert' => new external_value(PARAM_BOOL, 'True if student accessed Moodle after the last alert'),
+                    'telegram_linked'             => new external_value(
+                        PARAM_BOOL,
+                        'Whether student has a confirmed Telegram account linked'
+                    ),
+                    'last_alert_sent'             => new external_value(
+                        PARAM_INT,
+                        'Unix timestamp of last teacher alert sent (0 if none in last 30 days)'
+                    ),
+                    'alert_responded'             => new external_value(
+                        PARAM_BOOL,
+                        'True if student replied to bot after last alert'
+                    ),
+                    'alert_response_delay_min'    => new external_value(
+                        PARAM_INT,
+                        'Minutes between alert && first student response (0 if not yet responded)'
+                    ),
+                    'moodle_accessed_after_alert' => new external_value(
+                        PARAM_BOOL,
+                        'True if student accessed Moodle after the last alert'
+                    ),
                 ])
             ),
         ]);

@@ -71,7 +71,10 @@ class admin_chat extends external_api {
         $result = local_saipa_engine_request('/chat/advisor', $payload, 30);
 
         if ($result === false || !isset($result['reply'])) {
-            return ['reply' => 'El asistente no está disponible en este momento. Verificá que el motor de SAIPA esté en funcionamiento.'];
+            return [
+                'reply' => 'El asistente no está disponible en este momento. '
+                    . 'Verificá que el motor de SAIPA esté en funcionamiento.',
+            ];
         }
 
         return ['reply' => (string) $result['reply']];

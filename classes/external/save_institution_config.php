@@ -43,7 +43,12 @@ class save_institution_config extends external_api {
         return new external_function_parameters([
             'risk_threshold_medium'  => new external_value(PARAM_FLOAT, 'Medium risk threshold (0-1)', VALUE_DEFAULT, null),
             'risk_threshold_high'    => new external_value(PARAM_FLOAT, 'High risk threshold (0-1)', VALUE_DEFAULT, null),
-            'alert_cooldown_hours'   => new external_value(PARAM_INT, 'Min hours between alerts to same student', VALUE_DEFAULT, null),
+            'alert_cooldown_hours'   => new external_value(
+                PARAM_INT,
+                'Min hours between alerts to same student',
+                VALUE_DEFAULT,
+                null
+            ),
             'data_retention_days'    => new external_value(PARAM_INT, 'Days to keep messages/scores (GDPR)', VALUE_DEFAULT, null),
             'default_alert_template' => new external_value(PARAM_TEXT, 'Default alert message template', VALUE_DEFAULT, null),
             'risk_eval_enabled'      => new external_value(PARAM_BOOL, 'Risk evaluation globally on/off', VALUE_DEFAULT, null),
