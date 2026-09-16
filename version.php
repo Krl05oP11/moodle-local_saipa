@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component  = 'local_saipa';
 $plugin->version    = 2026091501;
 $plugin->requires   = 2024042200;   // Moodle 4.4 minimum.
-$plugin->maturity   = MATURITY_BETA;
+$plugin->maturity   = MATURITY_STABLE;
 $plugin->release    = '0.5.2';
 $plugin->supported  = [404, 405];
 // No plugin dependencies: local_saipa is the core component. block_saipa is an
