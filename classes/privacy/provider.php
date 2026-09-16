@@ -127,6 +127,23 @@ class provider implements
                  WHERE s.userid = :userid';
         $contextlist->add_from_sql($sql, ['ctxlevel' => CONTEXT_COURSE, 'userid' => $userid]);
 
+        // Course contexts from risk scores/history -- a student can have risk data
+        // in a course without ever having used the chat (e.g. teacher-triggered
+        // evaluation), so these need their own context discovery, not just sessions.
+        $sql = 'SELECT ctx.id
+                  FROM {context} ctx
+                  JOIN {course} c ON c.id = ctx.instanceid AND ctx.contextlevel = :ctxlevel
+                  JOIN {local_saipa_risk_scores} rs ON rs.courseid = c.id
+                 WHERE rs.userid = :userid';
+        $contextlist->add_from_sql($sql, ['ctxlevel' => CONTEXT_COURSE, 'userid' => $userid]);
+
+        $sql = 'SELECT ctx.id
+                  FROM {context} ctx
+                  JOIN {course} c ON c.id = ctx.instanceid AND ctx.contextlevel = :ctxlevel
+                  JOIN {local_saipa_risk_history} rh ON rh.courseid = c.id
+                 WHERE rh.userid = :userid';
+        $contextlist->add_from_sql($sql, ['ctxlevel' => CONTEXT_COURSE, 'userid' => $userid]);
+
         // System context for phone_verify, notifications, telegram_links.
         $contextlist->add_system_context();
 
@@ -150,6 +167,11 @@ class provider implements
             $userlist->add_from_sql(
                 'userid',
                 'SELECT userid FROM {local_saipa_risk_scores} WHERE courseid = :courseid',
+                ['courseid' => $context->instanceid]
+            );
+            $userlist->add_from_sql(
+                'userid',
+                'SELECT userid FROM {local_saipa_risk_history} WHERE courseid = :courseid',
                 ['courseid' => $context->instanceid]
             );
         }
@@ -217,6 +239,24 @@ class provider implements
                         'timecomputed' => transform::datetime($s->timecomputed),
                     ];
                 }, array_values($scores))]
+            );
+        }
+
+        $history = $DB->get_records(
+            'local_saipa_risk_history',
+            ['userid' => $userid, 'courseid' => $context->instanceid],
+            'timecomputed ASC'
+        );
+        if ($history) {
+            writer::with_context($context)->export_data(
+                array_merge($subcontext, ['risk_history']),
+                (object) ['history' => array_map(function ($h) {
+                    return (object) [
+                        'score'        => $h->score,
+                        'risk_level'   => $h->risk_level,
+                        'timecomputed' => transform::datetime($h->timecomputed),
+                    ];
+                }, array_values($history))]
             );
         }
 
