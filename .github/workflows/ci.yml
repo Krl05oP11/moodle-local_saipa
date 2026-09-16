@@ -36,6 +36,13 @@ jobs:
         with:
           path: plugin
 
+      - name: Check out block_saipa (extra plugin required by Behat)
+        uses: actions/checkout@v4
+        with:
+          repository: Krl05oP11/moodle-block_saipa
+          ssh-key: ${{ secrets.BLOCK_SAIPA_DEPLOY_KEY }}
+          path: extra-plugins/block_saipa
+
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
@@ -54,7 +61,7 @@ jobs:
 
       - name: Install moodle-plugin-ci
         run: |
-          moodle-plugin-ci install --plugin ./plugin --db-type pgsql --branch ${{ matrix.moodle-branch }}
+          moodle-plugin-ci install --plugin ./plugin --extra-plugins ./extra-plugins --db-type pgsql --branch ${{ matrix.moodle-branch }}
         env:
           DB: pgsql
 
