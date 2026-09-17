@@ -228,6 +228,7 @@ $string['risk_demo_button']         = 'Simular';
 $string['risk_trend_title']     = 'Tendencia de riesgo por semana';
 $string['saipa:advisor'] = 'Acceder al panel de asesor';
 $string['saipa:chat']   = 'Usar el asistente de chat SAIPA';
+$string['saipa:enginebridge'] = 'Actuar como el SAIPA Engine (puente Telegram servidor-a-servidor) -- otorgar solo a una cuenta dedicada, nunca a un administrador o docente';
 $string['saipa:manage'] = 'Administrar la configuración de SAIPA';
 $string['saipa:view']   = 'Ver el panel de SAIPA';
 $string['saipa:viewall'] = 'Ver datos de todos los estudiantes entre cursos';
