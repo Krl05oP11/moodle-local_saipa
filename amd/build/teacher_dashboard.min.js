@@ -8,7 +8,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log'], function(Ajax, Log) {
+define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
     'use strict';
 
@@ -96,14 +96,14 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
                     btn.disabled = false;
                 }, 3000);
             } else {
-                alert('No se pudo enviar: ' + result.error);
+                Str.get_string('alert_sent_error', 'local_saipa', result.error).then(alert).catch(Log.error);
                 btn.textContent = '📨';
                 btn.disabled = false;
             }
             return result;
         }).fail(function(err) {
             Log.error('SAIPA send_telegram_alert error: ' + JSON.stringify(err));
-            alert('Error al enviar alerta.');
+            Str.get_string('alert_sent_error', 'local_saipa', err.message || '').then(alert).catch(Log.error);
             btn.textContent = '📨';
             btn.disabled = false;
         });
