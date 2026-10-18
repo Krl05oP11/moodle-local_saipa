@@ -4,6 +4,24 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
+### Removed
+- **Setup wizard: the "SAIPA Cloud" engine option.** It was a "coming soon"
+  card for a hosted engine subscription, with a waitlist at
+  `cloud.saipa.online` (a domain that was never set up). The engine is free
+  and self-hosted (AGPLv3), so the option is gone: the provider cards, the
+  mode radio, the step-4 hint and the 8 lang keys (en/es/pt_br).
+  The wizard now offers local Ollama, an OpenAI-compatible API, or a custom
+  engine. No upgrade step is needed: the mode never worked, and a stored
+  `saipa_cloud` value only means no card is preselected when the wizard is
+  re-run.
+
+### Fixed
+- **Setup wizard always saved `engine_mode` as `custom`.** The mode was read
+  with `PARAM_ALPHA`, which strips the underscore from `local_ollama` /
+  `cloud_api`, so the value never matched the allowed list. Now read with
+  `PARAM_ALPHANUMEXT`; re-running the wizard preselects the mode actually
+  chosen.
+
 ### Changed
 - **`settings.php`: 9 settings had no admin-facing description at all** (not
   a translation gap — the `_desc` string didn't exist in any language):

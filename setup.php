@@ -145,7 +145,7 @@ if ($action === 'testbot') {
 if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     require_sesskey();
 
-    $mode            = required_param('engine_mode', PARAM_ALPHA);
+    $mode            = required_param('engine_mode', PARAM_ALPHANUMEXT);
     $engineurl      = required_param('engine_url', PARAM_URL);
     $enginetoken    = optional_param('engine_token', '', PARAM_RAW);
     $msgchannel     = optional_param('messaging_channel', 'none', PARAM_ALPHA);
@@ -156,7 +156,7 @@ if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $riskenabled    = optional_param('risk_eval_enabled', 1, PARAM_INT);
     $ragenabled     = optional_param('rag_global_enabled', 1, PARAM_INT);
 
-    $validmodes = ['local_ollama', 'cloud_api', 'saipa_cloud', 'custom'];
+    $validmodes = ['local_ollama', 'cloud_api', 'custom'];
     if (!in_array($mode, $validmodes)) {
         $mode = 'custom';
     }
@@ -282,7 +282,6 @@ echo $OUTPUT->header();
 .ai-pcard ul li { margin-bottom: 2px; }
 .pc-local  { border-top: 3px solid #198754; }
 .pc-cloud  { border-top: 3px solid #0d6efd; }
-.pc-saipa  { border-top: 3px solid #fd7e14; }
 .pc-custom { border-top: 3px solid #6c757d; }
 
 /* Mode cards */
@@ -303,7 +302,6 @@ echo $OUTPUT->header();
 }
 .badge-local  { background: #d1e7dd; color: #0a3622; }
 .badge-cloud  { background: #cfe2ff; color: #084298; }
-.badge-soon   { background: #fff3cd; color: #664d03; }
 .badge-custom { background: #e2e3e5; color: #41464b; }
 
 /* Telegram channel cards */
@@ -632,19 +630,6 @@ echo $OUTPUT->header();
               </ul>
             </div>
 
-            <div class="ai-pcard pc-saipa">
-              <div class="pc-head"><div class="pc-icon">🌐</div>
-                <h6>
-                  <?= get_string('wizard_prov_saipa_title', 'local_saipa') ?>
-                  <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span>
-                </h6></div>
-              <p><?= get_string('wizard_prov_saipa_desc', 'local_saipa') ?></p>
-              <ul>
-                <li><?= get_string('wizard_prov_saipa_i1', 'local_saipa') ?></li>
-                <li><?= get_string('wizard_prov_saipa_i2', 'local_saipa') ?></li>
-              </ul>
-            </div>
-
             <div class="ai-pcard pc-custom">
               <div class="pc-head"><div class="pc-icon">⚙️</div>
                 <h6>
@@ -715,16 +700,6 @@ echo $OUTPUT->header();
           </h5>
           <p><?= get_string('wizard_mode_cloud_desc', 'local_saipa') ?></p>
         </label>
-        <label class="mode-card <?= ($cfgmode === 'saipa_cloud') ? 'selected' : '' ?>" for="sp-mode-saipa">
-          <input type="radio" name="engine_mode" id="sp-mode-saipa" value="saipa_cloud"
-                 <?= ($cfgmode === 'saipa_cloud') ? 'checked' : '' ?>>
-          <div class="mc-icon">🌐</div>
-          <h5>
-            <?= get_string('wizard_prov_saipa_title', 'local_saipa') ?>
-            <span class="mode-badge badge-soon"><?= get_string('wizard_prov_saipa_badge', 'local_saipa') ?></span>
-          </h5>
-          <p><?= get_string('wizard_mode_saipa_desc', 'local_saipa') ?></p>
-        </label>
         <label class="mode-card <?= ($cfgmode === 'custom') ? 'selected' : '' ?>" for="sp-mode-custom">
           <input type="radio" name="engine_mode" id="sp-mode-custom" value="custom"
                  <?= ($cfgmode === 'custom') ? 'checked' : '' ?>>
@@ -759,9 +734,6 @@ echo $OUTPUT->header();
       </div>
       <div id="sp-hint-cloud_api" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;display:none">
         <?= get_string('wizard_hint_cloud', 'local_saipa') ?>
-      </div>
-      <div id="sp-hint-saipa_cloud" class="alert alert-warning mb-3 py-2 px-3" style="font-size:.82rem;display:none">
-        <?= get_string('wizard_hint_saipa', 'local_saipa') ?>
       </div>
       <div id="sp-hint-custom" class="alert alert-light border mb-3 py-2 px-3" style="font-size:.82rem;display:none">
         <?= get_string('wizard_hint_custom', 'local_saipa') ?>
@@ -1089,10 +1061,6 @@ echo $OUTPUT->header();
             get_string('wizard_js_mode_cloud', 'local_saipa'),
             JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
         ) ?>,
-        saipa_cloud:  <?= json_encode(
-            get_string('wizard_js_mode_saipa', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
         custom:       <?= json_encode(
             get_string('wizard_js_mode_custom', 'local_saipa'),
             JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
@@ -1174,7 +1142,7 @@ echo $OUTPUT->header();
      */
     function updateHints() {
         var mode  = getSelectedMode();
-        var modes = ['local_ollama', 'cloud_api', 'saipa_cloud', 'custom'];
+        var modes = ['local_ollama', 'cloud_api', 'custom'];
         modes.forEach(function (m) {
             var el = document.getElementById('sp-hint-' + m);
             if (el) el.style.display = (m === mode) ? '' : 'none';
