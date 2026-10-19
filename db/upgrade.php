@@ -24,6 +24,8 @@
 
 /**
  * Xmldb local saipa upgrade.
+ *
+ * @param int $oldversion The version we are upgrading from.
  */
 function xmldb_local_saipa_upgrade(int $oldversion): bool {
     global $DB, $CFG;

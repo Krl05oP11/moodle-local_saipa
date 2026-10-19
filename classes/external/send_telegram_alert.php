@@ -54,6 +54,8 @@ class send_telegram_alert extends external_api {
 
     /**
      * Builds a human-readable risk summary from a saipa_risk_scores record.
+     *
+     * @param \stdClass|null $risk Risk score record, or null if the student has none.
      */
     private static function build_risk_detail(?\stdClass $risk): string {
         if (!$risk) {
@@ -95,6 +97,10 @@ class send_telegram_alert extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $studentid Student user ID to alert.
+     * @param int $courseid Course context.
+     * @param string $message Message to send (leave empty for default).
      */
     public static function execute(int $studentid, int $courseid, string $message = ''): array {
         global $CFG;

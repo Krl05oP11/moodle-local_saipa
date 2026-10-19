@@ -44,6 +44,11 @@ $PAGE->set_pagelayout('admin');
 
 /**
  * Saipa status row.
+ *
+ * @param string $label Row label.
+ * @param bool $ok Whether the check passed.
+ * @param string $detail Optional detail shown under the label.
+ * @param bool $warning Show a warning badge instead of an error when not OK.
  */
 function saipa_status_row(string $label, bool $ok, string $detail = '', bool $warning = false): string {
     if ($ok) {
@@ -60,6 +65,8 @@ function saipa_status_row(string $label, bool $ok, string $detail = '', bool $wa
 
 /**
  * Saipa section header.
+ *
+ * @param string $title Section title.
  */
 function saipa_section_header(string $title): string {
     return '<tr class="table-secondary"><th colspan="2" class="py-2 px-3">' . htmlspecialchars($title) . '</th></tr>';

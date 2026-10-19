@@ -51,6 +51,13 @@ class set_course_settings extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course ID.
+     * @param bool|null $saipaenabled SAIPA enabled.
+     * @param bool|null $chatenabled Chat enabled.
+     * @param bool|null $riskenabled Risk enabled.
+     * @param bool|null $alertsenabled Alerts enabled.
+     * @param bool|null $ragenabled RAG enabled.
      */
     public static function execute(
         int $courseid,

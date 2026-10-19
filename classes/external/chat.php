@@ -50,6 +50,10 @@ class chat extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course ID.
+     * @param string $message Student message.
+     * @param int $sessionid Session ID (0 = new session).
      */
     public static function execute(int $courseid, string $message, int $sessionid = 0): array {
         global $CFG;

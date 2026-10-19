@@ -48,6 +48,9 @@ class admin_chat extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $message User message to the assistant.
+     * @param string $context Context: advisor || teacher.
      */
     public static function execute(string $message, string $context = 'advisor'): array {
         global $CFG;

@@ -58,6 +58,14 @@ class save_institution_config extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param float|null $riskthresholdmedium Medium risk threshold (0-1).
+     * @param float|null $riskthresholdhigh High risk threshold (0-1).
+     * @param int|null $alertcooldownhours Min hours between alerts to same student.
+     * @param int|null $dataretentiondays Days to keep messages/scores (GDPR).
+     * @param string|null $defaultalerttemplate Default alert message template.
+     * @param bool|null $riskevalenabled Risk evaluation globally on/off.
+     * @param bool|null $ragglobalenabled RAG globally on/off.
      */
     public static function execute(
         ?float $riskthresholdmedium = null,

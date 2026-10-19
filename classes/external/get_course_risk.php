@@ -72,6 +72,9 @@ class get_course_risk extends external_api {
 
     /**
      * Build demo risk result for one student using deterministic round-robin profiles.
+     *
+     * @param int $index Position of the student in the list (selects the profile).
+     * @param int $uid Student user ID.
      */
     private static function demo_result_for(int $index, int $uid): array {
         $profiles = self::demo_results();
@@ -96,6 +99,9 @@ class get_course_risk extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course ID.
+     * @param bool $demo Use synthetic demo data instead of real features.
      */
     public static function execute(int $courseid, bool $demo = false): array {
         global $CFG;

@@ -48,6 +48,9 @@ class get_risk_dashboard extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $period Period: 7d, 30d, semester, all.
+     * @param int $courseid Course ID; 0 = all courses.
      */
     public static function execute(string $period = '30d', int $courseid = 0): array {
         global $DB;
@@ -209,6 +212,8 @@ class get_risk_dashboard extends external_api {
 
     /**
      * Convert a period string to a Unix timestamp.
+     *
+     * @param string $period One of '7d', '30d', 'semester' or 'all'.
      */
     private static function period_to_since(string $period): int {
         $now = time();

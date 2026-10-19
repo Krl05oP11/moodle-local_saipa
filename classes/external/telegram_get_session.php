@@ -47,6 +47,8 @@ class telegram_get_session extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $telegramid Telegram chat_id.
      */
     public static function execute(int $telegramid): array {
         global $DB;

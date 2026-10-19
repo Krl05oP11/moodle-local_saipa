@@ -48,6 +48,10 @@ class save_feedback extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course ID.
+     * @param int $messageid ID of the assistant message being rated.
+     * @param int $rating 1 = thumbs up, -1 = thumbs down.
      */
     public static function execute(int $courseid, int $messageid, int $rating): array {
         global $USER, $DB;

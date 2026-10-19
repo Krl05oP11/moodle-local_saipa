@@ -91,6 +91,9 @@ final class external_v050_test extends \advanced_testcase {
 
     /**
      * Insert a SAIPA session row and return its ID.
+     *
+     * @param int $userid User ID.
+     * @param int $courseid Course ID.
      */
     private function create_session(int $userid, int $courseid): int {
         global $DB;
@@ -106,6 +109,10 @@ final class external_v050_test extends \advanced_testcase {
 
     /**
      * Insert a SAIPA message row and return its ID.
+     *
+     * @param int $sessionid Chat session ID.
+     * @param string $role Message author: 'user' or 'assistant'.
+     * @param string $content Message text.
      */
     private function create_message(int $sessionid, string $role, string $content): int {
         global $DB;

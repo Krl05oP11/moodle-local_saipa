@@ -47,6 +47,8 @@ class get_engagement_stats extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $period Period: 7d, 30d, semester, all.
      */
     public static function execute(string $period = '30d'): array {
         global $DB;
@@ -167,6 +169,8 @@ class get_engagement_stats extends external_api {
 
     /**
      * Convert a period string to a Unix timestamp.
+     *
+     * @param string $period One of '7d', '30d', 'semester' or 'all'.
      */
     private static function period_to_since(string $period): int {
         $now = time();

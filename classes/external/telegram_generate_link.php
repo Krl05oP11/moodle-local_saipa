@@ -47,6 +47,8 @@ class telegram_generate_link extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course ID for session context.
      */
     public static function execute(int $courseid = 0): array {
         global $USER, $DB;

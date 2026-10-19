@@ -114,6 +114,7 @@ class risk_evaluation extends \core\task\scheduled_task {
     /**
      * Evaluates risk for all students in one course.
      *
+     * @param int $cid Course ID.
      * @return array [int $evaluated, int $escalated]
      */
     private function evaluate_course(int $cid): array {
@@ -213,9 +214,10 @@ class risk_evaluation extends \core\task\scheduled_task {
     // Helpers.
 
     /**
-
      * Returns [userid => risk_level] for existing scores in this course.
-
+     *
+     * @param int $cid Course ID.
+     * @param array $userids User IDs to look up.
      */
     private function get_previous_levels(int $cid, array $userids): array {
         global $DB;
@@ -241,9 +243,10 @@ class risk_evaluation extends \core\task\scheduled_task {
     }
 
     /**
-
      * Calls get_student_features::execute() for each student; silently skips failures.
-
+     *
+     * @param int $cid Course ID.
+     * @param array $students Enrolled student records (need ->id).
      */
     private function extract_features(int $cid, array $students): array {
         $featuresmap = [];
@@ -259,9 +262,14 @@ class risk_evaluation extends \core\task\scheduled_task {
     }
 
     /**
-
      * Upserts one row in saipa_risk_scores and appends to saipa_risk_history.
-
+     *
+     * @param int $uid Student user ID.
+     * @param int $cid Course ID.
+     * @param float $score Dropout probability, 0.0 to 1.0.
+     * @param string $risklevel Risk level: low, medium or high.
+     * @param string $factors JSON-encoded contributing factors.
+     * @param int $now Timestamp of this evaluation.
      */
     private function upsert_score(
         int $uid,

@@ -37,6 +37,8 @@ class observer {
     /**
      * Handles course_module_created && course_module_updated events.
      * Indexes content for supported module types: page, assign, label, forum, book.
+     *
+     * @param \core\event\base $event The triggered event.
      */
     public static function course_module_updated(\core\event\base $event): void {
         global $DB;

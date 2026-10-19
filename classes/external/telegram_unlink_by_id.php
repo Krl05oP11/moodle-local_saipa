@@ -47,6 +47,8 @@ class telegram_unlink_by_id extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $telegramid Telegram chat_id to unlink.
      */
     public static function execute(int $telegramid): array {
         global $DB;

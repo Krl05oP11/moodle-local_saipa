@@ -47,6 +47,8 @@ class whatsapp_confirm_otp extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $otp 6-digit OTP code.
      */
     public static function execute(string $otp): array {
         global $USER, $DB;

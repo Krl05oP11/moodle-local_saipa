@@ -47,6 +47,8 @@ class get_institution_summary extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $period Period: 7d, 30d, semester, all.
      */
     public static function execute(string $period = '30d'): array {
         global $DB;
@@ -160,6 +162,8 @@ class get_institution_summary extends external_api {
 
     /**
      * Converts a period string to a unix timestamp (start of period).
+     *
+     * @param string $period One of '7d', '30d', 'semester' or 'all'.
      */
     private static function period_to_since(string $period): int {
         $now = time();

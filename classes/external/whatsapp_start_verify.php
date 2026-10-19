@@ -48,6 +48,8 @@ class whatsapp_start_verify extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $phone Phone number in international format (e.g. 5491112345678).
      */
     public static function execute(string $phone): array {
         global $CFG;

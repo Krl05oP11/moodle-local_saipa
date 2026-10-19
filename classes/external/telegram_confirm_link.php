@@ -49,6 +49,10 @@ class telegram_confirm_link extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param string $token HMAC token from the deep link.
+     * @param int $telegramid Telegram chat_id of the confirming user.
+     * @param string $telegramusername Telegram @username (without @).
      */
     public static function execute(string $token, int $telegramid, string $telegramusername = ''): array {
         global $DB;

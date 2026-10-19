@@ -52,6 +52,9 @@ class mark_alert_responded extends external_api {
 
     /**
      * Execute the web service.
+     *
+     * @param int $telegramid Telegram chat_id of the student.
+     * @param int $timereceived Unix timestamp when the message was received.
      */
     public static function execute(int $telegramid, int $timereceived = 0): array {
         global $DB;
