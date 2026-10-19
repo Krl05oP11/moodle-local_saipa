@@ -14,12 +14,17 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     'use strict';
 
-    var loaded   = {};   // Which tabs have been loaded already.
-    var period   = '30d';
-    var isManager = false;
+    var loaded = {}; // Which tabs have been loaded already.
+    var period = '30d';
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
+    /**
+     * Escape HTML special characters in a value (null/undefined become an empty string).
+     *
+     * @param {string} str Value to escape.
+     * @returns {string} The escaped string.
+     */
     function escapeHtml(str) {
         return String(str || '')
             .replace(/&/g, '&amp;')
@@ -28,15 +33,32 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             .replace(/"/g, '&quot;');
     }
 
+    /**
+     * Format a Unix timestamp as a short es-AR date (dd/mm/yy).
+     *
+     * @param {number} ts Unix timestamp in seconds.
+     * @returns {string} Formatted date, or a dash when ts is falsy.
+     */
     function fmtDate(ts) {
         if (!ts) { return '—'; }
-        return new Date(ts * 1000).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        return new Date(ts * 1000).toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: '2-digit'});
     }
 
+    /**
+     * Format a ratio (0-1) as a rounded percentage string.
+     *
+     * @param {number} val Ratio to format.
+     * @returns {string} Percentage string, e.g. "42%".
+     */
     function pct(val) {
         return Math.round((val || 0) * 100) + '%';
     }
 
+    /**
+     * Show the loading spinner of a tab and hide its content and error areas.
+     *
+     * @param {string} tabId Tab identifier used in the element ids.
+     */
     function showSpinner(tabId) {
         var el = document.getElementById('tab-' + tabId + '-loading');
         var ct = document.getElementById('tab-' + tabId + '-content');
@@ -46,6 +68,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         if (er) { er.style.display = 'none'; }
     }
 
+    /**
+     * Hide the loading spinner of a tab and show its content area.
+     *
+     * @param {string} tabId Tab identifier used in the element ids.
+     */
     function showContent(tabId) {
         var el = document.getElementById('tab-' + tabId + '-loading');
         var ct = document.getElementById('tab-' + tabId + '-content');
@@ -53,6 +80,12 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         if (ct) { ct.style.display = ''; }
     }
 
+    /**
+     * Hide the loading spinner of a tab and show an error message.
+     *
+     * @param {string} tabId Tab identifier used in the element ids.
+     * @param {string} msg Error message to display.
+     */
     function showError(tabId, msg) {
         var el = document.getElementById('tab-' + tabId + '-loading');
         var er = document.getElementById('tab-' + tabId + '-error');
@@ -60,6 +93,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         if (er) { er.textContent = msg; er.style.display = ''; }
     }
 
+    /**
+     * Show or hide the global dashboard spinner.
+     *
+     * @param {boolean} visible Whether the spinner should be visible.
+     */
     function globalSpinner(visible) {
         var sp = document.getElementById('saipa-adv-spinner');
         if (sp) { sp.style.display = visible ? '' : 'none'; }
@@ -67,6 +105,15 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── Simple sparkline using Canvas 2D ──────────────────────────────────────
 
+    /**
+     * Draw a simple line sparkline on a canvas, or show the no-data message when data is empty.
+     *
+     * @param {string} canvasId Id of the canvas element.
+     * @param {Array} labels Point labels (currently not drawn).
+     * @param {Array} data Numeric values to plot.
+     * @param {string} label Series label (currently not drawn).
+     * @param {string} color Line colour (defaults to #007bff).
+     */
     function drawSparkline(canvasId, labels, data, label, color) {
         var canvas = document.getElementById(canvasId);
         if (!canvas) { return; }
@@ -77,22 +124,22 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             return;
         }
 
-        canvas.width = canvas.offsetWidth || 400;   // Sync pixel buffer to CSS width.
+        canvas.width = canvas.offsetWidth || 400; // Sync pixel buffer to CSS width.
         var ctx = canvas.getContext('2d');
-        var w   = canvas.width;
-        var h   = canvas.height;
+        var w = canvas.width;
+        var h = canvas.height;
         var pad = 4;
 
         ctx.clearRect(0, 0, w, h);
 
-        var max  = Math.max.apply(null, data) || 1;
+        var max = Math.max.apply(null, data) || 1;
         var step = (w - pad * 2) / Math.max(data.length - 1, 1);
 
         ctx.beginPath();
         ctx.strokeStyle = color || '#007bff';
-        ctx.lineWidth   = 2;
-        ctx.lineJoin    = 'round';
-        ctx.lineCap     = 'round';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
 
         data.forEach(function(val, i) {
             var x = pad + i * step;
@@ -104,35 +151,38 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── TAB 1 — Institution summary ────────────────────────────────────────────
 
+    /**
+     * Load the institution summary tab: KPI values and message/user sparklines.
+     */
     function loadSummary() {
         showSpinner('summary');
         globalSpinner(true);
 
         Ajax.call([{
             methodname: 'local_saipa_get_institution_summary',
-            args: { period: period }
+            args: {period: period}
         }])[0].then(function(r) {
             var el = function(id) { return document.getElementById(id); };
 
             if (el('kpi-active-courses')) { el('kpi-active-courses').textContent = r.active_courses; }
-            if (el('kpi-enrolled'))       { el('kpi-enrolled').textContent       = r.total_enrolled; }
-            if (el('kpi-saipa-users'))    { el('kpi-saipa-users').textContent    = r.total_saipa_users; }
-            if (el('kpi-adoption'))       { el('kpi-adoption').textContent       = pct(r.adoption_rate); }
-            if (el('kpi-messages'))       { el('kpi-messages').textContent       = r.total_messages; }
-            if (el('kpi-feedback'))       { el('kpi-feedback').textContent       = pct(r.positive_feedback_pct); }
-            if (el('kpi-alerts-sent'))    { el('kpi-alerts-sent').textContent    = r.alerts_sent; }
-            if (el('kpi-alerts-resp'))    { el('kpi-alerts-resp').textContent    = r.alerts_responded; }
-            if (el('kpi-resp-rate'))      { el('kpi-resp-rate').textContent      = pct(r.alert_response_rate); }
+            if (el('kpi-enrolled')) { el('kpi-enrolled').textContent = r.total_enrolled; }
+            if (el('kpi-saipa-users')) { el('kpi-saipa-users').textContent = r.total_saipa_users; }
+            if (el('kpi-adoption')) { el('kpi-adoption').textContent = pct(r.adoption_rate); }
+            if (el('kpi-messages')) { el('kpi-messages').textContent = r.total_messages; }
+            if (el('kpi-feedback')) { el('kpi-feedback').textContent = pct(r.positive_feedback_pct); }
+            if (el('kpi-alerts-sent')) { el('kpi-alerts-sent').textContent = r.alerts_sent; }
+            if (el('kpi-alerts-resp')) { el('kpi-alerts-resp').textContent = r.alerts_responded; }
+            if (el('kpi-resp-rate')) { el('kpi-resp-rate').textContent = pct(r.alert_response_rate); }
 
             // Sparklines
-            var msgLabels  = (r.trend_messages  || []).map(function(d) { return fmtDate(d.date); });
-            var msgData    = (r.trend_messages  || []).map(function(d) { return d.count; });
-            var usrLabels  = (r.trend_new_users || []).map(function(d) { return fmtDate(d.date); });
-            var usrData    = (r.trend_new_users || []).map(function(d) { return d.count; });
+            var msgLabels = (r.trend_messages || []).map(function(d) { return fmtDate(d.date); });
+            var msgData = (r.trend_messages || []).map(function(d) { return d.count; });
+            var usrLabels = (r.trend_new_users || []).map(function(d) { return fmtDate(d.date); });
+            var usrData = (r.trend_new_users || []).map(function(d) { return d.count; });
 
-            showContent('summary');   // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
+            showContent('summary'); // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
             drawSparkline('spark-messages', msgLabels, msgData, 'Mensajes', '#007bff');
-            drawSparkline('spark-users',    usrLabels, usrData, 'Usuarios', '#28a745');
+            drawSparkline('spark-users', usrLabels, usrData, 'Usuarios', '#28a745');
             return r;
         }).fail(function(err) {
             Log.error('SAIPA advisor summary error: ' + JSON.stringify(err));
@@ -145,16 +195,21 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── TAB 2 — Risk ROI ───────────────────────────────────────────────────────
 
+    /**
+     * Render the intervention funnel bars (evaluated, high risk, alerted, responded, re-accessed).
+     *
+     * @param {Object} f Funnel counts returned by local_saipa_get_risk_dashboard.
+     */
     function buildFunnel(f) {
         var container = document.getElementById('adv-funnel');
         if (!container) { return; }
 
         var steps = [
-            { label: 'Evaluados',    value: f.evaluated,       color: '#6c757d' },
-            { label: 'Riesgo alto',  value: f.identified_high, color: '#dc3545' },
-            { label: 'Alertados',    value: f.received_alert,  color: '#fd7e14' },
-            { label: 'Respondieron', value: f.responded_alert, color: '#ffc107' },
-            { label: 'Re-ingresaron',value: f.accessed_after,  color: '#28a745' },
+            {label: 'Evaluados', value: f.evaluated, color: '#6c757d'},
+            {label: 'Riesgo alto', value: f.identified_high, color: '#dc3545'},
+            {label: 'Alertados', value: f.received_alert, color: '#fd7e14'},
+            {label: 'Respondieron', value: f.responded_alert, color: '#ffc107'},
+            {label: 'Re-ingresaron', value: f.accessed_after, color: '#28a745'},
         ];
 
         var maxVal = Math.max(1, f.evaluated);
@@ -166,9 +221,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             col.className = 'flex-fill mx-1 d-flex flex-column align-items-center';
 
             var bar = document.createElement('div');
-            bar.style.background  = s.color;
-            bar.style.width       = '100%';
-            bar.style.height      = Math.max(20, widthPct) + 'px';
+            bar.style.background = s.color;
+            bar.style.width = '100%';
+            bar.style.height = Math.max(20, widthPct) + 'px';
             bar.style.borderRadius = '4px 4px 0 0';
             bar.title = s.label + ': ' + s.value;
 
@@ -183,25 +238,30 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         });
     }
 
+    /**
+     * Draw the weekly high/medium/low risk percentage trend chart on its canvas.
+     *
+     * @param {Array} rows Weekly risk rows with week, pct_high, pct_medium and pct_low.
+     */
     function buildRiskTrend(rows) {
         var canvas = document.getElementById('risk-trend-chart');
         if (!canvas || !rows || rows.length === 0) { return; }
 
-        canvas.width = canvas.offsetWidth || 400;   // Sync pixel buffer to CSS width.
-        var ctx  = canvas.getContext('2d');
-        var w    = canvas.width;
-        var h    = canvas.height;
+        canvas.width = canvas.offsetWidth || 400; // Sync pixel buffer to CSS width.
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width;
+        var h = canvas.height;
         var padX = 32;
         var padY = 24;
-        var iw   = w - padX * 2;
-        var ih   = h - padY * 2;
+        var iw = w - padX * 2;
+        var ih = h - padY * 2;
 
         ctx.clearRect(0, 0, w, h);
 
         var series = [
-            { data: rows.map(function(r) { return r.pct_high   * 100; }), color: '#dc3545', label: 'Alto' },
-            { data: rows.map(function(r) { return r.pct_medium * 100; }), color: '#ffc107', label: 'Medio' },
-            { data: rows.map(function(r) { return r.pct_low    * 100; }), color: '#28a745', label: 'Bajo' }
+            {data: rows.map(function(r) { return r.pct_high * 100; }), color: '#dc3545', label: 'Alto'},
+            {data: rows.map(function(r) { return r.pct_medium * 100; }), color: '#ffc107', label: 'Medio'},
+            {data: rows.map(function(r) { return r.pct_low * 100; }), color: '#28a745', label: 'Bajo'}
         ];
         var stepX = iw / Math.max(rows.length - 1, 1);
 
@@ -233,8 +293,8 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         series.forEach(function(s) {
             ctx.beginPath();
             ctx.strokeStyle = s.color;
-            ctx.lineWidth   = 2;
-            ctx.lineJoin    = 'round';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
             s.data.forEach(function(val, i) {
                 var x = padX + i * stepX;
                 var y = padY + ih - (val / 100) * ih;
@@ -256,6 +316,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         });
     }
 
+    /**
+     * Render the intervention effectiveness table comparing risk at alert time and 14 days later.
+     *
+     * @param {Array} rows Intervention effectiveness records.
+     */
     function buildEffectiveness(rows) {
         var tbody = document.getElementById('effectiveness-tbody');
         var empty = document.getElementById('effectiveness-empty');
@@ -278,24 +343,27 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
                 + '<td>' + r.userid + '</td>'
                 + '<td>' + r.courseid + '</td>'
                 + '<td>' + fmtDate(r.alert_time) + '</td>'
-                + '<td class="text-right">' + (r.risk_at_alert  * 100).toFixed(1) + '%</td>'
+                + '<td class="text-right">' + (r.risk_at_alert * 100).toFixed(1) + '%</td>'
                 + '<td class="text-right">' + (r.risk_14d_later * 100).toFixed(1) + '%</td>'
                 + '<td class="text-center">' + improved + '</td>';
             tbody.appendChild(tr);
         });
     }
 
+    /**
+     * Load the risk ROI tab: funnel, effectiveness table and risk trend chart.
+     */
     function loadRisk() {
         showSpinner('risk');
         globalSpinner(true);
 
         Ajax.call([{
             methodname: 'local_saipa_get_risk_dashboard',
-            args: { period: period, courseid: 0 }
+            args: {period: period, courseid: 0}
         }])[0].then(function(r) {
             buildFunnel(r.funnel);
             buildEffectiveness(r.intervention_effectiveness);
-            showContent('risk');   // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
+            showContent('risk'); // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
             buildRiskTrend(r.risk_trend);
             return r;
         }).fail(function(err) {
@@ -308,6 +376,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── TAB 3 — Engagement ─────────────────────────────────────────────────────
 
+    /**
+     * Render the day-of-week by hour message heatmap as a CSS grid.
+     *
+     * @param {Array} rows Heatmap records with day_of_week (ISO, 0 = Monday), hour and count.
+     */
     function buildHeatmap(rows) {
         var container = document.getElementById('eng-heatmap');
         if (!container) { return; }
@@ -338,24 +411,24 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
         for (var h = 0; h < 24; h++) {
             var hdr = document.createElement('div');
-            hdr.className      = 'hm-header';
+            hdr.className = 'hm-header';
             hdr.style.fontSize = '12px';
-            hdr.textContent    = h % 3 === 0 ? String(h).padStart(2, '0') : '';
+            hdr.textContent = h % 3 === 0 ? String(h).padStart(2, '0') : '';
             container.appendChild(hdr);
         }
 
         // Data rows (Dom → Sáb)
         for (var d = 0; d < 7; d++) {
             var rowLabel = document.createElement('div');
-            rowLabel.className      = 'hm-row-label';
+            rowLabel.className = 'hm-row-label';
             rowLabel.style.fontSize = '12px';
-            rowLabel.textContent    = days[d];
+            rowLabel.textContent = days[d];
             container.appendChild(rowLabel);
 
             for (var col = 0; col < 24; col++) {
                 var count = (visualGrid[d] && visualGrid[d][col]) ? visualGrid[d][col] : 0;
                 var cell = document.createElement('div');
-                cell.className     = 'hm-cell';
+                cell.className = 'hm-cell';
                 cell.style.background = count === 0
                     ? '#f0f0f0'
                     : 'rgba(0, 123, 255, ' + (count / maxVal).toFixed(2) + ')';
@@ -365,26 +438,31 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         }
     }
 
+    /**
+     * Draw the session depth bar chart (sessions per message-count bucket) on its canvas.
+     *
+     * @param {Array} depths Session depth records with bucket and count.
+     */
     function buildDepthChart(depths) {
         var canvas = document.getElementById('eng-depth-chart');
         if (!canvas || !depths || depths.length === 0) { return; }
 
-        canvas.width = canvas.offsetWidth || 400;   // Sync pixel buffer to CSS width.
-        var ctx  = canvas.getContext('2d');
-        var w    = canvas.width;
-        var h    = canvas.height;
+        canvas.width = canvas.offsetWidth || 400; // Sync pixel buffer to CSS width.
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width;
+        var h = canvas.height;
         var padX = 36;
         var padY = 12;
-        var iw   = w - padX * 2;
-        var ih   = h - padY * 2 - 18; // 18px for x-axis labels.
+        var iw = w - padX * 2;
+        var ih = h - padY * 2 - 18; // 18px for x-axis labels.
 
         ctx.clearRect(0, 0, w, h);
 
-        var data   = depths.map(function(d) { return d.count; });
+        var data = depths.map(function(d) { return d.count; });
         var labels = depths.map(function(d) { return d.bucket + ' msgs'; });
-        var max    = Math.max.apply(null, data) || 1;
-        var gap    = iw / depths.length;
-        var barW   = gap * 0.65;
+        var max = Math.max.apply(null, data) || 1;
+        var gap = iw / depths.length;
+        var barW = gap * 0.65;
 
         // Y-axis grid + labels.
         ctx.font = '10px sans-serif';
@@ -403,9 +481,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
         // Bars + x-axis labels.
         data.forEach(function(val, i) {
-            var x    = padX + i * gap + (gap - barW) / 2;
+            var x = padX + i * gap + (gap - barW) / 2;
             var barH = (val / max) * ih;
-            var y    = padY + ih - barH;
+            var y = padY + ih - barH;
             ctx.fillStyle = '#17a2b8';
             ctx.fillRect(x, y, barW, barH);
             ctx.fillStyle = '#444';
@@ -414,13 +492,16 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         });
     }
 
+    /**
+     * Load the engagement tab: per-course usage table, hourly heatmap and session depth chart.
+     */
     function loadEngagement() {
         showSpinner('engagement');
         globalSpinner(true);
 
         Ajax.call([{
             methodname: 'local_saipa_get_engagement_stats',
-            args: { period: period }
+            args: {period: period}
         }])[0].then(function(r) {
             // Per-course table
             var tbody = document.getElementById('eng-course-tbody');
@@ -440,7 +521,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             }
 
             buildHeatmap(r.hourly_heatmap);
-            showContent('engagement');   // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
+            showContent('engagement'); // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
             buildDepthChart(r.session_depth);
             return r;
         }).fail(function(err) {
@@ -453,9 +534,16 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── TAB 4 — Course controls ─────────────────────────────────────────────────
 
+    /**
+     * Save a single on/off course setting and show the save status.
+     *
+     * @param {number} courseid Course id.
+     * @param {string} field Setting field name.
+     * @param {boolean} value New value (sent as 1 or 0).
+     */
     function saveCourseSetting(courseid, field, value) {
         var statusEl = document.getElementById('ctrl-save-status');
-        var args = { courseid: courseid };
+        var args = {courseid: courseid};
         args[field] = value ? 1 : 0;
 
         Ajax.call([{
@@ -473,31 +561,45 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         });
     }
 
+    /**
+     * Create a checkbox toggle that saves a course setting when changed.
+     *
+     * @param {number} courseid Course id.
+     * @param {string} field Setting field name.
+     * @param {boolean} currentVal Current value of the setting.
+     * @returns {HTMLElement} The checkbox input element.
+     */
     function buildToggle(courseid, field, currentVal) {
         var chk = document.createElement('input');
-        chk.type      = 'checkbox';
+        chk.type = 'checkbox';
         chk.className = 'saipa-toggle';
-        chk.checked   = !!currentVal;
+        chk.checked = !!currentVal;
         chk.dataset.courseid = courseid;
-        chk.dataset.field    = field;
+        chk.dataset.field = field;
         chk.addEventListener('change', function() {
             saveCourseSetting(parseInt(chk.dataset.courseid, 10), chk.dataset.field, chk.checked);
         });
         return chk;
     }
 
+    /**
+     * Create a button that triggers re-indexing of a course for RAG.
+     *
+     * @param {number} courseid Course id.
+     * @returns {HTMLElement} The button element.
+     */
     function buildIndexBtn(courseid) {
         var btn = document.createElement('button');
-        btn.type      = 'button';
+        btn.type = 'button';
         btn.className = 'btn btn-sm btn-outline-secondary';
         btn.textContent = '⟳';
         btn.title = 'Re-index course ' + courseid;
         btn.addEventListener('click', function() {
-            btn.disabled    = true;
+            btn.disabled = true;
             btn.textContent = '…';
             Ajax.call([{
                 methodname: 'local_saipa_index_course',
-                args: { course_id: courseid }
+                args: {course_id: courseid}
             }])[0].then(function(r) {
                 btn.textContent = r.status === 'ok' ? '✓' : '✗';
                 setTimeout(function() { btn.textContent = '⟳'; btn.disabled = false; }, 3000);
@@ -510,6 +612,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         return btn;
     }
 
+    /**
+     * Set every course setting toggle to the given value, saving those that change.
+     *
+     * @param {boolean} enable Value to apply to all toggles.
+     */
     function setAllToggle(enable) {
         var toggles = document.querySelectorAll('#ctrl-tbody .saipa-toggle');
         toggles.forEach(function(chk) {
@@ -524,6 +631,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         });
     }
 
+    /**
+     * Load the course controls tab: settings toggles, re-index buttons and bulk actions.
+     */
     function loadControls() {
         showSpinner('controls');
         globalSpinner(true);
@@ -562,9 +672,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             });
 
             // Bulk buttons
-            var enableAll  = document.getElementById('ctrl-enable-all');
+            var enableAll = document.getElementById('ctrl-enable-all');
             var disableAll = document.getElementById('ctrl-disable-all');
-            if (enableAll)  { enableAll.addEventListener('click',  function() { setAllToggle(true);  }); }
+            if (enableAll) { enableAll.addEventListener('click', function() { setAllToggle(true); }); }
             if (disableAll) { disableAll.addEventListener('click', function() { setAllToggle(false); }); }
 
             showContent('controls');
@@ -579,6 +689,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── TAB 5 — Institution config (managers only) ─────────────────────────────
 
+    /**
+     * Show the institution config tab and wire the form to save the configuration.
+     */
     function loadConfig() {
         // Config values are loaded from Moodle's admin_settings page via `get_config()`.
         // For the advisor dashboard view, we re-read from what the server already set.
@@ -597,24 +710,24 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
             var args = {};
             var med = parseFloat(form.querySelector('[name="risk_threshold_medium"]').value);
-            var hi  = parseFloat(form.querySelector('[name="risk_threshold_high"]').value);
+            var hi = parseFloat(form.querySelector('[name="risk_threshold_high"]').value);
             var cool = parseInt(form.querySelector('[name="alert_cooldown_hours"]').value, 10);
-            var ret  = parseInt(form.querySelector('[name="data_retention_days"]').value, 10);
-            var tpl  = form.querySelector('[name="default_alert_template"]').value;
+            var ret = parseInt(form.querySelector('[name="data_retention_days"]').value, 10);
+            var tpl = form.querySelector('[name="default_alert_template"]').value;
             var risk = form.querySelector('[name="risk_eval_enabled"]').checked ? 1 : 0;
-            var rag  = form.querySelector('[name="rag_global_enabled"]').checked ? 1 : 0;
+            var rag = form.querySelector('[name="rag_global_enabled"]').checked ? 1 : 0;
 
-            if (!isNaN(med))  { args.risk_threshold_medium  = med;  }
-            if (!isNaN(hi))   { args.risk_threshold_high    = hi;   }
-            if (!isNaN(cool)) { args.alert_cooldown_hours   = cool; }
-            if (!isNaN(ret))  { args.data_retention_days    = ret;  }
+            if (!isNaN(med)) { args.risk_threshold_medium = med; }
+            if (!isNaN(hi)) { args.risk_threshold_high = hi; }
+            if (!isNaN(cool)) { args.alert_cooldown_hours = cool; }
+            if (!isNaN(ret)) { args.data_retention_days = ret; }
             args.default_alert_template = tpl;
-            args.risk_eval_enabled      = risk;
-            args.rag_global_enabled     = rag;
+            args.risk_eval_enabled = risk;
+            args.rag_global_enabled = rag;
 
             var statusEl = document.getElementById('cfg-save-status');
-            var saveBtn  = document.getElementById('cfg-save-btn');
-            if (saveBtn)  { saveBtn.disabled = true; }
+            var saveBtn = document.getElementById('cfg-save-btn');
+            if (saveBtn) { saveBtn.disabled = true; }
             if (statusEl) { statusEl.textContent = '…'; }
 
             Ajax.call([{
@@ -636,23 +749,31 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── Tab switching ──────────────────────────────────────────────────────────
 
+    /**
+     * Load a tab's data the first time it is shown.
+     *
+     * @param {string} tabName Tab name (summary, risk, engagement, controls or config).
+     */
     function onTabShow(tabName) {
         if (loaded[tabName]) { return; }
         loaded[tabName] = true;
 
-        if (tabName === 'summary')    { loadSummary();    }
-        if (tabName === 'risk')       { loadRisk();       }
+        if (tabName === 'summary') { loadSummary(); }
+        if (tabName === 'risk') { loadRisk(); }
         if (tabName === 'engagement') { loadEngagement(); }
-        if (tabName === 'controls')   { loadControls();   }
-        if (tabName === 'config')     { loadConfig();     }
+        if (tabName === 'controls') { loadControls(); }
+        if (tabName === 'config') { loadConfig(); }
     }
 
+    /**
+     * Reload the already-visited period-dependent tabs after the period changes.
+     */
     function onPeriodChange() {
         // Reload already-visited tabs with new period.
         var reloadTabs = ['summary', 'risk', 'engagement'];
         reloadTabs.forEach(function(t) {
             if (loaded[t]) {
-                loaded[t] = false;   // Allow reload.
+                loaded[t] = false; // Allow reload.
                 onTabShow(t);
             }
         });
@@ -660,10 +781,10 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
     // ── init ───────────────────────────────────────────────────────────────────
 
+    /**
+     * Initialise the advisor dashboard: period selector, tab lazy-loading and the floating assistant.
+     */
     function init() {
-        var root = document.getElementById('saipa-advisor');
-        if (root) { isManager = root.dataset.isManager === '1'; }
-
         // Period selector
         var periodEl = document.getElementById('saipa-period');
         if (periodEl) {
@@ -682,13 +803,19 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         onTabShow('summary');
 
         // ── Floating Assistant (FAB) ────────────────────────────────────────
-        var fab      = document.getElementById('saipa-fab');
-        var panel    = document.getElementById('saipa-chat-panel');
+        var fab = document.getElementById('saipa-fab');
+        var panel = document.getElementById('saipa-chat-panel');
         var closeBtn = document.getElementById('saipa-chat-close');
-        var sendBtn  = document.getElementById('saipa-chat-send');
-        var input    = document.getElementById('saipa-chat-input');
+        var sendBtn = document.getElementById('saipa-chat-send');
+        var input = document.getElementById('saipa-chat-input');
         var messages = document.getElementById('saipa-chat-messages');
 
+        /**
+         * Append a message to the assistant chat panel.
+         *
+         * @param {string} text Message text.
+         * @param {string} role Message role (user or assistant), used as CSS modifier.
+         */
         function appendMsg(text, role) {
             if (!messages) { return; }
             var div = document.createElement('div');
@@ -698,6 +825,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             messages.scrollTop = messages.scrollHeight;
         }
 
+        /**
+         * Append a typing indicator to the assistant chat panel.
+         *
+         * @returns {HTMLElement|null} The indicator element, or null when the panel is missing.
+         */
         function appendTyping() {
             if (!messages) { return null; }
             var div = document.createElement('div');
@@ -708,6 +840,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             return div;
         }
 
+        /**
+         * Send the input text to the assistant and display its reply.
+         */
         function sendMessage() {
             if (!input) { return; }
             var text = input.value.trim();
@@ -719,7 +854,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
             Ajax.call([{
                 methodname: 'local_saipa_admin_chat',
-                args: { message: text, context: 'advisor' }
+                args: {message: text, context: 'advisor'}
             }])[0].then(function(r) {
                 if (typingEl && typingEl.parentNode) { typingEl.parentNode.removeChild(typingEl); }
                 appendMsg(r.reply || 'Sin respuesta.', 'assistant');
@@ -735,37 +870,61 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
         // ── FAB drag-to-reposition ──────────────────────────────────────
         var STORAGE_KEY = 'saipa_fab_pos';
-        var isDragging  = false;
-        var dragMoved   = false;
+        var isDragging = false;
+        var dragMoved = false;
         var dragStartX, dragStartY, fabStartLeft, fabStartTop;
 
+        /**
+         * Get the bounding rectangle of the floating assistant button.
+         *
+         * @returns {DOMRect|null} The button rectangle, or null when the button is missing.
+         */
         function getFabRect() {
             return fab ? fab.getBoundingClientRect() : null;
         }
 
+        /**
+         * Move the floating button (clamped to the viewport) and reposition the chat panel above it.
+         *
+         * @param {number} left Desired left offset in pixels.
+         * @param {number} top Desired top offset in pixels.
+         */
         function applyFabPos(left, top) {
             // Clamp within viewport.
-            var w = window.innerWidth, h = window.innerHeight;
-            var fw = fab.offsetWidth, fh = fab.offsetHeight;
+            var w = window.innerWidth,
+h = window.innerHeight;
+            var fw = fab.offsetWidth,
+fh = fab.offsetHeight;
             left = Math.max(0, Math.min(left, w - fw));
-            top  = Math.max(0, Math.min(top,  h - fh));
-            fab.style.left   = left + 'px';
-            fab.style.top    = top  + 'px';
-            fab.style.right  = 'auto';
+            top = Math.max(0, Math.min(top, h - fh));
+            fab.style.left = left + 'px';
+            fab.style.top = top + 'px';
+            fab.style.right = 'auto';
             fab.style.bottom = 'auto';
             // Reposition panel above the button.
             if (panel) {
-                panel.style.left   = Math.max(0, Math.min(left + fw - 360, w - 364)) + 'px';
-                panel.style.top    = Math.max(0, top - 510) + 'px';
-                panel.style.right  = 'auto';
+                panel.style.left = Math.max(0, Math.min(left + fw - 360, w - 364)) + 'px';
+                panel.style.top = Math.max(0, top - 510) + 'px';
+                panel.style.right = 'auto';
                 panel.style.bottom = 'auto';
             }
         }
 
+        /**
+         * Persist the floating button position in localStorage, ignoring storage errors.
+         *
+         * @param {number} left Left offset in pixels.
+         * @param {number} top Top offset in pixels.
+         */
         function saveFabPos(left, top) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify({l: left, t: top})); } catch(e) {}
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify({l: left, t: top})); } catch (e) {}
         }
 
+        /**
+         * Restore the floating button position saved in localStorage.
+         *
+         * @returns {boolean} True when a saved position was applied.
+         */
         function restoreFabPos() {
             try {
                 var raw = localStorage.getItem(STORAGE_KEY);
@@ -773,7 +932,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
                 var pos = JSON.parse(raw);
                 applyFabPos(pos.l, pos.t);
                 return true;
-            } catch(e) { return false; }
+            } catch (e) { return false; }
         }
 
         if (fab) {
@@ -782,12 +941,12 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             fab.addEventListener('mousedown', function(e) {
                 if (e.button !== 0) { return; }
                 isDragging = true;
-                dragMoved  = false;
+                dragMoved = false;
                 dragStartX = e.clientX;
                 dragStartY = e.clientY;
-                var rect   = getFabRect();
+                var rect = getFabRect();
                 fabStartLeft = rect.left;
-                fabStartTop  = rect.top;
+                fabStartTop = rect.top;
                 fab.classList.add('saipa-fab--dragging');
                 e.preventDefault();
             });
@@ -795,12 +954,12 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             fab.addEventListener('touchstart', function(e) {
                 var t = e.touches[0];
                 isDragging = true;
-                dragMoved  = false;
+                dragMoved = false;
                 dragStartX = t.clientX;
                 dragStartY = t.clientY;
-                var rect   = getFabRect();
+                var rect = getFabRect();
                 fabStartLeft = rect.left;
-                fabStartTop  = rect.top;
+                fabStartTop = rect.top;
                 fab.classList.add('saipa-fab--dragging');
             }, {passive: true});
         }
@@ -815,13 +974,16 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
         document.addEventListener('touchmove', function(e) {
             if (!isDragging || !fab) { return; }
-            var t  = e.touches[0];
+            var t = e.touches[0];
             var dx = t.clientX - dragStartX;
             var dy = t.clientY - dragStartY;
             if (Math.abs(dx) > 4 || Math.abs(dy) > 4) { dragMoved = true; }
             if (dragMoved) { applyFabPos(fabStartLeft + dx, fabStartTop + dy); }
         }, {passive: true});
 
+        /**
+         * End a floating button drag and save its position if it was moved.
+         */
         function stopDrag() {
             if (!isDragging) { return; }
             isDragging = false;
@@ -832,13 +994,13 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             }
         }
 
-        document.addEventListener('mouseup',    stopDrag);
-        document.addEventListener('touchend',   stopDrag);
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
         document.addEventListener('touchcancel', stopDrag);
 
         if (fab && panel) {
             fab.addEventListener('click', function() {
-                if (dragMoved) { return; }   // Ignore click that ended a drag.
+                if (dragMoved) { return; } // Ignore click that ended a drag.
                 var visible = panel.style.display !== 'none';
                 panel.style.display = visible ? 'none' : 'flex';
                 if (!visible && input) { input.focus(); }
@@ -867,5 +1029,5 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         Log.debug('SAIPA: advisor dashboard initialised');
     }
 
-    return { init: init };
+    return {init: init};
 });

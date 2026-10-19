@@ -17,27 +17,43 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
     // Keyed by userid → {score, risk_level, factors}
     var riskData = {};
 
-    // Keyed by userid → full student object from get_student_list
-    var studentData = {};
-
+    /**
+     * Format a Unix timestamp as a short es-AR date and time string.
+     *
+     * @param {number} ts Unix timestamp in seconds.
+     * @returns {string} Formatted date, or an empty string when ts is falsy.
+     */
     function formatDate(ts) {
         if (!ts) { return ''; }
-        return new Date(ts * 1000).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+        return new Date(ts * 1000).toLocaleString('es-AR', {dateStyle: 'short', timeStyle: 'short'});
     }
 
+    /**
+     * Build the HTML risk badge for a student from the cached risk data.
+     *
+     * @param {number} userid Moodle user id of the student.
+     * @returns {string} Badge HTML, or an empty string when no risk data is cached.
+     */
     function riskBadgeHtml(userid) {
         var r = riskData[userid];
         if (!r) { return ''; }
         var map = {
-            low:    { cls: 'badge-success',  icon: '🟢' },
-            medium: { cls: 'badge-warning',  icon: '🟡' },
-            high:   { cls: 'badge-danger',   icon: '🔴' },
+            low:    {cls: 'badge-success', icon: '🟢'},
+            medium: {cls: 'badge-warning', icon: '🟡'},
+            high:   {cls: 'badge-danger', icon: '🔴'},
         };
         var cfg = map[r.risk_level] || map.medium;
-        return '<span class="badge ' + cfg.cls + ' badge-pill ml-1" title="Riesgo ' + r.risk_level + ': ' + (r.score * 100).toFixed(0) + '%">'
+        return '<span class="badge ' + cfg.cls + ' badge-pill ml-1" title="Riesgo ' + r.risk_level + ': '
+            + (r.score * 100).toFixed(0) + '%">'
             + cfg.icon + ' ' + (r.score * 100).toFixed(0) + '%</span>';
     }
 
+    /**
+     * Build the HTML summary of a student's engagement with the last Telegram alert.
+     *
+     * @param {Object} student Student record with the alert engagement fields.
+     * @returns {string} Engagement HTML, or an empty string when no alert was sent.
+     */
     function alertEngagementHtml(student) {
         if (!student.last_alert_sent) { return ''; }
 
@@ -64,6 +80,13 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         return parts.join(' · ');
     }
 
+    /**
+     * Prompt for a message and send a Telegram alert to a student, updating the button state.
+     *
+     * @param {number} userid Moodle user id of the student.
+     * @param {string} fullname Student full name shown in the prompt.
+     * @param {HTMLElement} btn Alert button that triggered the action.
+     */
     function sendAlert(userid, fullname, btn) {
         var msg = prompt('Mensaje para ' + fullname + ' (dejá vacío para el mensaje por defecto):', '');
         if (msg === null) { return; } // Cancelado
@@ -73,14 +96,14 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         Ajax.call([{
             methodname: 'local_saipa_send_telegram_alert',
-            args: { student_id: userid, course_id: courseId, message: msg }
+            args: {student_id: userid, course_id: courseId, message: msg}
         }])[0].then(function(result) {
             if (result.sent) {
                 btn.textContent = '✓';
                 btn.classList.replace('btn-warning', 'btn-success');
                 // Update engagement indicator to show alert was just sent.
                 var engEl = document.getElementById('saipa-eng-' + userid);
-                var now   = Math.floor(Date.now() / 1000);
+                var now = Math.floor(Date.now() / 1000);
                 if (engEl) {
                     // Simulate a fresh student record with alert_sent but not responded.
                     engEl.innerHTML = alertEngagementHtml({
@@ -109,9 +132,15 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         });
     }
 
+    /**
+     * Create the clickable list item for a student, with risk badge, alert button and activity info.
+     *
+     * @param {Object} student Student record returned by local_saipa_get_student_list.
+     * @returns {HTMLElement} The list item element.
+     */
     function renderStudentRow(student) {
         var li = document.createElement('a');
-        li.href      = '#';
+        li.href = '#';
         li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
         li.dataset.studentid = student.userid;
 
@@ -126,16 +155,16 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         // Risk badge placeholder — updated when risk data arrives
         var riskSpan = document.createElement('span');
-        riskSpan.id        = 'saipa-risk-badge-' + student.userid;
+        riskSpan.id = 'saipa-risk-badge-' + student.userid;
         riskSpan.innerHTML = riskBadgeHtml(student.userid);
         nameRow.appendChild(riskSpan);
 
         // Telegram alert button — shown for linked students, highlighted when high risk
         var alertBtn = document.createElement('button');
-        alertBtn.id        = 'saipa-alert-btn-' + student.userid;
-        alertBtn.type      = 'button';
+        alertBtn.id = 'saipa-alert-btn-' + student.userid;
+        alertBtn.type = 'button';
         alertBtn.className = 'btn btn-sm ml-2 ' + (student.telegram_linked ? 'btn-outline-secondary' : 'd-none');
-        alertBtn.title     = student.telegram_linked ? 'Enviar alerta por Telegram' : '';
+        alertBtn.title = student.telegram_linked ? 'Enviar alerta por Telegram' : '';
         alertBtn.textContent = '📨';
         alertBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -156,7 +185,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         // Alert engagement indicator
         if (student.last_alert_sent > 0) {
             var engSpan = document.createElement('span');
-            engSpan.id        = 'saipa-eng-' + student.userid;
+            engSpan.id = 'saipa-eng-' + student.userid;
             engSpan.className = 'ml-2';
             engSpan.innerHTML = alertEngagementHtml(student);
             meta.appendChild(engSpan);
@@ -171,10 +200,10 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         var badge = document.createElement('span');
         if (student.has_session && student.message_count > 0) {
-            badge.className   = 'badge badge-primary badge-pill';
+            badge.className = 'badge badge-primary badge-pill';
             badge.textContent = student.message_count + ' msgs';
         } else {
-            badge.className   = 'badge badge-light badge-pill text-muted';
+            badge.className = 'badge badge-light badge-pill text-muted';
             badge.textContent = '—';
         }
 
@@ -189,18 +218,23 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         return li;
     }
 
+    /**
+     * Request course risk scores and update the student badges, alert buttons and summary.
+     *
+     * @param {boolean} isDemo Whether to request simulated (demo) risk data.
+     */
     function _doRisk(isDemo) {
-        var btn       = document.getElementById(isDemo ? 'saipa-demo-btn' : 'saipa-risk-btn');
-        var otherBtn  = document.getElementById(isDemo ? 'saipa-risk-btn' : 'saipa-demo-btn');
-        var status    = document.getElementById('saipa-risk-status');
+        var btn = document.getElementById(isDemo ? 'saipa-demo-btn' : 'saipa-risk-btn');
+        var otherBtn = document.getElementById(isDemo ? 'saipa-risk-btn' : 'saipa-demo-btn');
+        var status = document.getElementById('saipa-risk-status');
 
-        if (btn)      { btn.disabled = true; btn.textContent = '…'; }
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
         if (otherBtn) { otherBtn.disabled = true; }
-        if (status)   { status.textContent = isDemo ? 'Simulando…' : 'Calculando…'; }
+        if (status) { status.textContent = isDemo ? 'Simulando…' : 'Calculando…'; }
 
         Ajax.call([{
             methodname: 'local_saipa_get_course_risk',
-            args: { course_id: courseId, demo: isDemo ? 1 : 0 }
+            args: {course_id: courseId, demo: isDemo ? 1 : 0}
         }])[0].then(function(result) {
             riskData = {};
             (result.results || []).forEach(function(r) {
@@ -224,9 +258,9 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             });
 
             // Summary
-            var hi  = (result.results || []).filter(function(r) { return r.risk_level === 'high';   }).length;
+            var hi = (result.results || []).filter(function(r) { return r.risk_level === 'high'; }).length;
             var med = (result.results || []).filter(function(r) { return r.risk_level === 'medium'; }).length;
-            var lo  = (result.results || []).filter(function(r) { return r.risk_level === 'low';    }).length;
+            var lo = (result.results || []).filter(function(r) { return r.risk_level === 'low'; }).length;
             var label = isDemo ? '(demo) ' : '';
             if (status) {
                 status.textContent = label + '🔴 ' + hi + '  🟡 ' + med + '  🟢 ' + lo;
@@ -236,25 +270,31 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             Log.error('SAIPA risk error: ' + JSON.stringify(err));
             if (status) { status.textContent = 'Error al calcular riesgo'; }
         }).always(function() {
-            if (btn)      { btn.disabled = false; }
+            if (btn) { btn.disabled = false; }
             if (otherBtn) { otherBtn.disabled = false; }
             if (btn && !isDemo) { btn.innerHTML = '&#128202; Calcular riesgo'; }
-            if (btn &&  isDemo) { btn.innerHTML = '&#127922; Simular'; }
+            if (btn && isDemo) { btn.innerHTML = '&#127922; Simular'; }
         });
     }
 
+    /**
+     * Calculate real (non-demo) risk scores for the course.
+     */
     function loadRisk() { _doRisk(false); }
 
+    /**
+     * Load the course student list and render it in the dashboard.
+     */
     function loadStudentList() {
         Ajax.call([{
             methodname: 'local_saipa_get_student_list',
-            args: { course_id: courseId }
+            args: {course_id: courseId}
         }])[0].then(function(result) {
             var loadingEl = document.getElementById('saipa-student-list-loading');
-            var listEl    = document.getElementById('saipa-student-list');
+            var listEl = document.getElementById('saipa-student-list');
 
             if (loadingEl) { loadingEl.style.display = 'none'; }
-            if (!listEl)   { return result; }
+            if (!listEl) { return result; }
 
             listEl.innerHTML = '';
 
@@ -269,12 +309,6 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             listEl.style.display = '';
             return result;
 
-            // Store student data for later use (e.g. after alert sent)
-            result.students.forEach(function(s) {
-                studentData[s.userid] = s;
-            });
-            return result;
-
         }).fail(function(err) {
             Log.error('SAIPA teacher_dashboard get_student_list error: ' + JSON.stringify(err));
             var loadingEl = document.getElementById('saipa-student-list-loading');
@@ -282,19 +316,27 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         });
     }
 
+    /**
+     * Append a chat message bubble to the conversation container.
+     *
+     * @param {string} role Message author role ('user' or the assistant).
+     * @param {string} content Message text.
+     * @param {number} timecreated Unix timestamp in seconds when the message was created.
+     * @param {HTMLElement} container Element the message is appended to.
+     */
     function appendConvMessage(role, content, timecreated, container) {
         var row = document.createElement('div');
         row.className = 'mb-2 d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
 
         var bubble = document.createElement('div');
-        bubble.style.maxWidth   = '78%';
+        bubble.style.maxWidth = '78%';
         bubble.style.background = role === 'user' ? '#d1ecf1' : '#fff3cd';
         bubble.style.whiteSpace = 'pre-wrap';
-        bubble.style.wordBreak  = 'break-word';
+        bubble.style.wordBreak = 'break-word';
         bubble.className = 'p-2 rounded';
 
         var meta = document.createElement('div');
-        meta.className   = 'text-muted small mb-1';
+        meta.className = 'text-muted small mb-1';
         meta.textContent = (role === 'user' ? 'Estudiante' : 'SAIPA') + ' · ' + formatDate(timecreated);
 
         var text = document.createElement('div');
@@ -306,6 +348,12 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         container.appendChild(row);
     }
 
+    /**
+     * Show the conversation panel and load the chat history of a student.
+     *
+     * @param {number} studentId Moodle user id of the student.
+     * @param {string} studentName Student name shown as the panel heading.
+     */
     function loadConversation(studentId, studentName) {
         document.getElementById('saipa-student-list-panel').style.display = 'none';
 
@@ -321,12 +369,13 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         Ajax.call([{
             methodname: 'local_saipa_get_student_history',
-            args: { course_id: courseId, student_id: studentId }
+            args: {course_id: courseId, student_id: studentId}
         }])[0].then(function(result) {
             msgContainer.innerHTML = '';
 
             if (!result.messages || result.messages.length === 0) {
-                msgContainer.innerHTML = '<div class="text-muted p-3 text-center">Este estudiante aún no inició una conversación.</div>';
+                msgContainer.innerHTML = '<div class="text-muted p-3 text-center">'
+                    + 'Este estudiante aún no inició una conversación.</div>';
                 return result;
             }
 
@@ -343,6 +392,12 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         });
     }
 
+    /**
+     * Build the HTML badge for the course RAG index status.
+     *
+     * @param {string} status Index status (ready, indexing, pending or error).
+     * @returns {string} Badge HTML.
+     */
     function indexStatusBadge(status) {
         var map = {
             ready:      '<span class="badge badge-success">✓ ready</span>',
@@ -353,15 +408,18 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         return map[status] || '<span class="badge badge-light">' + status + '</span>';
     }
 
+    /**
+     * Load the course summary KPIs and populate the summary cards.
+     */
     function loadCourseSummary() {
         Ajax.call([{
             methodname: 'local_saipa_get_course_summary',
-            args: { course_id: courseId }
+            args: {course_id: courseId}
         }])[0].then(function(r) {
             var spinner = document.getElementById('saipa-summary-spinner');
-            var cards   = document.getElementById('saipa-summary-cards');
+            var cards = document.getElementById('saipa-summary-cards');
             if (spinner) { spinner.style.display = 'none'; }
-            if (!cards)  { return r; }
+            if (!cards) { return r; }
 
             // Populate KPI cells
             var adoption = r.enrolled_students > 0
@@ -369,9 +427,9 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
             var el = function(id) { return document.getElementById(id); };
             if (el('ss-enrolled')) { el('ss-enrolled').textContent = r.enrolled_students; }
-            if (el('ss-active'))   { el('ss-active').textContent   = r.active_saipa_users; }
-            if (el('ss-adoption')) { el('ss-adoption').textContent  = adoption; }
-            if (el('ss-msgs7d'))   { el('ss-msgs7d').textContent   = r.messages_7d; }
+            if (el('ss-active')) { el('ss-active').textContent = r.active_saipa_users; }
+            if (el('ss-adoption')) { el('ss-adoption').textContent = adoption; }
+            if (el('ss-msgs7d')) { el('ss-msgs7d').textContent = r.messages_7d; }
             if (el('ss-alerts')) {
                 el('ss-alerts').textContent = r.alerts_sent_30d
                     + (r.alerts_responded_30d ? ' / ' + r.alerts_responded_30d : '');
@@ -396,6 +454,11 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         });
     }
 
+    /**
+     * Initialise the teacher dashboard for a course.
+     *
+     * @param {number} cid Course id.
+     */
     function init(cid) {
         courseId = cid;
 
@@ -418,5 +481,5 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         Log.debug('SAIPA: teacher dashboard initialised for course ' + courseId);
     }
 
-    return { init: init };
+    return {init: init};
 });

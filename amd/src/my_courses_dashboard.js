@@ -12,11 +12,17 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
 
     'use strict';
 
-    var courses    = [];
-    var sortCol    = 'coursename';
-    var sortAsc    = true;
-    var wwwroot    = '';
+    var courses = [];
+    var sortCol = 'coursename';
+    var sortAsc = true;
+    var wwwroot = '';
 
+    /**
+     * Build the HTML badge for a course RAG index status.
+     *
+     * @param {string} status Index status (ready, indexing, pending or error).
+     * @returns {string} Badge HTML.
+     */
     function indexBadge(status) {
         var map = {
             ready:    '<span class="badge badge-success">✓</span>',
@@ -27,14 +33,27 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
         return map[status] || '<span class="badge badge-light">' + (status || '—') + '</span>';
     }
 
+    /**
+     * Build the HTML summary of high, medium and low risk student counts.
+     *
+     * @param {number} hi Number of high-risk students.
+     * @param {number} med Number of medium-risk students.
+     * @param {number} lo Number of low-risk students.
+     * @returns {string} Risk summary HTML, or a dash when all counts are zero.
+     */
     function riskHtml(hi, med, lo) {
         var parts = [];
-        if (hi  > 0) { parts.push('<span class="text-danger">🔴 ' + hi  + '</span>'); }
+        if (hi > 0) { parts.push('<span class="text-danger">🔴 ' + hi + '</span>'); }
         if (med > 0) { parts.push('<span class="text-warning">🟡 ' + med + '</span>'); }
-        if (lo  > 0) { parts.push('<span class="text-success">🟢 ' + lo  + '</span>'); }
+        if (lo > 0) { parts.push('<span class="text-success">🟢 ' + lo + '</span>'); }
         return parts.length ? parts.join(' ') : '<span class="text-muted">—</span>';
     }
 
+    /**
+     * Render the course rows into the summary table, toggling the empty-state message.
+     *
+     * @param {Array} data Course summary records to render.
+     */
     function renderRows(data) {
         var tbody = document.getElementById('saipa-mc-tbody');
         var empty = document.getElementById('saipa-mc-empty');
@@ -68,6 +87,12 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
         });
     }
 
+    /**
+     * Escape HTML special characters in a value.
+     *
+     * @param {string} str Value to escape (converted to string).
+     * @returns {string} The escaped string.
+     */
     function escapeHtml(str) {
         return String(str)
             .replace(/&/g, '&amp;')
@@ -76,6 +101,11 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
             .replace(/"/g, '&quot;');
     }
 
+    /**
+     * Sort the courses by a column, toggling direction when the same column is chosen again, and re-render.
+     *
+     * @param {string} col Course field name to sort by.
+     */
     function sortData(col) {
         if (sortCol === col) {
             sortAsc = !sortAsc;
@@ -87,12 +117,17 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
         courses.sort(function(a, b) {
             var av = a[col];
             var bv = b[col];
-            if (typeof av === 'string') { return mult * av.localeCompare(bv, 'es', { sensitivity: 'base' }); }
+            if (typeof av === 'string') { return mult * av.localeCompare(bv, 'es', {sensitivity: 'base'}); }
             return mult * (av - bv);
         });
         renderRows(filterData());
     }
 
+    /**
+     * Filter the courses by the search box text, matching course name or short name.
+     *
+     * @returns {Array} The matching course records.
+     */
     function filterData() {
         var q = (document.getElementById('saipa-mc-search') || {}).value || '';
         q = q.toLowerCase();
@@ -103,6 +138,9 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
         });
     }
 
+    /**
+     * Initialise the My Courses dashboard: load course data and wire up sorting and search.
+     */
     function init() {
         var root = document.getElementById('saipa-my-courses');
         if (root) { wwwroot = root.dataset.wwwroot || ''; }
@@ -111,9 +149,9 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
             methodname: 'local_saipa_get_my_courses',
             args: {}
         }])[0].then(function(result) {
-            var spinner  = document.getElementById('saipa-mc-spinner');
+            var spinner = document.getElementById('saipa-mc-spinner');
             var tableDiv = document.getElementById('saipa-mc-table-wrap');
-            if (spinner)  { spinner.style.display  = 'none'; }
+            if (spinner) { spinner.style.display = 'none'; }
             if (tableDiv) { tableDiv.style.display = ''; }
 
             courses = result.courses || [];
@@ -139,9 +177,9 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
             return result;
         }).fail(function(err) {
             Log.error('SAIPA my_courses_dashboard error: ' + JSON.stringify(err));
-            var spinner  = document.getElementById('saipa-mc-spinner');
+            var spinner = document.getElementById('saipa-mc-spinner');
             var errorDiv = document.getElementById('saipa-mc-error');
-            if (spinner)  { spinner.style.display  = 'none'; }
+            if (spinner) { spinner.style.display = 'none'; }
             if (errorDiv) {
                 errorDiv.textContent = 'Error loading course data.';
                 errorDiv.style.display = '';
@@ -149,5 +187,5 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
         });
     }
 
-    return { init: init };
+    return {init: init};
 });

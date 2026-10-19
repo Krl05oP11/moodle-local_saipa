@@ -4,6 +4,20 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
+### Fixed
+- **Code quality checks the CI used to ignore now pass.** The CI ran
+  `moodle-plugin-ci phpdoc` and `grunt` with `|| true`, hiding real failures:
+  38 functions with an incomplete `@param` list and 56 ESLint errors
+  (mostly missing JSDoc, plus long lines and unused variables). All fixed
+  without behaviour changes; clean stylistic ESLint autofixes applied.
+  `amd/build/*.min.js` (and now their source maps) are built with Moodle
+  4.4's grunt instead of being copies of `amd/src`. The CI no longer ignores
+  `phpdoc` or `grunt` failures.
+  Removed dead code in `teacher_dashboard.js` (`studentData`, filled only
+  after a `return`, never read) and in `advisor_dashboard.js` (`isManager`,
+  never read). Verified live: teacher dashboard (student list, conversation),
+  advisor dashboard (5 tabs), My courses, no console errors.
+
 ### Removed
 - **Setup wizard: the "SAIPA Cloud" engine option.** It was a "coming soon"
   card for a hosted engine subscription, with a waitlist at
