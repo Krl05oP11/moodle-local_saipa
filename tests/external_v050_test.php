@@ -572,7 +572,7 @@ final class external_v050_test extends \advanced_testcase {
         $r = \local_saipa\external\save_institution_config::execute(0.7, 0.3);
 
         $this->assertFalse($r['success']);
-        $this->assertStringContainsString('must be less than', $r['message']);
+        $this->assertSame(get_string('cfg_error_threshold_order', 'local_saipa'), $r['message']);
     }
 
     /**
@@ -586,7 +586,7 @@ final class external_v050_test extends \advanced_testcase {
         $r = \local_saipa\external\save_institution_config::execute(1.5);
 
         $this->assertFalse($r['success']);
-        $this->assertStringContainsString('between 0', $r['message']);
+        $this->assertSame(get_string('cfg_error_medium_range', 'local_saipa'), $r['message']);
     }
 
     /**
