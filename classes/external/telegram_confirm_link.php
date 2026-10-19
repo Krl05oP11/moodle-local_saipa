@@ -16,7 +16,7 @@
 
 /**
  * External web service: telegram_confirm_link
- * Validates an HMAC deep-link token && binds a Telegram chat_id to the Moodle user.
+ * Validates an HMAC deep-link token and binds a Telegram chat_id to the Moodle user.
  * Called server-to-server by saipa-engine when the student sends /start <token>.
  *
  * @package    local_saipa
@@ -69,7 +69,7 @@ class telegram_confirm_link extends external_api {
         $record = $DB->get_record('local_saipa_telegram_links', ['link_token' => $params['token']]);
 
         if (!$record) {
-            throw new \invalid_parameter_exception('Invalid || already used token.');
+            throw new \invalid_parameter_exception('Invalid or already used token.');
         }
 
         if ($record->confirmed) {

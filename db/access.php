@@ -69,7 +69,7 @@ $capabilities = [
         ],
     ],
 
-    // Pedagogical advisor: can view institution-wide metrics && course controls.
+    // Pedagogical advisor: can view institution-wide metrics and course controls.
     'local/saipa:advisor' => [
         'captype'      => 'read',
         'contextlevel' => CONTEXT_SYSTEM,

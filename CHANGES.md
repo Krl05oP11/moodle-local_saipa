@@ -4,6 +4,27 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
+### Changed
+- **Every user-visible string now comes from the language packs.** The JS
+  dashboards (teacher, advisor, My courses), `status.php`, `setup.php`,
+  `settings.php`, the advisor templates and the web services had hardcoded
+  Spanish (and some English) text; a site in English showed Spanish UI.
+  145 new keys in `en`/`es`/`pt_br`. Dates follow the page language instead
+  of a fixed `es-AR` locale; heatmap day names come from core.
+- **Messages to other users use the recipient's language:** the Telegram
+  risk alert to a student and the high-risk notification to teachers.
+- Comments and web service descriptions: Spanish comments translated, and
+  `&&`/`||` used as prose (left by an old search-and-replace) turned back into
+  "and"/"or".
+
+### Fixed
+- `help_advisor.mustache` referenced 5 lang keys that did not exist (shown as
+  `[[...]]`), and its footer showed a hardcoded "v0.5.0"; it now shows the
+  installed release.
+- `status.php` linked to `/local/saipa/health_check.php`, which does not
+  exist; the link is removed.
+- `alert_default_message` in `lang/en` was in Spanish.
+
 ### Fixed
 - **Code quality checks the CI used to ignore now pass.** The CI ran
   `moodle-plugin-ci phpdoc` and `grunt` with `|| true`, hiding real failures:

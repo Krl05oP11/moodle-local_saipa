@@ -185,7 +185,7 @@ class get_student_list extends external_api {
                     ),
                     'alert_response_delay_min'    => new external_value(
                         PARAM_INT,
-                        'Minutes between alert && first student response (0 if not yet responded)'
+                        'Minutes between alert and first student response (0 if not yet responded)'
                     ),
                     'moodle_accessed_after_alert' => new external_value(
                         PARAM_BOOL,

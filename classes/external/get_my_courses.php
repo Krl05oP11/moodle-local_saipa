@@ -75,7 +75,7 @@ class get_my_courses extends external_api {
             }
         }
 
-        // Prefetch settings && index rows.
+        // Prefetch settings and index rows.
         $settingsmap = [];
         foreach ($DB->get_records('local_saipa_course_settings') as $row) {
             $settingsmap[(int) $row->courseid] = $row;

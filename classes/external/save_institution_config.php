@@ -90,22 +90,22 @@ class save_institution_config extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:manage', $context);
 
-        // Validate thresholds are in [0, 1] range && medium < high.
+        // Validate thresholds are in [0, 1] range and medium < high.
         if ($params['risk_threshold_medium'] !== null) {
             $med = (float) $params['risk_threshold_medium'];
             if ($med < 0.0 || $med > 1.0) {
-                return ['success' => false, 'message' => 'risk_threshold_medium must be between 0 && 1'];
+                return ['success' => false, 'message' => get_string('cfg_error_medium_range', 'local_saipa')];
             }
         }
         if ($params['risk_threshold_high'] !== null) {
             $high = (float) $params['risk_threshold_high'];
             if ($high < 0.0 || $high > 1.0) {
-                return ['success' => false, 'message' => 'risk_threshold_high must be between 0 && 1'];
+                return ['success' => false, 'message' => get_string('cfg_error_high_range', 'local_saipa')];
             }
         }
         if ($params['risk_threshold_medium'] !== null && $params['risk_threshold_high'] !== null) {
             if ((float) $params['risk_threshold_medium'] >= (float) $params['risk_threshold_high']) {
-                return ['success' => false, 'message' => 'risk_threshold_medium must be less than risk_threshold_high'];
+                return ['success' => false, 'message' => get_string('cfg_error_threshold_order', 'local_saipa')];
             }
         }
 

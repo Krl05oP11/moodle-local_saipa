@@ -42,5 +42,7 @@ $PAGE->navbar->add(
 $PAGE->navbar->add(get_string('help_title', 'local_saipa'));
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_saipa/help_' . $page, []);
+echo $OUTPUT->render_from_template('local_saipa/help_' . $page, [
+    'release' => core_plugin_manager::instance()->get_plugin_info('local_saipa')->release,
+]);
 echo $OUTPUT->footer();

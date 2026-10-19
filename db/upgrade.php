@@ -91,7 +91,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
     if ($oldversion < 2026031904) {
         // Add responded_at column to saipa_notifications.
 
-        // This column was missing from the original install.xml && must be added for
+        // This column was missing from the original install.xml and must be added for
         // mark_alert_responded WS to work on fresh installations.
         $table = new xmldb_table('local_saipa_notifications');
         $field = new xmldb_field(
@@ -148,7 +148,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         $table->add_field('students_high_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('students_medium_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('students_low_risk', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        // NUMBER(8,2): precision '8,2' format sets both length && decimals in XMLDB API.
+        // NUMBER(8,2): precision '8,2' format sets both length and decimals in XMLDB API.
         $table->add_field('avg_response_delay_min', XMLDB_TYPE_NUMBER, '8,2', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
@@ -163,7 +163,7 @@ function xmldb_local_saipa_upgrade(int $oldversion): bool {
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
         $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
-        // NUMBER(5,4): precision '5,4' format sets both length && decimals in XMLDB API.
+        // NUMBER(5,4): precision '5,4' format sets both length and decimals in XMLDB API.
         $table->add_field('score', XMLDB_TYPE_NUMBER, '5,4', null, XMLDB_NOTNULL);
         $table->add_field('risk_level', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL);
         $table->add_field('timecomputed', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);

@@ -16,7 +16,7 @@
 
 /**
  * External web service: get_risk_dashboard
- * Returns risk ROI data: alert funnel, trend, && intervention effectiveness.
+ * Returns risk ROI data: alert funnel, trend, and intervention effectiveness.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>

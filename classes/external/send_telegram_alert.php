@@ -37,48 +37,48 @@ use core_external\external_value;
  * Send_telegram_alert.
  */
 class send_telegram_alert extends external_api {
-    /** @var mixed Human-readable Spanish labels for risk factor keys returned by the engine. */
-    private static $factorlabels = [
-        'last_access_days'   => 'días sin ingresar al curso',
-        'login_count_7d'     => 'accesos en los últimos 7 días',
-        'login_count_30d'    => 'accesos en los últimos 30 días',
-        'submission_rate'    => 'tasa de entregas completadas',
-        'quiz_avg_score'     => 'promedio en cuestionarios',
-        'completion_rate'    => 'progreso general del curso',
-        'forum_posts'        => 'participaciones en foros',
-        'resource_views'     => 'materiales vistos',
-        'local_saipa_sessions'     => 'consultas a SAIPA',
-        'grade_avg'          => 'promedio de calificaciones',
-        'days_enrolled'      => 'días inscripto',
+    /** @var array Lang string key (local_saipa) for each risk factor key returned by the engine. */
+    private const FACTOR_STRINGS = [
+        'last_access_days'     => 'alert_factor_last_access_days',
+        'login_count_7d'       => 'alert_factor_login_count_7d',
+        'login_count_30d'      => 'alert_factor_login_count_30d',
+        'submission_rate'      => 'alert_factor_submission_rate',
+        'quiz_avg_score'       => 'alert_factor_quiz_avg_score',
+        'completion_rate'      => 'alert_factor_completion_rate',
+        'forum_posts'          => 'alert_factor_forum_posts',
+        'resource_views'       => 'alert_factor_resource_views',
+        'local_saipa_sessions' => 'alert_factor_saipa_sessions',
+        'grade_avg'            => 'alert_factor_grade_avg',
+        'days_enrolled'        => 'alert_factor_days_enrolled',
     ];
 
     /**
      * Builds a human-readable risk summary from a saipa_risk_scores record.
      *
      * @param \stdClass|null $risk Risk score record, or null if the student has none.
+     * @param string $lang Language code the summary is written in (the student's language).
      */
-    private static function build_risk_detail(?\stdClass $risk): string {
+    private static function build_risk_detail(?\stdClass $risk, string $lang): string {
+        $sm = get_string_manager();
         if (!$risk) {
-            return '📊 Tu nivel de participación en el curso merece atención.';
+            return $sm->get_string('alert_risk_default', 'local_saipa', null, $lang);
         }
 
-        $levelmap = [
-            'high'   => '🔴 *Riesgo ALTO* de abandono',
-            'medium' => '🟡 *Riesgo MEDIO* de abandono',
-            'low'    => '🟢 *Riesgo BAJO* de abandono',
-        ];
-        $levellabel = $levelmap[$risk->risk_level] ?? '📊 Nivel de riesgo detectado';
-        $scorepct   = round((float) $risk->score * 100);
+        $levels   = ['high', 'medium', 'low'];
+        $levelkey = in_array($risk->risk_level, $levels, true) ? $risk->risk_level : 'unknown';
+        $scorepct = round((float) $risk->score * 100);
 
-        $lines   = [$levellabel . " ({$scorepct}%)"];
+        $lines   = [$sm->get_string('alert_risk_level_' . $levelkey, 'local_saipa', $scorepct, $lang)];
         $factors = json_decode($risk->factors ?? '{}', true);
 
-        // Pick the top 2 factors by weight && translate them.
+        // Pick the top 2 factors by weight and translate them.
         arsort($factors);
         $top = array_slice($factors, 0, 2, true);
         foreach ($top as $key => $weight) {
-            $label   = self::$factorlabels[$key] ?? $key;
-            $lines[] = "• Indicador destacado: {$label}";
+            $label = isset(self::FACTOR_STRINGS[$key])
+                ? $sm->get_string(self::FACTOR_STRINGS[$key], 'local_saipa', null, $lang)
+                : $key;
+            $lines[] = $sm->get_string('alert_factor_line', 'local_saipa', $label, $lang);
         }
 
         return implode("\n", $lines);
@@ -128,7 +128,7 @@ class send_telegram_alert extends external_api {
         }
 
         // Build message.
-        $student = $DB->get_record('user', ['id' => $params['student_id']], 'firstname,lastname');
+        $student = $DB->get_record('user', ['id' => $params['student_id']], 'firstname,lastname,lang');
         $course  = $DB->get_record('course', ['id' => $params['course_id']], 'fullname');
         $teacher = fullname($USER);
 
@@ -140,14 +140,17 @@ class send_telegram_alert extends external_api {
                 'courseid' => $params['course_id'],
             ]);
 
-            $riskdetail = self::build_risk_detail($risk);
+            // The message goes to the student, so write it in the student's language.
+            $lang = ($student && !empty($student->lang)) ? $student->lang : current_language();
 
-            $text = get_string('alert_default_message', 'local_saipa', (object) [
+            $riskdetail = self::build_risk_detail($risk, $lang);
+
+            $text = get_string_manager()->get_string('alert_default_message', 'local_saipa', (object) [
                 'student'     => $student ? $student->firstname : '',
                 'course'      => $course ? format_string($course->fullname) : '',
                 'teacher'     => $teacher,
                 'risk_detail' => $riskdetail,
-            ]);
+            ], $lang);
         }
 
         // Call engine /telegram/notify.

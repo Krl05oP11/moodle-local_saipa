@@ -17,15 +17,111 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
     // Keyed by userid → {score, risk_level, factors}
     var riskData = {};
 
+    // ── i18n ───────────────────────────────────────────────────────────────────
+    // Every UI string this module builds, keyed by lang key ('component/key' for core
+    // components, plain key for local_saipa). Values are the English fallback (identical
+    // to lang/en) shown until loadStrings() resolves. Placeholders ({$a}, {$a->x}) are
+    // left untouched by core/str when no parameter is passed and are filled by fmt().
+    var S = {
+        index_status_error: 'error',
+        index_status_indexing: 'indexing',
+        index_status_pending: 'pending',
+        index_status_ready: 'ready',
+        msgs_count: '{$a} msgs',
+        risk_button: 'Calculate risk',
+        risk_demo_button: 'Simulate',
+        risk_level_high: 'High',
+        risk_level_low: 'Low',
+        risk_level_medium: 'Medium',
+        teacher_alert_accessed: 'Accessed Moodle',
+        teacher_alert_accessed_title: 'Logged in to Moodle after the alert',
+        teacher_alert_btn: 'Send alert via Telegram',
+        teacher_alert_btn_high: '⚠️ High risk — Send alert via Telegram',
+        teacher_alert_delay_hours: '{$a}h',
+        teacher_alert_delay_minutes: '{$a} min',
+        teacher_alert_no_reply: 'No reply',
+        teacher_alert_not_replied: 'Has not replied to the bot yet',
+        teacher_alert_prompt: 'Message for {$a} (leave empty for the default message):',
+        teacher_alert_replied_in: 'Replied to the bot in {$a}',
+        teacher_alert_sent_on: 'Alert sent on {$a}',
+        teacher_conv_empty: 'This student has not started a conversation yet.',
+        teacher_conv_load_error: 'Error loading the conversation.',
+        teacher_conv_student: 'Student',
+        teacher_no_chat_activity: 'No chat activity',
+        teacher_no_students: 'No students enrolled.',
+        teacher_risk_badge: 'Risk: {$a->level} ({$a->score}%)',
+        teacher_risk_calculating: 'Calculating…',
+        teacher_risk_error: 'Error calculating risk',
+        teacher_risk_simulating: 'Simulating…',
+        teacher_students_load_error: 'Error loading students.',
+        'core/loading': 'Loading'
+    };
+
     /**
-     * Format a Unix timestamp as a short es-AR date and time string.
+     * Resolve every string in S against the current language in one batch request.
+     * Failures are logged and leave the English fallbacks in place, so the returned
+     * promise always resolves.
+     *
+     * @returns {Promise} Resolved once S holds the best available strings.
+     */
+    function loadStrings() {
+        var keys = Object.keys(S);
+        return Str.get_strings(keys.map(function(k) {
+            var parts = k.split('/');
+            return parts.length === 2 ? {key: parts[1], component: parts[0]} : {key: k, component: 'local_saipa'};
+        })).then(function(values) {
+            keys.forEach(function(k, i) { S[k] = values[i]; });
+            return values;
+        }).catch(function(err) {
+            Log.error('SAIPA teacher: string load error: ' + err);
+        });
+    }
+
+    /**
+     * Get a string from S with its placeholders filled in.
+     *
+     * @param {string} key Key in S.
+     * @param {string|number|Object} [a] Value for {$a}, or an object whose properties fill {$a->prop}.
+     * @returns {string} The resolved string.
+     */
+    function fmt(key, a) {
+        var str = S[key];
+        if (a !== null && typeof a === 'object') {
+            Object.keys(a).forEach(function(prop) {
+                str = str.split('{$a->' + prop + '}').join(String(a[prop]));
+            });
+            return str;
+        }
+        if (typeof a !== 'undefined') {
+            str = str.split('{$a}').join(String(a));
+        }
+        return str;
+    }
+
+    /**
+     * Escape HTML special characters in a value.
+     *
+     * @param {string} str Value to escape (converted to string).
+     * @returns {string} The escaped string.
+     */
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * Format a Unix timestamp as a short date and time string in the page language.
      *
      * @param {number} ts Unix timestamp in seconds.
      * @returns {string} Formatted date, or an empty string when ts is falsy.
      */
     function formatDate(ts) {
         if (!ts) { return ''; }
-        return new Date(ts * 1000).toLocaleString('es-AR', {dateStyle: 'short', timeStyle: 'short'});
+        return new Date(ts * 1000).toLocaleString(document.documentElement.lang || undefined,
+            {dateStyle: 'short', timeStyle: 'short'});
     }
 
     /**
@@ -43,8 +139,11 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             high:   {cls: 'badge-danger', icon: '🔴'},
         };
         var cfg = map[r.risk_level] || map.medium;
-        return '<span class="badge ' + cfg.cls + ' badge-pill ml-1" title="Riesgo ' + r.risk_level + ': '
-            + (r.score * 100).toFixed(0) + '%">'
+        var title = fmt('teacher_risk_badge', {
+            level: S['risk_level_' + r.risk_level] || r.risk_level,
+            score: (r.score * 100).toFixed(0)
+        });
+        return '<span class="badge ' + cfg.cls + ' badge-pill ml-1" title="' + escapeHtml(title) + '">'
             + cfg.icon + ' ' + (r.score * 100).toFixed(0) + '%</span>';
     }
 
@@ -60,21 +159,24 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         var parts = [];
 
         // Alert sent indicator
-        parts.push('<span title="Alerta enviada el ' + formatDate(student.last_alert_sent) + '" '
+        parts.push('<span title="' + escapeHtml(fmt('teacher_alert_sent_on', formatDate(student.last_alert_sent))) + '" '
             + 'style="color:#6c757d;">📨 ' + formatDate(student.last_alert_sent) + '</span>');
 
         if (student.alert_responded) {
             var delay = student.alert_response_delay_min;
             var delayStr = delay < 60
-                ? delay + ' min'
-                : Math.round(delay / 60) + 'h';
-            parts.push('<span class="text-success" title="Respondió al bot en ' + delayStr + '">💬 ' + delayStr + '</span>');
+                ? fmt('teacher_alert_delay_minutes', delay)
+                : fmt('teacher_alert_delay_hours', Math.round(delay / 60));
+            parts.push('<span class="text-success" title="' + escapeHtml(fmt('teacher_alert_replied_in', delayStr)) + '">💬 '
+                + escapeHtml(delayStr) + '</span>');
         } else {
-            parts.push('<span class="text-warning" title="Todavía no respondió al bot">⏳ Sin respuesta</span>');
+            parts.push('<span class="text-warning" title="' + escapeHtml(S.teacher_alert_not_replied) + '">⏳ '
+                + escapeHtml(S.teacher_alert_no_reply) + '</span>');
         }
 
         if (student.moodle_accessed_after_alert) {
-            parts.push('<span class="text-success" title="Ingresó a Moodle después de la alerta">✅ Accedió a Moodle</span>');
+            parts.push('<span class="text-success" title="' + escapeHtml(S.teacher_alert_accessed_title) + '">✅ '
+                + escapeHtml(S.teacher_alert_accessed) + '</span>');
         }
 
         return parts.join(' · ');
@@ -88,8 +190,8 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
      * @param {HTMLElement} btn Alert button that triggered the action.
      */
     function sendAlert(userid, fullname, btn) {
-        var msg = prompt('Mensaje para ' + fullname + ' (dejá vacío para el mensaje por defecto):', '');
-        if (msg === null) { return; } // Cancelado
+        var msg = prompt(fmt('teacher_alert_prompt', fullname), '');
+        if (msg === null) { return; } // Cancelled.
 
         btn.disabled = true;
         btn.textContent = '…';
@@ -164,7 +266,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         alertBtn.id = 'saipa-alert-btn-' + student.userid;
         alertBtn.type = 'button';
         alertBtn.className = 'btn btn-sm ml-2 ' + (student.telegram_linked ? 'btn-outline-secondary' : 'd-none');
-        alertBtn.title = student.telegram_linked ? 'Enviar alerta por Telegram' : '';
+        alertBtn.title = student.telegram_linked ? S.teacher_alert_btn : '';
         alertBtn.textContent = '📨';
         alertBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -179,7 +281,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         var activitySpan = document.createElement('span');
         activitySpan.textContent = student.has_session
             ? formatDate(student.last_message)
-            : 'Sin actividad en chat';
+            : S.teacher_no_chat_activity;
         meta.appendChild(activitySpan);
 
         // Alert engagement indicator
@@ -201,7 +303,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         var badge = document.createElement('span');
         if (student.has_session && student.message_count > 0) {
             badge.className = 'badge badge-primary badge-pill';
-            badge.textContent = student.message_count + ' msgs';
+            badge.textContent = fmt('msgs_count', student.message_count);
         } else {
             badge.className = 'badge badge-light badge-pill text-muted';
             badge.textContent = '—';
@@ -230,7 +332,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
         if (otherBtn) { otherBtn.disabled = true; }
-        if (status) { status.textContent = isDemo ? 'Simulando…' : 'Calculando…'; }
+        if (status) { status.textContent = isDemo ? S.teacher_risk_simulating : S.teacher_risk_calculating; }
 
         Ajax.call([{
             methodname: 'local_saipa_get_course_risk',
@@ -248,11 +350,11 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                     if (r.risk_level === 'high') {
                         alertEl.classList.remove('btn-outline-secondary');
                         alertEl.classList.add('btn-warning');
-                        alertEl.title = '⚠️ Alto riesgo — Enviar alerta por Telegram';
+                        alertEl.title = S.teacher_alert_btn_high;
                     } else {
                         alertEl.classList.remove('btn-warning');
                         alertEl.classList.add('btn-outline-secondary');
-                        alertEl.title = 'Enviar alerta por Telegram';
+                        alertEl.title = S.teacher_alert_btn;
                     }
                 }
             });
@@ -268,12 +370,12 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             return result;
         }).fail(function(err) {
             Log.error('SAIPA risk error: ' + JSON.stringify(err));
-            if (status) { status.textContent = 'Error al calcular riesgo'; }
+            if (status) { status.textContent = S.teacher_risk_error; }
         }).always(function() {
             if (btn) { btn.disabled = false; }
             if (otherBtn) { otherBtn.disabled = false; }
-            if (btn && !isDemo) { btn.innerHTML = '&#128202; Calcular riesgo'; }
-            if (btn && isDemo) { btn.innerHTML = '&#127922; Simular'; }
+            if (btn && !isDemo) { btn.innerHTML = '&#128202; ' + escapeHtml(S.risk_button); }
+            if (btn && isDemo) { btn.innerHTML = '&#127922; ' + escapeHtml(S.risk_demo_button); }
         });
     }
 
@@ -299,7 +401,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             listEl.innerHTML = '';
 
             if (!result.students || result.students.length === 0) {
-                listEl.innerHTML = '<div class="text-muted p-3 text-center">No hay estudiantes inscriptos.</div>';
+                listEl.innerHTML = '<div class="text-muted p-3 text-center">' + escapeHtml(S.teacher_no_students) + '</div>';
             } else {
                 result.students.forEach(function(s) {
                     listEl.appendChild(renderStudentRow(s));
@@ -312,7 +414,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         }).fail(function(err) {
             Log.error('SAIPA teacher_dashboard get_student_list error: ' + JSON.stringify(err));
             var loadingEl = document.getElementById('saipa-student-list-loading');
-            if (loadingEl) { loadingEl.textContent = 'Error al cargar estudiantes.'; }
+            if (loadingEl) { loadingEl.textContent = S.teacher_students_load_error; }
         });
     }
 
@@ -337,7 +439,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         var meta = document.createElement('div');
         meta.className = 'text-muted small mb-1';
-        meta.textContent = (role === 'user' ? 'Estudiante' : 'SAIPA') + ' · ' + formatDate(timecreated);
+        meta.textContent = (role === 'user' ? S.teacher_conv_student : 'SAIPA') + ' · ' + formatDate(timecreated);
 
         var text = document.createElement('div');
         text.textContent = content;
@@ -365,7 +467,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         var msgContainer = document.getElementById('saipa-conversation-messages');
         msgContainer.innerHTML = '<div class="text-muted small text-center py-4">'
-            + '<div class="spinner-border spinner-border-sm mr-2" role="status"></div>Cargando...</div>';
+            + '<div class="spinner-border spinner-border-sm mr-2" role="status"></div>' + escapeHtml(S['core/loading']) + '</div>';
 
         Ajax.call([{
             methodname: 'local_saipa_get_student_history',
@@ -375,7 +477,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
             if (!result.messages || result.messages.length === 0) {
                 msgContainer.innerHTML = '<div class="text-muted p-3 text-center">'
-                    + 'Este estudiante aún no inició una conversación.</div>';
+                    + escapeHtml(S.teacher_conv_empty) + '</div>';
                 return result;
             }
 
@@ -388,7 +490,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         }).fail(function(err) {
             Log.error('SAIPA teacher_dashboard get_student_history error: ' + JSON.stringify(err));
-            msgContainer.innerHTML = '<div class="text-danger p-3">Error al cargar la conversación.</div>';
+            msgContainer.innerHTML = '<div class="text-danger p-3">' + escapeHtml(S.teacher_conv_load_error) + '</div>';
         });
     }
 
@@ -400,10 +502,10 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
      */
     function indexStatusBadge(status) {
         var map = {
-            ready:      '<span class="badge badge-success">✓ ready</span>',
-            indexing:   '<span class="badge badge-info">⟳ indexing</span>',
-            pending:    '<span class="badge badge-secondary">— pending</span>',
-            error:      '<span class="badge badge-danger">✗ error</span>',
+            ready:      '<span class="badge badge-success">✓ ' + escapeHtml(S.index_status_ready) + '</span>',
+            indexing:   '<span class="badge badge-info">⟳ ' + escapeHtml(S.index_status_indexing) + '</span>',
+            pending:    '<span class="badge badge-secondary">— ' + escapeHtml(S.index_status_pending) + '</span>',
+            error:      '<span class="badge badge-danger">✗ ' + escapeHtml(S.index_status_error) + '</span>',
         };
         return map[status] || '<span class="badge badge-light">' + status + '</span>';
     }
@@ -476,8 +578,12 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         var demoBtn = document.getElementById('saipa-demo-btn');
         if (demoBtn) { demoBtn.addEventListener('click', function() { _doRisk(true); }); }
 
-        loadCourseSummary();
-        loadStudentList();
+        // Render the summary and student list once the UI strings are available.
+        loadStrings().then(function() {
+            loadCourseSummary();
+            loadStudentList();
+            return null;
+        }).catch(Log.error);
         Log.debug('SAIPA: teacher dashboard initialised for course ' + courseId);
     }
 

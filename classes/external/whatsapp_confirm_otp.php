@@ -16,7 +16,7 @@
 
 /**
  * External web service: whatsapp_confirm_otp
- * Validates the OTP entered by the student && marks the phone as verified.
+ * Validates the OTP entered by the student and marks the phone as verified.
  * Called via AJAX from block_saipa after the student enters the OTP they received.
  *
  * @package    local_saipa
@@ -87,7 +87,7 @@ class whatsapp_confirm_otp extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'success' => new external_value(PARAM_BOOL, 'True if OTP is correct && phone is now verified'),
+            'success' => new external_value(PARAM_BOOL, 'True if OTP is correct and phone is now verified'),
             'phone'   => new external_value(PARAM_TEXT, 'Verified phone number', VALUE_OPTIONAL),
             'error'   => new external_value(PARAM_ALPHA, 'Error code: otp_invalid, otp_expired, no_pending_verification'),
         ]);

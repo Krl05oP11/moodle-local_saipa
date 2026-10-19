@@ -16,7 +16,7 @@
 
 /**
  * External web service: whatsapp_start_verify
- * Generates an OTP && asks the engine to send it via WhatsApp.
+ * Generates an OTP and asks the engine to send it via WhatsApp.
  * Called via AJAX from block_saipa when the student enters their phone number.
  *
  * @package    local_saipa

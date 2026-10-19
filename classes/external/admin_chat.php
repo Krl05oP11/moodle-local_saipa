@@ -16,7 +16,7 @@
 
 /**
  * External web service: admin_chat
- * Contextual chat for advisors && admins — explains dashboard metrics && SAIPA procedures.
+ * Contextual chat for advisors and admins — explains dashboard metrics and SAIPA procedures.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -42,7 +42,7 @@ class admin_chat extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'message' => new external_value(PARAM_TEXT, 'User message to the assistant'),
-            'context' => new external_value(PARAM_ALPHANUMEXT, 'Context: advisor || teacher', VALUE_DEFAULT, 'advisor'),
+            'context' => new external_value(PARAM_ALPHANUMEXT, 'Context: advisor or teacher', VALUE_DEFAULT, 'advisor'),
         ]);
     }
 
@@ -50,7 +50,7 @@ class admin_chat extends external_api {
      * Execute the web service.
      *
      * @param string $message User message to the assistant.
-     * @param string $context Context: advisor || teacher.
+     * @param string $context Context: advisor or teacher.
      */
     public static function execute(string $message, string $context = 'advisor'): array {
         global $CFG;
@@ -74,10 +74,7 @@ class admin_chat extends external_api {
         $result = local_saipa_engine_request('/chat/advisor', $payload, 30);
 
         if ($result === false || !isset($result['reply'])) {
-            return [
-                'reply' => 'El asistente no está disponible en este momento. '
-                    . 'Verificá que el motor de SAIPA esté en funcionamiento.',
-            ];
+            return ['reply' => get_string('admin_chat_unavailable', 'local_saipa')];
         }
 
         return ['reply' => (string) $result['reply']];

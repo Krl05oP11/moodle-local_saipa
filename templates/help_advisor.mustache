@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    {{! ── Tab 1: Resumen institucional ── }}
+    {{! ── Tab 1: Institution summary ── }}
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <strong>{{#str}} help_tab1_title, local_saipa {{/str}}</strong>
@@ -50,7 +50,7 @@
         </div>
     </div>
 
-    {{! ── Tab 2: ROI Riesgo ── }}
+    {{! ── Tab 2: Risk ROI ── }}
     <div class="card mb-4">
         <div class="card-header bg-danger text-white">
             <strong>{{#str}} help_tab2_title, local_saipa {{/str}}</strong>
@@ -86,7 +86,7 @@
         </div>
     </div>
 
-    {{! ── Tab 4: Controles ── }}
+    {{! ── Tab 4: Course controls ── }}
     <div class="card mb-4">
         <div class="card-header bg-warning">
             <strong>{{#str}} help_tab4_title, local_saipa {{/str}}</strong>
@@ -101,15 +101,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td><strong>{{#str}} ctrl_saipa_enabled, local_saipa {{/str}}</strong></td>
+                    <tr><td><strong>{{#str}} ctrl_col_saipa, local_saipa {{/str}}</strong></td>
                         <td>{{#str}} help_toggle_saipa, local_saipa {{/str}}</td></tr>
-                    <tr><td><strong>{{#str}} ctrl_chat_enabled, local_saipa {{/str}}</strong></td>
+                    <tr><td><strong>{{#str}} ctrl_col_chat, local_saipa {{/str}}</strong></td>
                         <td>{{#str}} help_toggle_chat, local_saipa {{/str}}</td></tr>
-                    <tr><td><strong>{{#str}} ctrl_risk_enabled, local_saipa {{/str}}</strong></td>
+                    <tr><td><strong>{{#str}} ctrl_col_risk, local_saipa {{/str}}</strong></td>
                         <td>{{#str}} help_toggle_risk, local_saipa {{/str}}</td></tr>
-                    <tr><td><strong>{{#str}} ctrl_alerts_enabled, local_saipa {{/str}}</strong></td>
+                    <tr><td><strong>{{#str}} ctrl_col_alerts, local_saipa {{/str}}</strong></td>
                         <td>{{#str}} help_toggle_alerts, local_saipa {{/str}}</td></tr>
-                    <tr><td><strong>{{#str}} ctrl_rag_enabled, local_saipa {{/str}}</strong></td>
+                    <tr><td><strong>{{#str}} ctrl_col_rag, local_saipa {{/str}}</strong></td>
                         <td>{{#str}} help_toggle_rag, local_saipa {{/str}}</td></tr>
                 </tbody>
             </table>
@@ -119,7 +119,7 @@
         </div>
     </div>
 
-    {{! ── Tab 5: Configuración ── }}
+    {{! ── Tab 5: Institution configuration ── }}
     <div class="card mb-4">
         <div class="card-header bg-secondary text-white">
             <strong>{{#str}} help_tab5_title, local_saipa {{/str}}</strong>
@@ -152,7 +152,7 @@
                     </tr>
                     <tr>
                         <td>{{#str}} cfg_retention, local_saipa {{/str}}</td>
-                        <td><code>730 días</code></td>
+                        <td><code>{{#str}} numdays, core, 730 {{/str}}</code></td>
                         <td>{{#str}} help_cfg_retention, local_saipa {{/str}}</td>
                     </tr>
                 </tbody>
@@ -164,7 +164,7 @@
     </div>
 
     <div class="text-center text-muted small mt-4">
-        SAIPA v0.5.0 &nbsp;·&nbsp; Schaller &amp; Ponce &nbsp;·&nbsp;
+        SAIPA v{{release}} &nbsp;·&nbsp; Schaller &amp; Ponce &nbsp;·&nbsp;
         <a href="{{#str}} help_support_url, local_saipa {{/str}}">{{#str}} help_support_link, local_saipa {{/str}}</a>
     </div>
 

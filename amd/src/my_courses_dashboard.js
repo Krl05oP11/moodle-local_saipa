@@ -8,7 +8,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log'], function(Ajax, Log) {
+define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
     'use strict';
 
@@ -181,8 +181,11 @@ define(['core/ajax', 'core/log'], function(Ajax, Log) {
             var errorDiv = document.getElementById('saipa-mc-error');
             if (spinner) { spinner.style.display = 'none'; }
             if (errorDiv) {
-                errorDiv.textContent = 'Error loading course data.';
-                errorDiv.style.display = '';
+                Str.get_string('mc_load_error', 'local_saipa').then(function(msg) {
+                    errorDiv.textContent = msg;
+                    errorDiv.style.display = '';
+                    return msg;
+                }).catch(Log.error);
             }
         });
     }

@@ -48,7 +48,7 @@ class risk_evaluation extends \core\task\scheduled_task {
      * Get name.
      */
     public function get_name(): string {
-        return get_string('pluginname', 'local_saipa') . ' — Risk Evaluation';
+        return get_string('task_risk_evaluation', 'local_saipa', get_string('pluginname', 'local_saipa'));
     }
 
     /**
@@ -315,6 +315,7 @@ class risk_evaluation extends \core\task\scheduled_task {
     /**
      * Sends a proactive Telegram message to each escalated student who has
      * a confirmed Telegram link, via the saipa-engine /telegram/notify endpoint.
+     * Each message is written in the student's own language.
      *
      * @param object $course   Course DB record
      * @param array  $newhigh [userid => fullname]
@@ -333,12 +334,11 @@ class risk_evaluation extends \core\task\scheduled_task {
             // Use first name only for a warmer, more personal tone.
             $firstname = explode(' ', trim($name))[0];
 
-            $message =
-                "🤖 Hola {$firstname}! SAIPA detectó que podrías necesitar un poco de apoyo " .
-                "en tu cursada de *{$coursename}*.\n\n" .
-                "Tu docente ya está al tanto y puede ayudarte. " .
-                "Si querés charlar o tenés alguna consulta sobre el curso, ¡escribime aquí! " .
-                "No estás solo/a. 💪";
+            $lang = $DB->get_field('user', 'lang', ['id' => $uid]) ?: current_language();
+            $message = get_string_manager()->get_string('notify_student_telegram', 'local_saipa', (object) [
+                'firstname' => $firstname,
+                'course'    => $coursename,
+            ], $lang);
 
             $response = local_saipa_engine_request('/telegram/notify', [
                 'telegram_id' => (int) $link->telegram_id,
@@ -354,7 +354,7 @@ class risk_evaluation extends \core\task\scheduled_task {
                 ));
             } else if (!empty($response['sent'])) {
                 mtrace(sprintf(
-                    '    📱 Telegram alerta enviada a %s (chat_id=%d)',
+                    '    📱 Telegram alert sent to %s (chat_id=%d)',
                     $name,
                     $link->telegram_id
                 ));
@@ -383,7 +383,7 @@ class risk_evaluation extends \core\task\scheduled_task {
             $context,
             'local/saipa:view',
             0,
-            'u.id, u.firstname, u.lastname, u.email'
+            'u.id, u.firstname, u.lastname, u.email, u.lang'
         );
 
         if (empty($teachers)) {
@@ -396,58 +396,51 @@ class risk_evaluation extends \core\task\scheduled_task {
             $studentlines[] = "  • {$name}";
         }
         $studentlist = implode("\n", $studentlines);
+        $studenthtml = implode('', array_map(fn($n) => "<li>{$n}</li>", $newhigh));
 
         $courseurl = (new \moodle_url(
             '/local/saipa/teacher.php',
             ['courseid' => $cid]
         ))->out(false);
 
-        $subject = sprintf('[SAIPA] Alerta de riesgo — %s', format_string($course->fullname));
-
-        $bodytext = sprintf(
-            "SAIPA detectó que los siguientes estudiantes escalaron a RIESGO ALTO en el curso \"%s\":\n\n%s\n\n" .
-            "Accedé al panel del docente para ver los detalles:\n%s\n\n" .
-            "Este mensaje fue generado automáticamente por SAIPA.",
-            format_string($course->fullname),
-            $studentlist,
-            $courseurl
-        );
-
-        $bodyhtml = sprintf(
-            '<p>SAIPA detectó que los siguientes estudiantes escalaron a <strong>🔴 RIESGO ALTO</strong> ' .
-            'en el curso <em>%s</em>:</p><ul>%s</ul>' .
-            '<p><a href="%s">Ver panel del docente →</a></p>' .
-            '<p style="color:#888;font-size:0.9em;">Mensaje generado automáticamente por SAIPA.</p>',
-            format_string($course->fullname),
-            implode('', array_map(fn($n) => "<li>{$n}</li>", $newhigh)),
-            $courseurl
-        );
+        $coursename = format_string($course->fullname);
 
         // Use a system user as sender (noreply).
         $sender = \core_user::get_noreply_user();
+        $sm     = get_string_manager();
 
         foreach ($teachers as $teacher) {
+            // Write the notification in the teacher's own language.
+            $lang = !empty($teacher->lang) ? $teacher->lang : current_language();
+
             $msg                     = new \core\message\message();
             $msg->component          = 'local_saipa';
             $msg->name               = 'risk_alert';
             $msg->userfrom           = $sender;
             $msg->userto             = $teacher;
-            $msg->subject            = $subject;
-            $msg->fullmessage        = $bodytext;
+            $msg->subject            = $sm->get_string('notify_teacher_subject', 'local_saipa', $coursename, $lang);
+            $msg->fullmessage        = $sm->get_string('notify_teacher_body', 'local_saipa', (object) [
+                'course'   => $coursename,
+                'students' => $studentlist,
+                'url'      => $courseurl,
+            ], $lang);
             $msg->fullmessageformat  = FORMAT_PLAIN;
-            $msg->fullmessagehtml    = $bodyhtml;
-            $msg->smallmessage       = sprintf(
-                'SAIPA: %d estudiante(s) en riesgo alto en %s',
-                count($newhigh),
-                format_string($course->fullname)
-            );
+            $msg->fullmessagehtml    = $sm->get_string('notify_teacher_body_html', 'local_saipa', (object) [
+                'course'   => $coursename,
+                'students' => $studenthtml,
+                'url'      => $courseurl,
+            ], $lang);
+            $msg->smallmessage       = $sm->get_string('notify_teacher_small', 'local_saipa', (object) [
+                'count'  => count($newhigh),
+                'course' => $coursename,
+            ], $lang);
             $msg->notification       = 1;
             $msg->contexturl         = $courseurl;
-            $msg->contexturlname     = 'Panel del docente';
+            $msg->contexturlname     = $sm->get_string('notify_teacher_contexturlname', 'local_saipa', null, $lang);
 
             message_send($msg);
 
-            mtrace(sprintf('    📧 Notificación enviada a %s', fullname($teacher)));
+            mtrace(sprintf('    📧 Notification sent to %s', fullname($teacher)));
         }
     }
 }

@@ -17,11 +17,11 @@
 /**
  * External web service: mark_alert_responded
  * Called by saipa-engine when a student sends any message to the Telegram bot.
- * Finds the most recent pending teacher_alert for this student && marks it
+ * Finds the most recent pending teacher_alert for this student and marks it
  * as responded, recording the delay since the alert was sent.
  *
  * Also checks if the student re-accessed Moodle after the alert (using
- * user_lastaccess) && stores that in the payload.
+ * user_lastaccess) and stores that in the payload.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -137,8 +137,8 @@ class mark_alert_responded extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'found'           => new external_value(PARAM_BOOL, 'True if a pending alert was found && marked'),
-            'delay_minutes'   => new external_value(PARAM_INT, 'Minutes between alert && student response'),
+            'found'           => new external_value(PARAM_BOOL, 'True if a pending alert was found and marked'),
+            'delay_minutes'   => new external_value(PARAM_INT, 'Minutes between alert and student response'),
             'moodle_accessed' => new external_value(PARAM_BOOL, 'True if student re-accessed Moodle after the alert'),
         ]);
     }

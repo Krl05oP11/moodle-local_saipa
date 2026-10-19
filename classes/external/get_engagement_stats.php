@@ -210,7 +210,7 @@ class get_engagement_stats extends external_api {
             ),
             'session_depth' => new external_multiple_structure(
                 new external_single_structure([
-                    'bucket' => new external_value(PARAM_TEXT, '1-3, 4-10, || 11+'),
+                    'bucket' => new external_value(PARAM_TEXT, '1-3, 4-10, or 11+'),
                     'count'  => new external_value(PARAM_INT, 'Number of sessions in this bucket'),
                 ])
             ),

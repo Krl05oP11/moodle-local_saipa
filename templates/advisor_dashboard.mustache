@@ -361,24 +361,25 @@
 </div>{{! /saipa-advisor }}
 
 {{! Floating Assistant Button + Chat Panel }}
-<button id="saipa-fab" class="saipa-fab" title="Asistente SAIPA" aria-label="Abrir Asistente SAIPA">
+<button id="saipa-fab" class="saipa-fab" title="{{#str}} adv_assistant_title, local_saipa {{/str}}"
+        aria-label="{{#str}} adv_assistant_open, local_saipa {{/str}}">
     <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA">
 </button>
 
 <div id="saipa-chat-panel" class="saipa-chat-panel" style="display:none;">
     <div class="saipa-chat-header">
         <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA" style="width:28px;height:28px;border-radius:50%;margin-right:8px;">
-        <span>Asistente SAIPA</span>
-        <button id="saipa-chat-close" class="saipa-chat-close" aria-label="Cerrar">&times;</button>
+        <span>{{#str}} adv_assistant_title, local_saipa {{/str}}</span>
+        <button id="saipa-chat-close" class="saipa-chat-close" aria-label="{{#str}} closebuttontitle, core {{/str}}">&times;</button>
     </div>
     <div id="saipa-chat-messages" class="saipa-chat-messages">
         <div class="saipa-msg saipa-msg--assistant">
-            <span>¡Hola! Soy el asistente de SAIPA. Podés preguntarme sobre las métricas del dashboard, los procedimientos del sistema o el estado de los alumnos. ¿En qué puedo ayudarte?</span>
+            <span>{{#str}} adv_assistant_greeting, local_saipa {{/str}}</span>
         </div>
     </div>
     <div class="saipa-chat-input-row">
         <input id="saipa-chat-input" type="text" class="form-control form-control-sm"
-               placeholder="Escribí tu consulta…" autocomplete="off">
+               placeholder="{{#str}} adv_assistant_placeholder, local_saipa {{/str}}" autocomplete="off">
         <button id="saipa-chat-send" class="btn btn-primary btn-sm ml-2">&#10148;</button>
     </div>
 </div>

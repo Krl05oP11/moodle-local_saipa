@@ -16,7 +16,7 @@
 
 /**
  * SAIPA — Advisor / Admin Dashboard.
- * Institution-wide analytics && controls (5-tab layout).
+ * Institution-wide analytics and controls (5-tab layout).
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>

@@ -16,7 +16,7 @@
 
 /**
  * External web service: chat
- * Sends a student message to saipa-engine && returns the AI reply.
+ * Sends a student message to saipa-engine and returns the AI reply.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -60,14 +60,14 @@ class chat extends external_api {
         require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $USER, $DB;
 
-        // Validate && normalise parameters.
+        // Validate and normalise parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'course_id'  => $courseid,
             'message'    => $message,
             'session_id' => $sessionid,
         ]);
 
-        // Require course context && chat capability.
+        // Require course context and chat capability.
         $context = \context_course::instance($params['course_id']);
         self::validate_context($context);
         require_capability('local/saipa:chat', $context);

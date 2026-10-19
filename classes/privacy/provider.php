@@ -357,7 +357,7 @@ class provider implements
     /**
      * Delete all data for the specified user in the specified contexts.
      *
-     * @param approved_contextlist $contextlist The approved contexts && user.
+     * @param approved_contextlist $contextlist The approved contexts and user.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
         global $DB;
@@ -386,7 +386,7 @@ class provider implements
     /**
      * Delete multiple users' data within a single context.
      *
-     * @param approved_userlist $userlist The approved users && context.
+     * @param approved_userlist $userlist The approved users and context.
      */
     public static function delete_data_for_users(approved_userlist $userlist): void {
         global $DB;

@@ -10,12 +10,91 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
+define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str, $) {
 
     'use strict';
 
     var loaded = {}; // Which tabs have been loaded already.
     var period = '30d';
+
+    // ── i18n ───────────────────────────────────────────────────────────────────
+    // Every UI string this module builds, keyed by lang key ('component/key' for core
+    // components, plain key for local_saipa). Values are the English fallback (identical
+    // to lang/en) shown until loadStrings() resolves. Placeholders ({$a}, {$a->x}) are
+    // left untouched by core/str when no parameter is passed and are filled by fmt().
+    var S = {
+        adv_assistant_error: 'Error connecting to the assistant.',
+        adv_assistant_no_reply: 'No reply.',
+        adv_error_controls: 'Error loading course controls.',
+        adv_error_engagement: 'Error loading engagement data.',
+        adv_error_risk: 'Error loading risk data.',
+        adv_funnel_alerted: 'Alerted',
+        adv_funnel_evaluated: 'Evaluated',
+        adv_funnel_reaccessed: 'Re-engaged',
+        adv_funnel_responded: 'Responded',
+        adv_heatmap_cell: '{$a->day} {$a->hour}:00 — {$a->count} messages',
+        adv_improved_no: 'No',
+        adv_improved_yes: 'Yes',
+        cfg_save_error: 'Error saving configuration.',
+        cfg_saved_ok: 'Configuration saved.',
+        ctrl_reindex_title: 'Re-index course {$a}',
+        ctrl_save_error: 'Error saving settings.',
+        ctrl_saved: 'Saved.',
+        error_detail: 'Error: {$a}',
+        msgs_count: '{$a} msgs',
+        risk_level_high: 'High',
+        risk_level_low: 'Low',
+        risk_level_medium: 'Medium',
+        summary_risk: 'High risk',
+        'calendar/sun': 'Sun',
+        'calendar/mon': 'Mon',
+        'calendar/tue': 'Tue',
+        'calendar/wed': 'Wed',
+        'calendar/thu': 'Thu',
+        'calendar/fri': 'Fri',
+        'calendar/sat': 'Sat'
+    };
+
+    /**
+     * Resolve every string in S against the current language in one batch request.
+     * Failures are logged and leave the English fallbacks in place, so the returned
+     * promise always resolves.
+     *
+     * @returns {Promise} Resolved once S holds the best available strings.
+     */
+    function loadStrings() {
+        var keys = Object.keys(S);
+        return Str.get_strings(keys.map(function(k) {
+            var parts = k.split('/');
+            return parts.length === 2 ? {key: parts[1], component: parts[0]} : {key: k, component: 'local_saipa'};
+        })).then(function(values) {
+            keys.forEach(function(k, i) { S[k] = values[i]; });
+            return values;
+        }).catch(function(err) {
+            Log.error('SAIPA advisor: string load error: ' + err);
+        });
+    }
+
+    /**
+     * Get a string from S with its placeholders filled in.
+     *
+     * @param {string} key Key in S.
+     * @param {string|number|Object} [a] Value for {$a}, or an object whose properties fill {$a->prop}.
+     * @returns {string} The resolved string.
+     */
+    function fmt(key, a) {
+        var str = S[key];
+        if (a !== null && typeof a === 'object') {
+            Object.keys(a).forEach(function(prop) {
+                str = str.split('{$a->' + prop + '}').join(String(a[prop]));
+            });
+            return str;
+        }
+        if (typeof a !== 'undefined') {
+            str = str.split('{$a}').join(String(a));
+        }
+        return str;
+    }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -34,14 +113,15 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
     }
 
     /**
-     * Format a Unix timestamp as a short es-AR date (dd/mm/yy).
+     * Format a Unix timestamp as a short date (2-digit day, month and year) in the page language.
      *
      * @param {number} ts Unix timestamp in seconds.
      * @returns {string} Formatted date, or a dash when ts is falsy.
      */
     function fmtDate(ts) {
         if (!ts) { return '—'; }
-        return new Date(ts * 1000).toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: '2-digit'});
+        return new Date(ts * 1000).toLocaleDateString(document.documentElement.lang || undefined,
+            {day: '2-digit', month: '2-digit', year: '2-digit'});
     }
 
     /**
@@ -181,13 +261,13 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             var usrData = (r.trend_new_users || []).map(function(d) { return d.count; });
 
             showContent('summary'); // Must come BEFORE canvas draws (offsetWidth = 0 on hidden divs).
-            drawSparkline('spark-messages', msgLabels, msgData, 'Mensajes', '#007bff');
-            drawSparkline('spark-users', usrLabels, usrData, 'Usuarios', '#28a745');
+            drawSparkline('spark-messages', msgLabels, msgData, 'messages', '#007bff');
+            drawSparkline('spark-users', usrLabels, usrData, 'users', '#28a745');
             return r;
         }).fail(function(err) {
             Log.error('SAIPA advisor summary error: ' + JSON.stringify(err));
             var msg = (err && err.message) ? err.message : JSON.stringify(err);
-            showError('summary', 'Error: ' + msg);
+            showError('summary', fmt('error_detail', msg));
         }).always(function() {
             globalSpinner(false);
         });
@@ -205,11 +285,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         if (!container) { return; }
 
         var steps = [
-            {label: 'Evaluados', value: f.evaluated, color: '#6c757d'},
-            {label: 'Riesgo alto', value: f.identified_high, color: '#dc3545'},
-            {label: 'Alertados', value: f.received_alert, color: '#fd7e14'},
-            {label: 'Respondieron', value: f.responded_alert, color: '#ffc107'},
-            {label: 'Re-ingresaron', value: f.accessed_after, color: '#28a745'},
+            {label: S.adv_funnel_evaluated, value: f.evaluated, color: '#6c757d'},
+            {label: S.summary_risk, value: f.identified_high, color: '#dc3545'},
+            {label: S.adv_funnel_alerted, value: f.received_alert, color: '#fd7e14'},
+            {label: S.adv_funnel_responded, value: f.responded_alert, color: '#ffc107'},
+            {label: S.adv_funnel_reaccessed, value: f.accessed_after, color: '#28a745'},
         ];
 
         var maxVal = Math.max(1, f.evaluated);
@@ -230,7 +310,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             var lbl = document.createElement('div');
             lbl.className = 'text-muted mt-1 text-center';
             lbl.style.fontSize = '0.7rem';
-            lbl.innerHTML = '<strong>' + s.value + '</strong><br/>' + s.label;
+            lbl.innerHTML = '<strong>' + s.value + '</strong><br/>' + escapeHtml(s.label);
 
             col.appendChild(bar);
             col.appendChild(lbl);
@@ -259,9 +339,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         ctx.clearRect(0, 0, w, h);
 
         var series = [
-            {data: rows.map(function(r) { return r.pct_high * 100; }), color: '#dc3545', label: 'Alto'},
-            {data: rows.map(function(r) { return r.pct_medium * 100; }), color: '#ffc107', label: 'Medio'},
-            {data: rows.map(function(r) { return r.pct_low * 100; }), color: '#28a745', label: 'Bajo'}
+            {data: rows.map(function(r) { return r.pct_high * 100; }), color: '#dc3545', label: S.risk_level_high},
+            {data: rows.map(function(r) { return r.pct_medium * 100; }), color: '#ffc107', label: S.risk_level_medium},
+            {data: rows.map(function(r) { return r.pct_low * 100; }), color: '#28a745', label: S.risk_level_low}
         ];
         var stepX = iw / Math.max(rows.length - 1, 1);
 
@@ -336,8 +416,8 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
 
         rows.forEach(function(r) {
             var improved = r.improved
-                ? '<span class="text-success">&#9650; Sí</span>'
-                : '<span class="text-danger">&#9660; No</span>';
+                ? '<span class="text-success">&#9650; ' + escapeHtml(S.adv_improved_yes) + '</span>'
+                : '<span class="text-danger">&#9660; ' + escapeHtml(S.adv_improved_no) + '</span>';
             var tr = document.createElement('tr');
             tr.innerHTML = ''
                 + '<td>' + r.userid + '</td>'
@@ -368,7 +448,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             return r;
         }).fail(function(err) {
             Log.error('SAIPA advisor risk error: ' + JSON.stringify(err));
-            showError('risk', 'Error loading risk data.');
+            showError('risk', S.adv_error_risk);
         }).always(function() {
             globalSpinner(false);
         });
@@ -394,9 +474,9 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             if (r.count > maxVal) { maxVal = r.count; }
         });
 
-        // Argentine week: Dom=0, Lun=1 ... Sáb=6
-        // Backend sends ISO DOW: 0=Lun...6=Dom → remap visual = (iso+1)%7
-        var days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        // Rows start on Sunday: Sun=0, Mon=1 ... Sat=6.
+        // Backend sends ISO DOW: 0=Mon...6=Sun → remap visual = (iso+1)%7
+        var days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map(function(d) { return S['calendar/' + d]; });
         var visualGrid = {};
         Object.keys(grid).forEach(function(isoDow) {
             var vis = (parseInt(isoDow, 10) + 1) % 7;
@@ -417,7 +497,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             container.appendChild(hdr);
         }
 
-        // Data rows (Dom → Sáb)
+        // Data rows (Sun → Sat)
         for (var d = 0; d < 7; d++) {
             var rowLabel = document.createElement('div');
             rowLabel.className = 'hm-row-label';
@@ -432,7 +512,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
                 cell.style.background = count === 0
                     ? '#f0f0f0'
                     : 'rgba(0, 123, 255, ' + (count / maxVal).toFixed(2) + ')';
-                cell.title = days[d] + ' ' + String(col).padStart(2, '0') + ':00 — ' + count + ' mensajes';
+                cell.title = fmt('adv_heatmap_cell', {day: days[d], hour: String(col).padStart(2, '0'), count: count});
                 container.appendChild(cell);
             }
         }
@@ -459,7 +539,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         ctx.clearRect(0, 0, w, h);
 
         var data = depths.map(function(d) { return d.count; });
-        var labels = depths.map(function(d) { return d.bucket + ' msgs'; });
+        var labels = depths.map(function(d) { return fmt('msgs_count', d.bucket); });
         var max = Math.max.apply(null, data) || 1;
         var gap = iw / depths.length;
         var barW = gap * 0.65;
@@ -526,7 +606,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             return r;
         }).fail(function(err) {
             Log.error('SAIPA advisor engagement error: ' + JSON.stringify(err));
-            showError('engagement', 'Error loading engagement data.');
+            showError('engagement', S.adv_error_engagement);
         }).always(function() {
             globalSpinner(false);
         });
@@ -551,13 +631,13 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             args: args
         }])[0].then(function(r) {
             if (statusEl) {
-                statusEl.textContent = r.success ? 'Guardado.' : ('Error: ' + r.message);
+                statusEl.textContent = r.success ? S.ctrl_saved : fmt('error_detail', r.message);
                 setTimeout(function() { statusEl.textContent = ''; }, 2000);
             }
             return r;
         }).fail(function(err) {
             Log.error('SAIPA set_course_settings error: ' + JSON.stringify(err));
-            if (statusEl) { statusEl.textContent = 'Error al guardar.'; }
+            if (statusEl) { statusEl.textContent = S.ctrl_save_error; }
         });
     }
 
@@ -593,7 +673,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
         btn.type = 'button';
         btn.className = 'btn btn-sm btn-outline-secondary';
         btn.textContent = '⟳';
-        btn.title = 'Re-index course ' + courseid;
+        btn.title = fmt('ctrl_reindex_title', courseid);
         btn.addEventListener('click', function() {
             btn.disabled = true;
             btn.textContent = '…';
@@ -681,7 +761,7 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             return r;
         }).fail(function(err) {
             Log.error('SAIPA advisor controls error: ' + JSON.stringify(err));
-            showError('controls', 'Error loading course controls.');
+            showError('controls', S.adv_error_controls);
         }).always(function() {
             globalSpinner(false);
         });
@@ -735,12 +815,12 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
                 args: args
             }])[0].then(function(r) {
                 if (statusEl) {
-                    statusEl.textContent = r.success ? 'Configuración guardada.' : ('Error: ' + r.message);
+                    statusEl.textContent = r.success ? S.cfg_saved_ok : fmt('error_detail', r.message);
                 }
                 return r;
             }).fail(function(err) {
                 Log.error('SAIPA save_institution_config error: ' + JSON.stringify(err));
-                if (statusEl) { statusEl.textContent = 'Error al guardar.'; }
+                if (statusEl) { statusEl.textContent = S.cfg_save_error; }
             }).always(function() {
                 if (saveBtn) { saveBtn.disabled = false; }
             });
@@ -799,8 +879,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
             onTabShow($(e.target).data('tab'));
         });
 
-        // Load the first (active) tab immediately.
-        onTabShow('summary');
+        // Load the first (active) tab as soon as the UI strings are available.
+        loadStrings().then(function() {
+            onTabShow('summary');
+            return null;
+        }).catch(Log.error);
 
         // ── Floating Assistant (FAB) ────────────────────────────────────────
         var fab = document.getElementById('saipa-fab');
@@ -857,11 +940,11 @@ define(['core/ajax', 'core/log', 'jquery'], function(Ajax, Log, $) {
                 args: {message: text, context: 'advisor'}
             }])[0].then(function(r) {
                 if (typingEl && typingEl.parentNode) { typingEl.parentNode.removeChild(typingEl); }
-                appendMsg(r.reply || 'Sin respuesta.', 'assistant');
+                appendMsg(r.reply || S.adv_assistant_no_reply, 'assistant');
                 return r;
             }).fail(function(err) {
                 if (typingEl && typingEl.parentNode) { typingEl.parentNode.removeChild(typingEl); }
-                appendMsg('Error al conectar con el asistente.', 'assistant');
+                appendMsg(S.adv_assistant_error, 'assistant');
                 Log.error('SAIPA FAB chat error: ' + JSON.stringify(err));
             }).always(function() {
                 if (sendBtn) { sendBtn.disabled = false; }

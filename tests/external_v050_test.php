@@ -636,7 +636,7 @@ final class external_v050_test extends \advanced_testcase {
 
         $this->assertArrayHasKey('reply', $r);
         $this->assertNotEmpty($r['reply']);
-        $this->assertStringContainsString('asistente', $r['reply']);
+        $this->assertEquals(get_string('admin_chat_unavailable', 'local_saipa'), $r['reply']);
     }
 
     /**

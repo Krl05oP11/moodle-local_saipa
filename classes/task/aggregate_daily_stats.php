@@ -20,7 +20,7 @@
  * Runs at 03:00 daily (after risk_evaluation at 02:00).
  * Produces one row per (courseid, stat_date) in saipa_daily_stats.
  * This pre-aggregation ensures the advisor dashboard loads fast even
- * with hundreds of courses && thousands of messages.
+ * with hundreds of courses and thousands of messages.
  *
  * Enable via Site admin → Server → Scheduled tasks → SAIPA Aggregate Daily Stats.
  *
@@ -40,7 +40,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
      * Get name.
      */
     public function get_name(): string {
-        return get_string('pluginname', 'local_saipa') . ' — Aggregate Daily Stats';
+        return get_string('task_aggregate_daily_stats', 'local_saipa', get_string('pluginname', 'local_saipa'));
     }
 
     /**
@@ -82,7 +82,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
     }
 
     /**
-     * Aggregates one course's data for the given day window && upserts into saipa_daily_stats.
+     * Aggregates one course's data for the given day window and upserts into saipa_daily_stats.
      *
      * @param int $cid            Course ID.
      * @param int $daystart      Unix timestamp of day start (midnight UTC).
@@ -145,7 +145,7 @@ class aggregate_daily_stats extends \core\task\scheduled_task {
         $positivefeedback = (int) ($fbcounts->pos ?? 0);
         $negativefeedback = (int) ($fbcounts->neg ?? 0);
 
-        // Alerts sent && responded.
+        // Alerts sent and responded.
         $alertcounts = $DB->get_record_sql(
             'SELECT
                COUNT(*) AS sent,

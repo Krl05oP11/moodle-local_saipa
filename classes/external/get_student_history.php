@@ -107,7 +107,7 @@ class get_student_history extends external_api {
             'student_name' => new external_value(PARAM_TEXT, 'Student full name'),
             'messages'     => new external_multiple_structure(
                 new external_single_structure([
-                    'role'        => new external_value(PARAM_TEXT, 'user || assistant'),
+                    'role'        => new external_value(PARAM_TEXT, 'user or assistant'),
                     'content'     => new external_value(PARAM_RAW, 'Message content'),
                     'timecreated' => new external_value(PARAM_INT, 'Timestamp'),
                 ])

@@ -153,7 +153,7 @@ function local_saipa_risk_level(float $score): string {
 }
 
 /**
- * Strips HTML tags && decodes entities for plain-text indexing.
+ * Strips HTML tags and decodes entities for plain-text indexing.
  *
  * @param  string $html  Raw HTML content from Moodle
  * @return string        Clean plain text
@@ -241,7 +241,7 @@ function local_saipa_items_for_module(string $modulename, int $instanceid, int $
 
 /**
  * Extracts all indexable items for an entire course.
- * Includes the course summary && all supported module types.
+ * Includes the course summary and all supported module types.
  *
  * @param  int   $courseid
  * @return array Flat list of ['source' => string, 'text' => string]

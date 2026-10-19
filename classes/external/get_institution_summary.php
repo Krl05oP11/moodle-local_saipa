@@ -16,7 +16,7 @@
 
 /**
  * External web service: get_institution_summary
- * Returns institution-wide KPIs && trend sparklines for the advisor dashboard.
+ * Returns institution-wide KPIs and trend sparklines for the advisor dashboard.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>

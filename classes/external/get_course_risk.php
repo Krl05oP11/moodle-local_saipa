@@ -19,7 +19,7 @@
  * Computes dropout risk for all enrolled students in a course.
  * Calls saipa-engine /analytics/risk/batch, which in turn calls
  * local_saipa_get_student_features for each student.
- * Saves results to saipa_risk_scores && returns them.
+ * Saves results to saipa_risk_scores and returns them.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -49,22 +49,22 @@ class get_course_risk extends external_api {
      */
     private static function demo_results(): array {
         return [
-            // 0: 🟢 low — estudiante muy activo
+            // 0: 🟢 low — very active student
             ['score' => 0.08,
              'factors' => ['last_access_days' => 0.007, 'submission_rate' => 0.028, 'quiz_avg_score' => 0.013]],
-            // 1: 🟢 low — activo, sin usar SAIPA aún
+            // 1: 🟢 low — active, not using SAIPA yet
             ['score' => 0.14,
              'factors' => ['submission_rate' => 0.041, 'login_count_7d' => 0.019, 'completion_rate' => 0.011]],
-            // 2: 🟡 medium — actividad decreciente
+            // 2: 🟡 medium — declining activity
             ['score' => 0.51,
              'factors' => ['last_access_days' => 0.124, 'login_count_7d' => 0.076, 'submission_rate' => 0.058]],
-            // 3: 🟡 medium — pocas entregas
+            // 3: 🟡 medium — few submissions
             ['score' => 0.63,
              'factors' => ['submission_rate' => 0.143, 'last_access_days' => 0.098, 'quiz_avg_score' => 0.065]],
-            // 4: 🔴 high — ausente hace 3 semanas
+            // 4: 🔴 high — absent for 3 weeks
             ['score' => 0.87,
              'factors' => ['last_access_days' => 0.321, 'submission_rate' => 0.248, 'login_count_7d' => 0.076]],
-            // 5: 🔴 high — sin actividad en el curso
+            // 5: 🔴 high — no activity in the course
             ['score' => 0.96,
              'factors' => ['last_access_days' => 0.396, 'submission_rate' => 0.276, 'completion_rate' => 0.043]],
         ];
@@ -222,7 +222,7 @@ class get_course_risk extends external_api {
                 new external_single_structure([
                     'userid'     => new external_value(PARAM_INT, 'Student user ID'),
                     'score'      => new external_value(PARAM_FLOAT, 'Dropout risk 0.0–1.0'),
-                    'risk_level' => new external_value(PARAM_TEXT, '"low", "medium" || "high"'),
+                    'risk_level' => new external_value(PARAM_TEXT, '"low", "medium" or "high"'),
                     'factors'    => new external_value(PARAM_RAW, 'JSON object of top contributing features'),
                 ])
             ),

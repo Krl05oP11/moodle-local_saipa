@@ -67,7 +67,7 @@ class save_feedback extends external_api {
         require_capability('local/saipa:chat', $context);
 
         if (!in_array($params['rating'], [1, -1], true)) {
-            throw new \invalid_parameter_exception('rating must be 1 || -1');
+            throw new \invalid_parameter_exception('rating must be 1 or -1');
         }
 
         // Verify the message belongs to a session owned by this user in this course.

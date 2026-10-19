@@ -129,7 +129,7 @@ if ($action === 'testbot') {
     $resp = (string) $response->getBody();
     $tg = json_decode($resp, true);
     if (!$tg || empty($tg['ok'])) {
-        $desc = $tg['description'] ?? 'Invalid response';
+        $desc = $tg['description'] ?? get_string('wizard_err_invalid_response', 'local_saipa');
         echo json_encode(['error' => get_string('wizard_err_telegram_api', 'local_saipa', $desc)]);
         die();
     }
