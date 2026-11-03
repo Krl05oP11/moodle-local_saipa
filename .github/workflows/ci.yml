@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:14
+        image: postgres:${{ matrix.pgsql }}
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -29,13 +29,25 @@ jobs:
       matrix:
         php: ['8.1', '8.2', '8.3']
         moodle-branch: ['MOODLE_404_STABLE', 'MOODLE_405_STABLE']
-        # Moodle 5.0 needs PHP 8.2 or later. The plugins declare 4.4 and 4.5; 5.0 runs here
-        # so that a change that breaks it shows up (Marketplace review MMR-462 tested on 5.x).
+        pgsql: ['14']
+        # Moodle 5.0 needs PHP 8.2; 5.2 and 5.3 need PHP 8.3. PostgreSQL follows each branch's
+        # minimum: 14 up to 5.0, then 15, 16 and 17 (admin/environment.xml).
         include:
           - php: '8.2'
             moodle-branch: 'MOODLE_500_STABLE'
+            pgsql: '14'
           - php: '8.3'
             moodle-branch: 'MOODLE_500_STABLE'
+            pgsql: '14'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_501_STABLE'
+            pgsql: '15'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_502_STABLE'
+            pgsql: '16'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+            pgsql: '17'
 
     steps:
       - name: Check out plugin
