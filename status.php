@@ -50,7 +50,7 @@ $PAGE->set_pagelayout('admin');
  * @param string $detail Optional detail shown under the label.
  * @param bool $warning Show a warning badge instead of an error when not OK.
  */
-function saipa_status_row(string $label, bool $ok, string $detail = '', bool $warning = false): string {
+function local_saipa_status_row(string $label, bool $ok, string $detail = '', bool $warning = false): string {
     if ($ok) {
         $icon  = '<span class="badge badge-success" style="font-size:1rem">&#10003; OK</span>';
     } else if ($warning) {
@@ -70,7 +70,7 @@ function saipa_status_row(string $label, bool $ok, string $detail = '', bool $wa
  *
  * @param string $title Section title.
  */
-function saipa_section_header(string $title): string {
+function local_saipa_section_header(string $title): string {
     return '<tr class="table-secondary"><th colspan="2" class="py-2 px-3">' . htmlspecialchars($title) . '</th></tr>';
 }
 
@@ -364,13 +364,13 @@ echo $OUTPUT->header();
 
 // Build the status-table body in PHP so the markup below is a single string.
 // Inline PHP islands in HTML also make the file-docblock sniff misfire.
-$tablerows = saipa_section_header(get_string('status_section_engine', 'local_saipa'));
+$tablerows = local_saipa_section_header(get_string('status_section_engine', 'local_saipa'));
 foreach ($checks as $c) {
-    $tablerows .= saipa_status_row($c[0], $c[1], $c[2], $c[3]);
+    $tablerows .= local_saipa_status_row($c[0], $c[1], $c[2], $c[3]);
 }
-$tablerows .= saipa_section_header(get_string('status_section_moodle', 'local_saipa'));
+$tablerows .= local_saipa_section_header(get_string('status_section_moodle', 'local_saipa'));
 foreach ($adminchecks as $c) {
-    $tablerows .= saipa_status_row($c[0], $c[1], $c[2], $c[3]);
+    $tablerows .= local_saipa_status_row($c[0], $c[1], $c[2], $c[3]);
 }
 
 $settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out();
