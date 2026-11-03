@@ -163,6 +163,30 @@ function local_saipa_clean_html(string $html): string {
 }
 
 /**
+ * Module types whose content goes into the course's chat index.
+ *
+ * @return string[] Module names.
+ */
+function local_saipa_indexed_modules(): array {
+    return ['page', 'assign', 'label', 'forum', 'book'];
+}
+
+/**
+ * Whether a course module's content may go into the chat index, which every student of the course can query.
+ *
+ * Hidden modules, modules in hidden sections and modules being deleted stay out.
+ *
+ * @param  cm_info $cm Course module from get_fast_modinfo().
+ * @return bool
+ */
+function local_saipa_cm_is_indexable(cm_info $cm): bool {
+    return in_array($cm->modname, local_saipa_indexed_modules(), true)
+        && $cm->visible
+        && $cm->get_section_info()->visible
+        && empty($cm->deletioninprogress);
+}
+
+/**
  * Extracts indexable items for a single module instance.
  * Returns array of ['source' => string, 'text' => string].
  *
@@ -225,7 +249,12 @@ function local_saipa_items_for_module(string $modulename, int $instanceid, int $
                 if ($introtext !== '') {
                     $items[] = ['source' => 'book:' . $book->id . ':' . $book->name, 'text' => $introtext];
                 }
-                $chapters = $DB->get_records('book_chapters', ['bookid' => $book->id], 'pagenum ASC', 'id,title,content');
+                $chapters = $DB->get_records(
+                    'book_chapters',
+                    ['bookid' => $book->id, 'hidden' => 0],
+                    'pagenum ASC',
+                    'id,title,content'
+                );
                 foreach ($chapters as $ch) {
                     $chtext = local_saipa_clean_html($ch->title . ' ' . $ch->content);
                     if ($chtext !== '') {
@@ -241,7 +270,7 @@ function local_saipa_items_for_module(string $modulename, int $instanceid, int $
 
 /**
  * Extracts all indexable items for an entire course.
- * Includes the course summary and all supported module types.
+ * Includes the course summary and every supported module students can see.
  *
  * @param  int   $courseid
  * @return array Flat list of ['source' => string, 'text' => string]
@@ -259,11 +288,10 @@ function local_saipa_items_for_course(int $courseid): array {
         }
     }
 
-    // All supported module types.
-    foreach (['page', 'assign', 'label', 'forum', 'book'] as $modname) {
-        $records = $DB->get_records($modname, ['course' => $courseid], '', 'id');
-        foreach ($records as $rec) {
-            $items = array_merge($items, local_saipa_items_for_module($modname, $rec->id, $courseid));
+    // The supported modules students can see, from the course's cached module info.
+    foreach (get_fast_modinfo($courseid)->get_cms() as $cm) {
+        if (local_saipa_cm_is_indexable($cm)) {
+            $items = array_merge($items, local_saipa_items_for_module($cm->modname, (int) $cm->instance, $courseid));
         }
     }
 

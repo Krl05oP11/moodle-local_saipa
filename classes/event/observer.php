@@ -16,7 +16,7 @@
 
 /**
  * Event observers for local_saipa.
- * Auto-indexes mod_page content when a page is created or updated.
+ * Queues the indexing of a module's content when the module is created or updated.
  *
  * @package    local_saipa
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
@@ -24,8 +24,6 @@
  */
 
 namespace local_saipa\event;
-
-
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/local/saipa/lib.php');
@@ -36,73 +34,19 @@ require_once($CFG->dirroot . '/local/saipa/lib.php');
 class observer {
     /**
      * Handles course_module_created and course_module_updated events.
-     * Indexes content for supported module types: page, assign, label, forum, book.
+     *
+     * Observers run while the teacher saves the activity, so this only queues
+     * \local_saipa\task\index_module; the task reads the content and calls the engine.
      *
      * @param \core\event\base $event The triggered event.
      */
     public static function course_module_updated(\core\event\base $event): void {
-        global $DB;
-
-        $supported = ['page', 'assign', 'label', 'forum', 'book'];
-        $modulename = $event->other['modulename'] ?? '';
-
-        if (!in_array($modulename, $supported, true)) {
+        if (!in_array($event->other['modulename'] ?? '', local_saipa_indexed_modules(), true)) {
             return;
         }
-
-        $cmid      = $event->objectid;
-        $courseid = (int) $event->courseid;
-
-        $cm = $DB->get_record('course_modules', ['id' => $cmid], 'instance', IGNORE_MISSING);
-        if (!$cm) {
-            return;
-        }
-
-        $items = local_saipa_items_for_module($modulename, (int) $cm->instance, $courseid);
-        if (empty($items)) {
-            return;
-        }
-
-        $totalchunks = 0;
-        $haserror    = false;
-
-        foreach ($items as $item) {
-            $response = local_saipa_engine_request('/index', [
-                'course_id' => $courseid,
-                'content'   => $item['text'],
-                'source'    => $item['source'],
-            ], 120);
-
-            if (isset($response['error'])) {
-                debugging('SAIPA auto-index error [' . $item['source'] . ']: ' . $response['error'], DEBUG_DEVELOPER);
-                $haserror = true;
-            } else {
-                $totalchunks += (int) ($response['chunk_count'] ?? 1);
-            }
-        }
-
-        if ($haserror && $totalchunks === 0) {
-            return;
-        }
-
-        // Upsert saipa_course_index.
-        $now    = time();
-        $record = $DB->get_record('local_saipa_course_index', ['courseid' => $courseid]);
-        if ($record) {
-            $record->last_indexed  = $now;
-            $record->chunk_count   = $record->chunk_count + $totalchunks;
-            $record->status        = 'ready';
-            $record->timemodified  = $now;
-            $DB->update_record('local_saipa_course_index', $record);
-        } else {
-            $DB->insert_record('local_saipa_course_index', (object) [
-                'courseid'     => $courseid,
-                'last_indexed' => $now,
-                'chunk_count'  => $totalchunks,
-                'status'       => 'ready',
-                'timecreated'  => $now,
-                'timemodified' => $now,
-            ]);
-        }
+        $task = new \local_saipa\task\index_module();
+        $task->set_custom_data(['cmid' => (int) $event->objectid, 'courseid' => (int) $event->courseid]);
+        // The same module saved twice before cron runs is indexed once.
+        \core\task\manager::queue_adhoc_task($task, true);
     }
 }
