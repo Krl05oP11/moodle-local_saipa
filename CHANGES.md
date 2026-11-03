@@ -41,7 +41,10 @@ items marked "audit" come from our own review of every web service afterwards.
 #### Added
 - Course backup and restore of SAIPA's data (issue 3). Deleting a course, or its
   content before a restore, deletes SAIPA's data about it.
-- Moodle 5.0 jobs in the CI.
+- Supports Moodle 4.4 to 5.3 (`$plugin->supported = [404, 503]`). The CI runs
+  every branch from 4.4 to 5.3, each with its minimum PostgreSQL.
+- Behat checks that every advisor dashboard tab opens and loads its data
+  (issue 6) on each of those branches.
 
 #### Changed
 - Advisor dashboard tabs work with Bootstrap 5 (Moodle 5.x) as well as 4 (issue 6).
