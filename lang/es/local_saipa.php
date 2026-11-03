@@ -312,16 +312,13 @@ $string['settings:engine_url']             = 'URL del motor SAIPA';
 $string['settings:engine_url_desc']        = 'URL base del servicio saipa-engine, sin barra final (ej. https://saipa-engine.example.edu o http://localhost:8052). Dejalo vacío para deshabilitar las funciones de IA hasta desplegar el motor.';
 $string['settings:heading_engine']         = 'Conexión con el motor SAIPA';
 $string['settings:heading_messaging']          = 'Canales de mensajería';
-$string['settings:heading_messaging_desc']     = 'Seleccioná por cuáles aplicaciones SAIPA va a contactar a los estudiantes. '
-    . 'Telegram requiere configurar TELEGRAM_BOT_TOKEN en el .env del motor. '
-    . 'WhatsApp requiere Evolution API configurada y conectada.';
+$string['settings:heading_messaging_desc']     = 'Seleccioná por cuáles aplicaciones SAIPA va a contactar a los estudiantes. Telegram requiere configurar TELEGRAM_BOT_TOKEN en el .env del motor. WhatsApp requiere Evolution API configurada y conectada.';
 $string['settings:heading_whatsapp']       = 'Configuración de WhatsApp';
 $string['settings:messaging_channel']          = 'Canal de mensajería activo';
 $string['settings:messaging_channel_desc']     = 'Elegí qué canales de mensajería van a estar disponibles para los estudiantes en el bloque SAIPA.';
 $string['settings:status_page'] = 'SAIPA — Estado de la instalación';
 $string['settings:telegram_bot_username']      = 'Usuario del bot de Telegram (sin @)';
-$string['settings:telegram_bot_username_desc'] = 'El nombre de usuario del bot de Telegram sin el arroba (ej. saipa_bot). '
-    . 'Se usa para construir el enlace de vinculación.';
+$string['settings:telegram_bot_username_desc'] = 'El nombre de usuario del bot de Telegram sin el arroba (ej. saipa_bot). Se usa para construir el enlace de vinculación.';
 $string['settings:twilio_from']            = 'Número de origen WhatsApp (Twilio)';
 $string['settings:twilio_from_desc']       = 'El número emisor habilitado para WhatsApp, en el formato que exige Twilio (whatsapp:+<número>). Usá el número del Sandbox de Twilio para pruebas, o tu propio número de WhatsApp Business aprobado en producción.';
 $string['settings:twilio_sid']             = 'SID de cuenta Twilio';

@@ -312,16 +312,13 @@ $string['settings:engine_url']        = 'URL do motor SAIPA';
 $string['settings:engine_url_desc']   = 'URL base do serviço saipa-engine, sem barra final (ex. https://saipa-engine.example.edu ou http://localhost:8052). Deixe em branco para desabilitar os recursos de IA até que o motor seja implantado.';
 $string['settings:heading_engine']    = 'Conexão com o motor SAIPA';
 $string['settings:heading_messaging']          = 'Canais de Mensagens';
-$string['settings:heading_messaging_desc']     = 'Escolha quais aplicativos de mensagens o SAIPA usa para contatar os alunos. '
-    . 'O Telegram requer TELEGRAM_BOT_TOKEN no .env do motor. '
-    . 'O WhatsApp requer uma instância da Evolution API conectada.';
+$string['settings:heading_messaging_desc']     = 'Escolha quais aplicativos de mensagens o SAIPA usa para contatar os alunos. O Telegram requer TELEGRAM_BOT_TOKEN no .env do motor. O WhatsApp requer uma instância da Evolution API conectada.';
 $string['settings:heading_whatsapp']  = 'Configuração do WhatsApp';
 $string['settings:messaging_channel']          = 'Canal de mensagens ativo';
 $string['settings:messaging_channel_desc']     = 'Selecione quais canais de mensagens os alunos podem vincular a partir do bloco SAIPA.';
 $string['settings:status_page'] = 'SAIPA — Status da Instalação';
 $string['settings:telegram_bot_username']      = 'Usuário do bot do Telegram (sem @)';
-$string['settings:telegram_bot_username_desc'] = 'O nome de usuário do bot do Telegram, sem o @. '
-    . 'Usado para montar o link direto exibido aos alunos.';
+$string['settings:telegram_bot_username_desc'] = 'O nome de usuário do bot do Telegram, sem o @. Usado para montar o link direto exibido aos alunos.';
 $string['settings:twilio_from']       = 'Número de origem do WhatsApp (Twilio)';
 $string['settings:twilio_from_desc']  = 'O número remetente habilitado para WhatsApp, no formato exigido pelo Twilio (whatsapp:+<número>). Use o número do Sandbox do Twilio para testes, ou o seu próprio número aprovado do WhatsApp Business em produção.';
 $string['settings:twilio_sid']        = 'SID da conta Twilio';

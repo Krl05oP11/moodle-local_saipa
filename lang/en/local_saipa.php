@@ -312,16 +312,13 @@ $string['settings:engine_url']        = 'SAIPA Engine URL';
 $string['settings:engine_url_desc']   = 'Base URL of the saipa-engine service, without a trailing slash (e.g. https://saipa-engine.example.edu or http://localhost:8052). Leave empty to disable all AI features until the engine is deployed.';
 $string['settings:heading_engine']    = 'SAIPA Engine Connection';
 $string['settings:heading_messaging']          = 'Messaging Channels';
-$string['settings:heading_messaging_desc']     = 'Choose which messaging apps SAIPA uses to reach students. '
-    . 'Telegram requires TELEGRAM_BOT_TOKEN in the engine .env. '
-    . 'WhatsApp requires a connected Evolution API instance.';
+$string['settings:heading_messaging_desc']     = 'Choose which messaging apps SAIPA uses to reach students. Telegram requires TELEGRAM_BOT_TOKEN in the engine .env. WhatsApp requires a connected Evolution API instance.';
 $string['settings:heading_whatsapp']  = 'WhatsApp Configuration';
 $string['settings:messaging_channel']          = 'Active messaging channel';
 $string['settings:messaging_channel_desc']     = 'Select which messaging channels students can link from the SAIPA block.';
 $string['settings:status_page'] = 'SAIPA — Installation Status';
 $string['settings:telegram_bot_username']      = 'Telegram bot username (without @)';
-$string['settings:telegram_bot_username_desc'] = 'The Telegram bot username without the @ sign (e.g. saipa_bot). '
-    . 'Used to build the deep link shown to students.';
+$string['settings:telegram_bot_username_desc'] = 'The Telegram bot username without the @ sign (e.g. saipa_bot). Used to build the deep link shown to students.';
 $string['settings:twilio_from']       = 'Twilio WhatsApp From Number';
 $string['settings:twilio_from_desc']  = 'The WhatsApp-enabled sender number, in Twilio\'s required format (whatsapp:+<number>). Use the Twilio Sandbox number for testing, or your own approved WhatsApp Business number in production.';
 $string['settings:twilio_sid']        = 'Twilio Account SID';
