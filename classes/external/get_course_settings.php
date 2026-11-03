@@ -53,41 +53,36 @@ class get_course_settings extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:advisor', $context);
 
-        // Get all courses that have SAIPA activity.
-        $sql = 'SELECT DISTINCT c.id AS courseid, c.fullname, c.shortname
+        // Courses with SAIPA activity, with their settings and index status, in one query.
+        // Both joined tables have one row per course at most (unique courseid).
+        $sql = "SELECT c.id AS courseid, c.fullname, c.shortname,
+                       cs.id AS settingsid, cs.saipa_enabled, cs.chat_enabled, cs.risk_enabled,
+                       cs.alerts_enabled, cs.rag_enabled,
+                       ci.status AS index_status, ci.last_indexed
                   FROM {course} c
-                  JOIN {local_saipa_sessions} s ON s.courseid = c.id
-                 ORDER BY c.fullname';
-        $courses = $DB->get_records_sql($sql);
-
-        // Get existing settings rows.
-        $settingsmap = [];
-        $rows = $DB->get_records('local_saipa_course_settings');
-        foreach ($rows as $row) {
-            $settingsmap[(int) $row->courseid] = $row;
-        }
+             LEFT JOIN {local_saipa_course_settings} cs ON cs.courseid = c.id
+             LEFT JOIN {local_saipa_course_index} ci ON ci.courseid = c.id
+                 WHERE EXISTS (SELECT 1 FROM {local_saipa_sessions} s WHERE s.courseid = c.id)
+              ORDER BY c.fullname";
+        $rs = $DB->get_recordset_sql($sql);
 
         $result = [];
-        foreach ($courses as $course) {
-            $cid = (int) $course->courseid;
-            $s   = $settingsmap[$cid] ?? null;
-
-            // Get index status.
-            $idx = $DB->get_record('local_saipa_course_index', ['courseid' => $cid]);
-
+        foreach ($rs as $row) {
+            $hassettings = !empty($row->settingsid);
             $result[] = [
-                'courseid'       => $cid,
-                'coursename'     => $course->fullname,
-                'shortname'      => $course->shortname,
-                'saipa_enabled'  => $s ? (bool) $s->saipa_enabled : true,
-                'chat_enabled'   => $s ? (bool) $s->chat_enabled : true,
-                'risk_enabled'   => $s ? (bool) $s->risk_enabled : true,
-                'alerts_enabled' => $s ? (bool) $s->alerts_enabled : true,
-                'rag_enabled'    => $s ? (bool) $s->rag_enabled : true,
-                'index_status'   => $idx ? $idx->status : 'pending',
-                'last_indexed'   => $idx ? (int) $idx->last_indexed : 0,
+                'courseid'       => (int) $row->courseid,
+                'coursename'     => $row->fullname,
+                'shortname'      => $row->shortname,
+                'saipa_enabled'  => $hassettings ? (bool) $row->saipa_enabled : true,
+                'chat_enabled'   => $hassettings ? (bool) $row->chat_enabled : true,
+                'risk_enabled'   => $hassettings ? (bool) $row->risk_enabled : true,
+                'alerts_enabled' => $hassettings ? (bool) $row->alerts_enabled : true,
+                'rag_enabled'    => $hassettings ? (bool) $row->rag_enabled : true,
+                'index_status'   => $row->index_status ?? 'pending',
+                'last_indexed'   => (int) ($row->last_indexed ?? 0),
             ];
         }
+        $rs->close();
 
         return ['courses' => $result];
     }
