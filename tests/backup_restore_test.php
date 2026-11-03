@@ -90,9 +90,10 @@ final class backup_restore_test extends \advanced_testcase {
      * Backs up the course and restores it into a new course.
      *
      * @param bool $users Whether the backup includes user data.
-     * @return int Id of the new course.
+     * @param int|null $targetcourseid Restore into this course after deleting its content, instead of a new course.
+     * @return int Id of the course restored into.
      */
-    private function backup_and_restore(bool $users): int {
+    private function backup_and_restore(bool $users, ?int $targetcourseid = null): int {
         global $CFG, $USER;
         $CFG->keeptempdirectoriesonbackup = true;
 
@@ -109,15 +110,25 @@ final class backup_restore_test extends \advanced_testcase {
         $backupid = $bc->get_backupid();
         $bc->destroy();
 
-        $newcourseid = \restore_dbops::create_new_course('Restored', 'restored' . (int) $users, $this->course->category);
+        if ($targetcourseid) {
+            // Restore into this course deleting its contents first: the controller deletes the content.
+            $newcourseid = $targetcourseid;
+        } else {
+            $newcourseid = \restore_dbops::create_new_course('Restored', 'restored' . (int) $users, $this->course->category);
+        }
         $rc = new \restore_controller(
             $backupid,
             $newcourseid,
             \backup::INTERACTIVE_NO,
             \backup::MODE_GENERAL,
             $USER->id,
-            \backup::TARGET_NEW_COURSE
+            $targetcourseid ? \backup::TARGET_EXISTING_DELETING : \backup::TARGET_NEW_COURSE
         );
+        if ($targetcourseid) {
+            // Into an existing course, Moodle restores course-level plugin data (the course
+            // structure step) only with "Overwrite course configuration".
+            $rc->get_plan()->get_setting('overwrite_conf')->set_value(true);
+        }
         $this->assertTrue($rc->execute_precheck());
         $rc->execute_plan();
         $rc->destroy();
@@ -167,5 +178,42 @@ final class backup_restore_test extends \advanced_testcase {
         $this->assertFalse($DB->record_exists('local_saipa_sessions', ['courseid' => $newcourseid]));
         $this->assertFalse($DB->record_exists('local_saipa_risk_scores', ['courseid' => $newcourseid]));
         $this->assertFalse($DB->record_exists('local_saipa_risk_history', ['courseid' => $newcourseid]));
+    }
+
+    /**
+     * Deleting a course's content removes SAIPA's data about it, and only about it.
+     */
+    public function test_content_deletion_removes_course_data(): void {
+        global $DB;
+        $other = $this->getDataGenerator()->create_course();
+        $DB->insert_record('local_saipa_risk_scores', (object) [
+            'userid' => $this->student->id, 'courseid' => $other->id, 'score' => 0.1, 'risk_level' => 'low',
+            'timecomputed' => time(),
+        ]);
+
+        remove_course_contents($this->course->id, false);
+
+        foreach (
+            ['local_saipa_sessions', 'local_saipa_risk_scores', 'local_saipa_risk_history',
+                'local_saipa_course_settings'] as $table
+        ) {
+            $this->assertFalse($DB->record_exists($table, ['courseid' => $this->course->id]), $table);
+        }
+        $this->assertEquals(0, $DB->count_records('local_saipa_messages'));
+        $this->assertEquals(0, $DB->count_records('local_saipa_feedback'));
+        $this->assertTrue($DB->record_exists('local_saipa_risk_scores', ['courseid' => $other->id]));
+    }
+
+    /**
+     * Restoring into the same course after deleting its content leaves the data once, not twice.
+     */
+    public function test_restore_into_course_deleting_content(): void {
+        global $DB;
+        $this->backup_and_restore(true, $this->course->id);
+
+        $this->assertEquals(1, $DB->count_records('local_saipa_sessions', ['courseid' => $this->course->id]));
+        $this->assertEquals(2, $DB->count_records('local_saipa_messages'));
+        $this->assertEquals(1, $DB->count_records('local_saipa_course_settings', ['courseid' => $this->course->id]));
+        $this->assertEquals(1, $DB->count_records('local_saipa_risk_history', ['courseid' => $this->course->id]));
     }
 }

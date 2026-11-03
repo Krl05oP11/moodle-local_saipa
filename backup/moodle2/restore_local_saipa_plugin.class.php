@@ -25,10 +25,12 @@
 /**
  * Restores what backup_local_saipa_plugin saved into the target course.
  *
- * Users are mapped to the restored ones; data of users that are not restored is skipped.
- * When restoring into an existing course, the course's own settings, sessions and current
- * risk scores win: settings are kept, messages join the user's existing session, and a
- * user's existing risk score is not replaced.
+ * Users are mapped to the restored ones; data of users that are not restored is skipped, together
+ * with everything below it (a skipped session's messages and ratings).
+ * When restoring into an existing course (Moodle does it only with "Overwrite course
+ * configuration"), the course's own settings, sessions and current risk scores win: settings are
+ * kept, messages join the user's existing session, and a user's existing risk score is not
+ * replaced. With "delete contents first", local_saipa_delete_course_data() has already emptied them.
  */
 class restore_local_saipa_plugin extends restore_local_plugin {
     /**
@@ -73,6 +75,7 @@ class restore_local_saipa_plugin extends restore_local_plugin {
      * A user's chat session in the course.
      *
      * @param array $data Element data.
+     * @return int|null restore_structure_step::SKIP_ALL_CHILDREN when the user is not restored.
      */
     public function process_local_saipa_session($data) {
         global $DB;
@@ -80,7 +83,8 @@ class restore_local_saipa_plugin extends restore_local_plugin {
         $oldid = $data->id;
         $userid = $this->get_mappingid('user', $data->userid);
         if (!$userid) {
-            return;
+            // Without this, the messages would attach to the previous session restored.
+            return restore_structure_step::SKIP_ALL_CHILDREN;
         }
         $courseid = $this->task->get_courseid();
         $existing = $DB->get_field('local_saipa_sessions', 'id', ['userid' => $userid, 'courseid' => $courseid], IGNORE_MULTIPLE);
@@ -102,6 +106,7 @@ class restore_local_saipa_plugin extends restore_local_plugin {
      * A message of a restored session.
      *
      * @param array $data Element data.
+     * @return int|null restore_structure_step::SKIP_ALL_CHILDREN when the session was not restored.
      */
     public function process_local_saipa_message($data) {
         global $DB;
@@ -109,7 +114,7 @@ class restore_local_saipa_plugin extends restore_local_plugin {
         $oldid = $data->id;
         $sessionid = $this->get_new_parentid('local_saipa_session');
         if (!$sessionid) {
-            return;
+            return restore_structure_step::SKIP_ALL_CHILDREN;
         }
         $newid = $DB->insert_record('local_saipa_messages', (object) [
             'sessionid'   => $sessionid,

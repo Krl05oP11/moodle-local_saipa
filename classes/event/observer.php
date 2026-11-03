@@ -49,4 +49,13 @@ class observer {
         // The same module saved twice before cron runs is indexed once.
         \core\task\manager::queue_adhoc_task($task, true);
     }
+
+    /**
+     * Handles course_content_deleted: the course is being deleted, or emptied before a restore.
+     *
+     * @param \core\event\course_content_deleted $event The triggered event.
+     */
+    public static function course_content_deleted(\core\event\course_content_deleted $event): void {
+        local_saipa_delete_course_data((int) $event->courseid);
+    }
 }

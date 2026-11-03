@@ -297,3 +297,26 @@ function local_saipa_items_for_course(int $courseid): array {
 
     return $items;
 }
+
+/**
+ * Deletes all of SAIPA's data about a course.
+ *
+ * Called when the course's content is deleted (course deletion, or "delete contents" before a
+ * restore). The engine's index of the course is not touched: it lives outside Moodle.
+ *
+ * @param int $courseid Course id.
+ */
+function local_saipa_delete_course_data(int $courseid): void {
+    global $DB;
+    $sessions = "SELECT id FROM {local_saipa_sessions} WHERE courseid = :courseid";
+    $messages = "SELECT id FROM {local_saipa_messages} WHERE sessionid IN ($sessions)";
+    $params = ['courseid' => $courseid];
+    $DB->delete_records_select('local_saipa_feedback', "messageid IN ($messages)", $params);
+    $DB->delete_records_select('local_saipa_messages', "sessionid IN ($sessions)", $params);
+    foreach (
+        ['local_saipa_sessions', 'local_saipa_risk_scores', 'local_saipa_risk_history', 'local_saipa_course_settings',
+            'local_saipa_course_index', 'local_saipa_daily_stats'] as $table
+    ) {
+        $DB->delete_records($table, ['courseid' => $courseid]);
+    }
+}

@@ -40,4 +40,8 @@ $observers = [
         'internal'    => false,
         'priority'    => 0,
     ],
+    [
+        'eventname'   => '\core\event\course_content_deleted',
+        'callback'    => '\local_saipa\event\observer::course_content_deleted',
+    ],
 ];
