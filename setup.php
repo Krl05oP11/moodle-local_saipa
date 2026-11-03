@@ -518,7 +518,7 @@ echo $OUTPUT->header();
             </div>
             <div class="req-value">
               <?php
-                $blockinstalled = $DB->record_exists('config_plugins', ['plugin' => 'block_saipa', 'name' => 'version']);
+                $blockinstalled = get_config('block_saipa', 'version') !== false;
                 echo $blockinstalled
                   ? '<span class="text-success">' . get_string('wizard_req_block_installed', 'local_saipa') . '</span>'
                   : '<span class="text-warning">' .
