@@ -887,8 +887,16 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
             });
         }
 
-        // Bootstrap tab events — must use jQuery because shown.bs.tab is a jQuery custom event.
-        $('#saipa-adv-tabs a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        // Tab events. Moodle 4.4/4.5 ship Bootstrap 4, which fires shown.bs.tab as a jQuery event;
+        // Moodle 5.x ships Bootstrap 5, which fires it as a native DOM event. Listen to both:
+        // onTabShow() ignores a tab that is already loaded.
+        var tablinks = document.querySelectorAll('#saipa-adv-tabs [data-tab]');
+        tablinks.forEach(function(link) {
+            link.addEventListener('shown.bs.tab', function() {
+                onTabShow(link.dataset.tab);
+            });
+        });
+        $(tablinks).on('shown.bs.tab', function(e) {
             onTabShow($(e.target).data('tab'));
         });
 
