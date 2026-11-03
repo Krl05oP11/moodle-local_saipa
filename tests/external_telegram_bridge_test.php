@@ -223,4 +223,24 @@ final class external_telegram_bridge_test extends \advanced_testcase {
         $this->expectException(\require_login_exception::class);
         \local_saipa\external\telegram_unlink_by_id::execute($this->telegramid);
     }
+
+    /**
+     * The session's course is returned only while the student can still chat there.
+     */
+    public function test_telegram_get_session_drops_course_after_unenrolment(): void {
+        global $DB;
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($this->student->id, $course->id, 'student');
+        $DB->insert_record('local_saipa_sessions', (object) [
+            'userid' => $this->student->id, 'courseid' => $course->id,
+            'contextid' => \context_course::instance($course->id)->id, 'timecreated' => time(), 'timemodified' => time(),
+        ]);
+        $this->setUser($this->enginebridge);
+        $this->assertEquals($course->id, \local_saipa\external\telegram_get_session::execute($this->telegramid)['course_id']);
+
+        $enrol = enrol_get_plugin('manual');
+        $instance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual']);
+        $enrol->unenrol_user($instance, $this->student->id);
+        $this->assertSame(0, \local_saipa\external\telegram_get_session::execute($this->telegramid)['course_id']);
+    }
 }

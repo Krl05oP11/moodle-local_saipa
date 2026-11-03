@@ -78,17 +78,22 @@ class telegram_get_session extends external_api {
         $user       = \core_user::get_user($link->userid, "id, {$namefields}", MUST_EXIST);
         $fullname   = fullname($user);
 
-        // Find the most recently active SAIPA session for this user.
-        $session = $DB->get_record_sql(
-            "SELECT s.courseid FROM {local_saipa_sessions} s
+        // The course of the user's most recent SAIPA session, as long as they can still chat there:
+        // a student removed from a course must not keep getting its material through Telegram.
+        $sessions = $DB->get_records_sql(
+            "SELECT s.id, s.courseid FROM {local_saipa_sessions} s
               WHERE s.userid = :uid
-              ORDER BY s.timemodified DESC",
-            ['uid' => $link->userid],
-            0, // Limitfrom.
-            1   // Limitnum.
+              ORDER BY s.timemodified DESC, s.id DESC",
+            ['uid' => $link->userid]
         );
-
-        $courseid = $session ? (int) $session->courseid : 0;
+        $courseid = 0;
+        foreach ($sessions as $session) {
+            $coursecontext = \context_course::instance($session->courseid, IGNORE_MISSING);
+            if ($coursecontext && is_enrolled($coursecontext, $link->userid, 'local/saipa:chat', true)) {
+                $courseid = (int) $session->courseid;
+                break;
+            }
+        }
 
         return [
             'linked'    => true,

@@ -61,10 +61,10 @@ class telegram_generate_link extends external_api {
         $now     = time();
         $expires = $now + (15 * MINSECS);   // 15-minute window
 
-        // Generate HMAC token: HMAC-SHA256(userid|expires, hmac_secret) encoded as hex.
-        $secret  = get_config('local_saipa', 'telegram_hmac_secret');
-        $payload = $USER->id . '|' . $expires;
-        $token   = hash_hmac('sha256', $payload, $secret);
+        // Single-use random token (64 hex characters, the most a Telegram /start payload takes).
+        // It used to be an HMAC of the user id and the expiry time, which is guessable when the
+        // site has no telegram_hmac_secret (set only by upgrade.php, never on a fresh install).
+        $token = bin2hex(random_bytes(32));
 
         // Upsert the link record (one row per user).
         $existing = $DB->get_record('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
