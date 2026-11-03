@@ -30,8 +30,17 @@ items marked "audit" come from our own review of every web service afterwards.
 - The chat index leaves out hidden modules, modules in hidden sections and hidden
   book chapters (audit).
 
+- Only active students can be reached (no co-teachers, no suspended enrolments).
+- Telegram messages are HTML (the engine's parse_mode): values are escaped and the
+  strings use `<b>`; a `<` or `&` in a name or in the teacher's text used to make
+  Telegram reject the message.
+- The alert cooldown and the WhatsApp code limits hold under parallel requests
+  (locks); codes are compared with `hash_equals()`.
+- Capabilities declare their `riskbitmask`.
+
 #### Added
-- Course backup and restore of SAIPA's data (issue 3).
+- Course backup and restore of SAIPA's data (issue 3). Deleting a course, or its
+  content before a restore, deletes SAIPA's data about it.
 - Moodle 5.0 jobs in the CI.
 
 #### Changed
@@ -41,6 +50,7 @@ items marked "audit" come from our own review of every web service afterwards.
 - The setup wizard's script is an AMD module (`setup_wizard`), and the setup and
   advisor CSS moved to `styles.css`, scoped to each page (issues 9 and 12).
 - No whole-table reads in lib.php, get_course_settings and get_my_courses (issue 10).
+- Visits to the course are read through the site's SQL log reader.
 - Global functions carry the `local_saipa_` prefix (issue 1); block_saipa's
   version is read with get_config() (issue 2); GPL boilerplate in every template
   and AMD source (issue 8); language strings are single literals (issue 14).
