@@ -203,6 +203,45 @@ $cfgcooldown  = get_config('local_saipa', 'alert_cooldown_hours') ?: '24';
 $cfgriskon   = get_config('local_saipa', 'risk_eval_enabled') ?? '1';
 $cfgragon    = get_config('local_saipa', 'rag_global_enabled') ?? '1';
 
+// Strings and labels for amd/src/setup_wizard.js, passed in the wizard's data-config attribute.
+$wizardconfig = [
+    'url'      => (new moodle_url('/local/saipa/setup.php'))->out(false),
+    'strings'  => [
+        'enter_token'       => get_string('wizard_js_enter_token', 'local_saipa'),
+        'validating'        => get_string('wizard_js_validating', 'local_saipa'),
+        'bot_verified'      => get_string('wizard_js_bot_verified', 'local_saipa'),
+        'username_autofill' => get_string('wizard_js_username_autofill', 'local_saipa'),
+        'error'             => get_string('wizard_js_error', 'local_saipa'),
+        'invalid_token'     => get_string('wizard_js_invalid_token', 'local_saipa'),
+        'network_error'     => get_string('wizard_js_network_error', 'local_saipa'),
+        'connecting'        => get_string('wizard_js_connecting', 'local_saipa'),
+        'url_empty'         => get_string('wizard_js_url_empty', 'local_saipa'),
+        'engine_reachable'  => get_string('wizard_js_engine_reachable', 'local_saipa'),
+        'engine_version'    => get_string('wizard_js_engine_version', 'local_saipa'),
+        'uptime'            => get_string('wizard_js_uptime', 'local_saipa'),
+        'success'           => get_string('wizard_js_success', 'local_saipa'),
+        'not_configured'    => get_string('wizard_js_not_configured', 'local_saipa'),
+        'connection_failed' => get_string('wizard_js_connection_failed', 'local_saipa'),
+        'unknown_error'     => get_string('wizard_js_unknown_error', 'local_saipa'),
+        'troubleshooting'   => get_string('wizard_js_troubleshooting', 'local_saipa'),
+        'ts_running'        => get_string('wizard_js_ts_running', 'local_saipa'),
+        'ts_url'            => get_string('wizard_js_ts_url', 'local_saipa'),
+        'ts_docker'         => get_string('wizard_js_ts_docker', 'local_saipa'),
+        'ts_token'          => get_string('wizard_js_ts_token', 'local_saipa'),
+    ],
+    'modes'    => [
+        'local_ollama' => get_string('wizard_js_mode_local', 'local_saipa'),
+        'cloud_api'    => get_string('wizard_js_mode_cloud', 'local_saipa'),
+        'custom'       => get_string('wizard_js_mode_custom', 'local_saipa'),
+    ],
+    'channels' => [
+        'none'     => get_string('wizard_js_ch_none', 'local_saipa'),
+        'telegram' => get_string('wizard_js_ch_telegram', 'local_saipa'),
+        'whatsapp' => get_string('wizard_js_ch_whatsapp', 'local_saipa'),
+        'both'     => get_string('wizard_js_ch_both', 'local_saipa'),
+    ],
+];
+
 // Detect server environment.
 $phpverok    = version_compare(PHP_VERSION, '8.1.0', '>=');
 $moodleverok = ($CFG->version >= 2024042200);
@@ -217,7 +256,7 @@ echo $OUTPUT->header();
 // file docblock is present at the top of the file. Re-enabled at end of file.
 ?>
 
-<div class="spwiz mt-4">
+<div class="spwiz mt-4" data-config="<?= s(json_encode($wizardconfig, JSON_UNESCAPED_UNICODE)) ?>">
 
 <?php if ($done) : ?>
   <!-- Completion screen (after save + redirect) -->
@@ -327,7 +366,7 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-end">
-        <button class="btn btn-primary px-5" onclick="spwizGoto(2)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="2"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 1 -->
 
@@ -532,10 +571,10 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-3">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(1)">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="1">
             <?= get_string('wizard_btn_back', 'local_saipa') ?>
         </button>
-        <button class="btn btn-primary px-5" id="req-next-btn" disabled onclick="spwizGoto(3)">
+        <button class="btn btn-primary px-5" id="req-next-btn" disabled data-spwiz-goto="3">
             <?= get_string('wizard_btn_next', 'local_saipa') ?>
         </button>
       </div>
@@ -584,10 +623,10 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(2)">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="2">
             <?= get_string('wizard_btn_back', 'local_saipa') ?>
         </button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(4)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="4"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 3 -->
 
@@ -628,10 +667,10 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(3)">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="3">
             <?= get_string('wizard_btn_back', 'local_saipa') ?>
         </button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(5)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="5"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 4 -->
 
@@ -705,7 +744,7 @@ echo $OUTPUT->header();
               <input type="password" class="form-control" id="sp-tg-token"
                      placeholder="<?= get_string('wizard_tg_token_placeholder', 'local_saipa') ?>"
                      autocomplete="off">
-              <button class="btn btn-outline-primary" type="button" onclick="spTestBot()">
+              <button class="btn btn-outline-primary" type="button" data-spwiz-action="testbot">
                 <?= get_string('wizard_btn_validate', 'local_saipa') ?>
               </button>
             </div>
@@ -738,10 +777,10 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(4)">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="4">
             <?= get_string('wizard_btn_back', 'local_saipa') ?>
         </button>
-        <button class="btn btn-primary px-5" onclick="spwizGoto(6)"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="6"><?= get_string('wizard_btn_next', 'local_saipa') ?></button>
       </div>
     </div><!-- /step 5 -->
 
@@ -836,14 +875,14 @@ echo $OUTPUT->header();
       </div>
 
       <div class="d-flex justify-content-between mt-2">
-        <button class="btn btn-outline-secondary" onclick="spwizGoto(5)">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="5">
             <?= get_string('wizard_btn_back', 'local_saipa') ?>
         </button>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary" id="sp-retry-btn" style="display:none"
-                  onclick="spRunTest()"><?= get_string('wizard_btn_retry', 'local_saipa') ?></button>
+                  data-spwiz-action="runtest"><?= get_string('wizard_btn_retry', 'local_saipa') ?></button>
           <button class="btn btn-success px-5" id="sp-save-btn" style="display:none"
-                  onclick="spSave()"><?= get_string('wizard_btn_save_finish', 'local_saipa') ?></button>
+                  data-spwiz-action="save"><?= get_string('wizard_btn_save_finish', 'local_saipa') ?></button>
         </div>
       </div>
     </div><!-- /step 6 -->
@@ -892,348 +931,9 @@ echo $OUTPUT->header();
 <?php endif; ?>
 </div><!-- /spwiz -->
 
-<script>
-(function () {
-    'use strict';
-
-    var L = <?= json_encode([
-        'enter_token'       => get_string('wizard_js_enter_token', 'local_saipa'),
-        'validating'        => get_string('wizard_js_validating', 'local_saipa'),
-        'bot_verified'      => get_string('wizard_js_bot_verified', 'local_saipa'),
-        'username_autofill' => get_string('wizard_js_username_autofill', 'local_saipa'),
-        'error'             => get_string('wizard_js_error', 'local_saipa'),
-        'invalid_token'     => get_string('wizard_js_invalid_token', 'local_saipa'),
-        'network_error'     => get_string('wizard_js_network_error', 'local_saipa'),
-        'connecting'        => get_string('wizard_js_connecting', 'local_saipa'),
-        'url_empty'         => get_string('wizard_js_url_empty', 'local_saipa'),
-        'engine_reachable'  => get_string('wizard_js_engine_reachable', 'local_saipa'),
-        'engine_version'    => get_string('wizard_js_engine_version', 'local_saipa'),
-        'uptime'            => get_string('wizard_js_uptime', 'local_saipa'),
-        'success'           => get_string('wizard_js_success', 'local_saipa'),
-        'not_configured'    => get_string('wizard_js_not_configured', 'local_saipa'),
-        'connection_failed' => get_string('wizard_js_connection_failed', 'local_saipa'),
-        'unknown_error'     => get_string('wizard_js_unknown_error', 'local_saipa'),
-        'troubleshooting'   => get_string('wizard_js_troubleshooting', 'local_saipa'),
-        'ts_running'        => get_string('wizard_js_ts_running', 'local_saipa'),
-        'ts_url'            => get_string('wizard_js_ts_url', 'local_saipa'),
-        'ts_docker'         => get_string('wizard_js_ts_docker', 'local_saipa'),
-        'ts_token'          => get_string('wizard_js_ts_token', 'local_saipa'),
-    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-
-    var currentStep = 1;
-    var healthOk    = false;
-
-    var modeLabels = {
-        local_ollama: <?= json_encode(
-            get_string('wizard_js_mode_local', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
-        cloud_api:    <?= json_encode(
-            get_string('wizard_js_mode_cloud', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
-        custom:       <?= json_encode(
-            get_string('wizard_js_mode_custom', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>
-    };
-    var channelLabels = {
-        none:     <?= json_encode(
-            get_string('wizard_js_ch_none', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
-        telegram: <?= json_encode(
-            get_string('wizard_js_ch_telegram', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
-        whatsapp: <?= json_encode(
-            get_string('wizard_js_ch_whatsapp', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>,
-        both:     <?= json_encode(
-            get_string('wizard_js_ch_both', 'local_saipa'),
-            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>
-    };
-
-    // ── Navigation ────────────────────────────────────────────────────────────
-    /**
-     * SpwizGoto.
-     */
-    function spwizGoto(step) {
-        var prev = document.getElementById('spwiz-step-' + currentStep);
-        if (prev) prev.classList.remove('active');
-        currentStep = step;
-        var next = document.getElementById('spwiz-step-' + step);
-        if (next) next.classList.add('active');
-
-        document.querySelectorAll('#spwiz-progress .step').forEach(function (el) {
-            var n = parseInt(el.dataset.step, 10);
-            el.classList.remove('active', 'done');
-            if (n === step) el.classList.add('active');
-            if (n < step)   el.classList.add('done');
-        });
-
-        if (step === 4) updateHints();
-        if (step === 5) updateChannelUI();
-        if (step === 6) spRunTest();
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    window.spwizGoto = spwizGoto;
-
-    // ── Requirements confirmation ─────────────────────────────────────────────
-    var reqCheck   = document.getElementById('req-confirm');
-    var reqNextBtn = document.getElementById('req-next-btn');
-    if (reqCheck) {
-        reqCheck.addEventListener('change', function () {
-            reqNextBtn.disabled = !reqCheck.checked;
-        });
-    }
-
-    // ── Mode cards ────────────────────────────────────────────────────────────
-    document.querySelectorAll('.mode-card').forEach(function (card) {
-        card.addEventListener('click', function () {
-            document.querySelectorAll('.mode-card').forEach(function (c) { c.classList.remove('selected'); });
-            card.classList.add('selected');
-            card.querySelector('input[type=radio]').checked = true;
-        });
-    });
-
-    /**
-     * GetSelectedMode.
-     */
-    function getSelectedMode() {
-        var checked = document.querySelector('input[name="engine_mode"]:checked');
-        return checked ? checked.value : 'local_ollama';
-    }
-
-    /**
-     * UpdateHints.
-     */
-    function updateHints() {
-        var mode  = getSelectedMode();
-        var modes = ['local_ollama', 'cloud_api', 'custom'];
-        modes.forEach(function (m) {
-            var el = document.getElementById('sp-hint-' + m);
-            if (el) el.style.display = (m === mode) ? '' : 'none';
-        });
-    }
-
-    // ── Channel cards ─────────────────────────────────────────────────────────
-    document.querySelectorAll('.channel-card').forEach(function (card) {
-        card.addEventListener('click', function () {
-            document.querySelectorAll('.channel-card').forEach(function (c) { c.classList.remove('selected'); });
-            card.classList.add('selected');
-            card.querySelector('input[type=radio]').checked = true;
-            updateChannelUI();
-        });
-    });
-
-    /**
-     * GetSelectedChannel.
-     */
-    function getSelectedChannel() {
-        var checked = document.querySelector('input[name="messaging_channel"]:checked');
-        return checked ? checked.value : 'none';
-    }
-
-    /**
-     * UpdateChannelUI.
-     */
-    function updateChannelUI() {
-        var ch  = getSelectedChannel();
-        var tgSection  = document.getElementById('sp-telegram-section');
-        var waNote     = document.getElementById('sp-whatsapp-note');
-
-        if (tgSection) tgSection.style.display = (ch === 'telegram' || ch === 'both') ? '' : 'none';
-        if (waNote)    waNote.style.display    = (ch === 'whatsapp' || ch === 'both') ? '' : 'none';
-    }
-    // Init on load.
-    updateChannelUI();
-
-    // ── Telegram bot test ─────────────────────────────────────────────────────
-    /**
-     * SpTestBot.
-     */
-    function spTestBot() {
-        var resultEl  = document.getElementById('sp-bot-result');
-        var tokenEl   = document.getElementById('sp-tg-token');
-        var usernameEl = document.getElementById('sp-tg-username');
-
-        if (!tokenEl || !tokenEl.value.trim()) {
-            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">'
-                + he(L.enter_token) + '</div>';
-            return;
-        }
-
-        resultEl.innerHTML =
-            '<div class="d-flex align-items-center gap-2 text-muted py-1">' +
-            '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>' + he(L.validating) + '</span></div>';
-
-        var fd = new FormData();
-        fd.append('action',    'testbot');
-        fd.append('sesskey',   '<?= $sesskey ?>');
-        fd.append('bot_token', tokenEl.value.trim());
-
-        fetch('<?= (new moodle_url('/local/saipa/setup.php'))->out(false) ?>',
-            { method: 'POST', credentials: 'same-origin', body: fd })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.ok) {
-                // Auto-fill the username field.
-                if (usernameEl && data.username) {
-                    usernameEl.value = data.username;
-                }
-                resultEl.innerHTML =
-                    '<div class="alert alert-success py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '✅ <strong>' + he(L.bot_verified) + '</strong> @' + he(data.username) +
-                    ' (' + he((data.name || '').trim()) + '). ' +
-                    he(L.username_autofill) + '</div>';
-            } else {
-                resultEl.innerHTML =
-                    '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '❌ <strong>' + he(L.error) + '</strong> ' + he(data.error || L.invalid_token) + '</div>';
-            }
-        })
-        .catch(function (e) {
-            resultEl.innerHTML =
-                '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                '❌ ' + he(L.network_error) + ' ' + he(e.message) + '</div>';
-        });
-    }
-    window.spTestBot = spTestBot;
-
-    // ── Health check ──────────────────────────────────────────────────────────
-    /**
-     * SpRunTest.
-     */
-    function spRunTest() {
-        healthOk = false;
-        var resultEl = document.getElementById('sp-health-result');
-        var saveBtn  = document.getElementById('sp-save-btn');
-        var retryBtn = document.getElementById('sp-retry-btn');
-        var summaryEl = document.getElementById('sp-summary');
-
-        saveBtn.style.display  = 'none';
-        retryBtn.style.display = 'none';
-        if (summaryEl) summaryEl.style.display = 'none';
-
-        resultEl.innerHTML =
-            '<div class="d-flex align-items-center gap-2 text-muted py-2">' +
-            '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>' + he(L.connecting) + '</span></div>';
-
-        var url   = (document.getElementById('sp-url')   || {}).value || '';
-        var token = (document.getElementById('sp-token') || {}).value || '';
-        url = url.trim();
-
-        if (!url) {
-            renderHealthError(L.url_empty, url);
-            return;
-        }
-
-        var fd = new FormData();
-        fd.append('action',       'health');
-        fd.append('sesskey',      '<?= $sesskey ?>');
-        fd.append('engine_url',   url);
-        fd.append('engine_token', token);
-
-        fetch('<?= (new moodle_url('/local/saipa/setup.php'))->out(false) ?>',
-            { method: 'POST', credentials: 'same-origin', body: fd })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.ok) {
-                healthOk = true;
-                resultEl.innerHTML =
-                    '<div class="health-row">' +
-                    '<div class="health-icon">✅</div>' +
-                    '<div class="health-label"><strong>' + he(L.engine_reachable) + '</strong></div>' +
-                    '<div class="health-value">' + he(url) + '</div></div>' +
-                    '<div class="health-row">' +
-                    '<div class="health-icon">🔢</div>' +
-                    '<div class="health-label">' + he(L.engine_version) + '</div>' +
-                    '<div class="health-value">' + he(data.version) + '</div></div>' +
-                    '<div class="health-row">' +
-                    '<div class="health-icon">⏱️</div>' +
-                    '<div class="health-label">' + he(L.uptime) + '</div>' +
-                    '<div class="health-value">' + he(data.uptime) + '</div></div>' +
-                    '<div class="alert alert-success py-2 px-3 mt-3 mb-0" style="font-size:.85rem;">' +
-                    L.success + '</div>';
-
-                // Populate summary.
-                var usernameEl = document.getElementById('sp-tg-username');
-                setText('sum-mode',    modeLabels[getSelectedMode()] || getSelectedMode());
-                setText('sum-url',     url);
-                setText('sum-token',   token ? '●●●●●●●●' : L.not_configured);
-                setText('sum-channel', channelLabels[getSelectedChannel()] || getSelectedChannel());
-                setText('sum-tg',      usernameEl && usernameEl.value ? '@' + usernameEl.value : L.not_configured);
-                if (summaryEl) summaryEl.style.display = '';
-                saveBtn.style.display = '';
-            } else {
-                renderHealthError(data.error || L.unknown_error, url);
-            }
-        })
-        .catch(function (e) { renderHealthError(e.message || L.network_error, url); });
-    }
-    window.spRunTest = spRunTest;
-
-    /**
-     * RenderHealthError.
-     */
-    function renderHealthError(msg, url) {
-        document.getElementById('sp-health-result').innerHTML =
-            '<div class="health-row">' +
-            '<div class="health-icon">❌</div>' +
-            '<div class="health-label"><strong>' + he(L.connection_failed) + '</strong></div>' +
-            '<div class="health-value">' + he(url || '—') + '</div></div>' +
-            '<div class="alert alert-danger py-2 px-3 mt-3 mb-0" style="font-size:.84rem;">' +
-            '<strong>' + he(L.error) + '</strong> ' + he(msg) + '<br><br>' +
-            '<strong>' + he(L.troubleshooting) + '</strong>' +
-            '<ul class="mb-0 mt-1">' +
-            '<li>' + L.ts_running + '</li>' +
-            '<li>' + L.ts_url + '</li>' +
-            '<li>' + L.ts_docker + '</li>' +
-            '<li>' + L.ts_token + '</li>' +
-            '</ul></div>';
-        document.getElementById('sp-retry-btn').style.display = '';
-    }
-
-    // ── Save ──────────────────────────────────────────────────────────────────
-    /**
-     * SpSave.
-     */
-    function spSave() {
-        var usernameEl = document.getElementById('sp-tg-username');
-        document.getElementById('sf-mode').value    = getSelectedMode();
-        document.getElementById('sf-url').value     = (document.getElementById('sp-url')   || {}).value || '';
-        document.getElementById('sf-token').value   = (document.getElementById('sp-token') || {}).value || '';
-        document.getElementById('sf-channel').value = getSelectedChannel();
-        document.getElementById('sf-tguser').value  = usernameEl ? usernameEl.value : '';
-        document.getElementById('sp-save-form').submit();
-    }
-    window.spSave = spSave;
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    /**
-     * He.
-     */
-    function he(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    /**
-     * SetText.
-     */
-    function setText(id, val) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = val;
-    }
-}());
-</script>
 
 <?php
 // phpcs:enable moodle.Commenting.MissingDocblock.File
+$PAGE->requires->js_call_amd('local_saipa/setup_wizard', 'init');
 echo $OUTPUT->footer();
 
