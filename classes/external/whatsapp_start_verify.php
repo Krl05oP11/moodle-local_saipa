@@ -78,21 +78,35 @@ class whatsapp_start_verify extends external_api {
 
         // Sending limits: each code is a WhatsApp message paid by the institution and received by
         // whoever owns the number, so an account and a number get only a few codes per hour.
-        $cache = \cache::make('local_saipa', 'otp');
-        $accountkey = 'send_u' . $USER->id;
-        $numberkey = 'send_p' . sha1($phoneclean);
-        $recent = fn($times) => array_values(array_filter($times ?: [], fn($t) => $t > $now - HOURSECS));
-        $accountsends = $recent($cache->get($accountkey));
-        $numbersends = $recent($cache->get($numberkey));
-        $toosoon = $accountsends && max($accountsends) > $now - self::MIN_INTERVAL;
-        if ($toosoon || count($accountsends) >= self::MAX_PER_ACCOUNT || count($numbersends) >= self::MAX_PER_NUMBER) {
+        // The counters are read and written under one lock, so parallel requests cannot all pass.
+        $lock = \core\lock\lock_config::get_lock_factory('local_saipa_otp')->get_lock('send', 5);
+        if (!$lock) {
             return ['sent' => false, 'expires' => 0, 'detail' => get_string('whatsapp_otp_rate_limited', 'local_saipa')];
         }
-        $accountsends[] = $now;
-        $numbersends[] = $now;
-        $cache->set($accountkey, $accountsends);
-        $cache->set($numberkey, $numbersends);
-        $cache->delete('attempts_u' . $USER->id);   // A new code gets a fresh set of attempts.
+        try {
+            $cache = \cache::make('local_saipa', 'otp');
+            $accountkey = 'send_u' . $USER->id;
+            // Leading zeros (international or trunk prefix) do not make another number for the limit.
+            $numberkey = 'send_p' . sha1(ltrim($phoneclean, '0'));
+            $recent = fn($times) => array_values(array_filter($times ?: [], fn($t) => $t > $now - HOURSECS));
+            $accountsends = $recent($cache->get($accountkey));
+            $numbersends = $recent($cache->get($numberkey));
+            $toosoon = $accountsends && max($accountsends) > $now - self::MIN_INTERVAL;
+            $limited = $toosoon || count($accountsends) >= self::MAX_PER_ACCOUNT
+                || count($numbersends) >= self::MAX_PER_NUMBER;
+            if (!$limited) {
+                $accountsends[] = $now;
+                $numbersends[] = $now;
+                $cache->set($accountkey, $accountsends);
+                $cache->set($numberkey, $numbersends);
+                $cache->delete('attempts_u' . $USER->id);   // A new code gets a fresh set of attempts.
+            }
+        } finally {
+            $lock->release();
+        }
+        if ($limited) {
+            return ['sent' => false, 'expires' => 0, 'detail' => get_string('whatsapp_otp_rate_limited', 'local_saipa')];
+        }
 
         $expires = $now + (10 * MINSECS);   // 10-minute OTP window
         $otp     = (string) random_int(100000, 999999);

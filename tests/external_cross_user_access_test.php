@@ -131,6 +131,9 @@ final class external_cross_user_access_test extends \advanced_testcase {
      * Issue 4: the visit counts come from this course's log rows, not from site logins or other courses.
      */
     public function test_get_student_features_counts_only_this_course(): void {
+        // The visits are read through the site's log reader; PHPUnit starts with no log store enabled.
+        set_config('enabled_stores', 'logstore_standard', 'tool_log');
+        get_log_manager(true);
         $this->log_event($this->student->id, $this->course->id, '\core\event\course_viewed', 'viewed');
         $this->log_event($this->student->id, $this->course->id, '\core\event\course_viewed', 'viewed');
         $this->log_event($this->student->id, SITEID, '\core\event\user_loggedin', 'loggedin');
@@ -229,5 +232,36 @@ final class external_cross_user_access_test extends \advanced_testcase {
         $this->expectException(\moodle_exception::class);
         $this->expectExceptionMessage(get_string('notsamegroup', 'local_saipa'));
         \local_saipa\external\get_student_history::execute($course->id, $theirs->id);
+    }
+
+    /**
+     * A co-teacher and a suspended student are not students these services can reach.
+     */
+    public function test_co_teacher_and_suspended_student_are_not_reachable(): void {
+        $gen = $this->getDataGenerator();
+        $coteacher = $gen->create_user();
+        $gen->enrol_user($coteacher->id, $this->course->id, 'teacher');
+        $suspended = $gen->create_user();
+        $gen->enrol_user($suspended->id, $this->course->id, 'student', 'manual', 0, 0, ENROL_USER_SUSPENDED);
+
+        $this->setUser($this->teacher);
+        foreach ([$coteacher, $suspended] as $user) {
+            try {
+                get_student_features::execute($user->id, $this->course->id);
+                $this->fail('User ' . $user->id . ' was reachable.');
+            } catch (\moodle_exception $e) {
+                $this->assertSame(get_string('notenrolled', 'local_saipa'), $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Telegram messages are HTML: values are escaped and the strings use HTML bold, not Markdown.
+     */
+    public function test_telegram_messages_are_html(): void {
+        $this->assertSame('&lt;b&gt;A &amp; B&lt;/b&gt;', local_saipa_telegram_escape('<b>A & B</b>'));
+        foreach (['alert_custom_message', 'alert_default_message', 'alert_risk_level_high', 'notify_student_telegram'] as $key) {
+            $this->assertStringNotContainsString('*', get_string($key, 'local_saipa'), $key);
+        }
     }
 }

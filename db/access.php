@@ -41,6 +41,7 @@ $capabilities = [
     // Teacher capability: can view the SAIPA dashboard (risk scores, conversations).
     'local/saipa:view' => [
         'captype'      => 'read',
+        'riskbitmask'  => RISK_PERSONAL | RISK_SPAM,
         'contextlevel' => CONTEXT_COURSE,
         'archetypes'   => [
             'teacher'        => CAP_ALLOW,
@@ -52,6 +53,7 @@ $capabilities = [
     // Site admin capability: can manage global SAIPA settings.
     'local/saipa:manage' => [
         'captype'      => 'write',
+        'riskbitmask'  => RISK_CONFIG,
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes'   => [
             'manager' => CAP_ALLOW,
@@ -61,6 +63,7 @@ $capabilities = [
     // Multi-course view: teacher can see summary across all their courses.
     'local/saipa:viewall' => [
         'captype'      => 'read',
+        'riskbitmask'  => RISK_PERSONAL,
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes'   => [
             'teacher'        => CAP_ALLOW,
@@ -72,6 +75,7 @@ $capabilities = [
     // Pedagogical advisor: can view institution-wide metrics and course controls.
     'local/saipa:advisor' => [
         'captype'      => 'read',
+        'riskbitmask'  => RISK_PERSONAL,
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes'   => [
             'manager' => CAP_ALLOW,

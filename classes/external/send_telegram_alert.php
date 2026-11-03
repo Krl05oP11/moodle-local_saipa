@@ -126,6 +126,31 @@ class send_telegram_alert extends external_api {
             return ['sent' => false, 'error' => 'message_too_long'];
         }
 
+        // One alert to a student at a time: two teachers clicking together would both pass the
+        // cooldown check before either alert is logged.
+        $lock = \core\lock\lock_config::get_lock_factory('local_saipa_alert')->get_lock('student_' . $params['student_id'], 0);
+        if (!$lock) {
+            return ['sent' => false, 'error' => 'cooldown'];
+        }
+        try {
+            return self::send($params, $text);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Applies the cooldown, builds the message in the student's language and sends it.
+     *
+     * Runs under the per-student lock taken by execute().
+     *
+     * @param array $params Validated parameters (student_id, course_id).
+     * @param string $text Teacher's text, trimmed and within the length limit ('' for the default message).
+     * @return array ['sent' => bool, 'error' => string]
+     */
+    private static function send(array $params, string $text): array {
+        global $DB, $USER;
+
         // Alert cooldown: the site setting sets the minimum hours between alerts to the same student.
         $cooldownhours = (int) get_config('local_saipa', 'alert_cooldown_hours');
         $recentalert = $cooldownhours > 0 && $DB->record_exists_select(
@@ -150,7 +175,9 @@ class send_telegram_alert extends external_api {
         // Build message.
         $student = $DB->get_record('user', ['id' => $params['student_id']], 'firstname,lastname,lang');
         $course  = $DB->get_record('course', ['id' => $params['course_id']], 'fullname');
-        $teacher = fullname($USER);
+        // Telegram reads the message as HTML: every value is escaped (local_saipa_telegram_escape()).
+        $teacher = local_saipa_telegram_escape(fullname($USER));
+        $coursename = $course ? local_saipa_telegram_escape(format_string($course->fullname, true, ['escape' => false])) : '';
 
         // The message goes to the student, so write it in the student's language.
         $lang = ($student && !empty($student->lang)) ? $student->lang : current_language();
@@ -159,8 +186,8 @@ class send_telegram_alert extends external_api {
             // The teacher's own words always go out signed with their name and the course.
             $text = get_string_manager()->get_string('alert_custom_message', 'local_saipa', (object) [
                 'teacher' => $teacher,
-                'course'  => $course ? format_string($course->fullname) : '',
-                'message' => $text,
+                'course'  => $coursename,
+                'message' => local_saipa_telegram_escape($text),
             ], $lang);
         } else {
             // Look up last risk score for contextualised default message.
@@ -172,8 +199,8 @@ class send_telegram_alert extends external_api {
             $riskdetail = self::build_risk_detail($risk, $lang);
 
             $text = get_string_manager()->get_string('alert_default_message', 'local_saipa', (object) [
-                'student'     => $student ? $student->firstname : '',
-                'course'      => $course ? format_string($course->fullname) : '',
+                'student'     => $student ? local_saipa_telegram_escape($student->firstname) : '',
+                'course'      => $coursename,
                 'teacher'     => $teacher,
                 'risk_detail' => $riskdetail,
             ], $lang);

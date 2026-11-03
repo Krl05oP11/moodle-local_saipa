@@ -34,8 +34,11 @@ namespace local_saipa\local;
  */
 class access {
     /**
-     * Throws unless $userid is enrolled in the course and visible to the current user.
+     * Throws unless $userid is an active student of the course, visible to the current user.
      *
+     * A student, as everywhere in SAIPA, is an active participant who can use the chat
+     * (local/saipa:chat) and is not staff (no local/saipa:view): a teacher cannot read a
+     * co-teacher's chat or message them through these services.
      * Call it after validate_context() and require_capability() on the same context.
      *
      * @param \context_course $context Course context already validated by the caller.
@@ -43,7 +46,9 @@ class access {
      * @throws \moodle_exception notenrolled or notsamegroup.
      */
     public static function require_course_user(\context_course $context, int $userid): void {
-        if (!is_enrolled($context, $userid)) {
+        $student = is_enrolled($context, $userid, 'local/saipa:chat', true)
+            && !has_capability('local/saipa:view', $context, $userid);
+        if (!$student) {
             throw new \moodle_exception('notenrolled', 'local_saipa');
         }
         if (!groups_user_groups_visible(get_course($context->instanceid), $userid)) {

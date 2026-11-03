@@ -320,3 +320,16 @@ function local_saipa_delete_course_data(int $courseid): void {
         $DB->delete_records($table, ['courseid' => $courseid]);
     }
 }
+
+/**
+ * Escapes a value for a Telegram message: the engine sends them with parse_mode HTML.
+ *
+ * Telegram rejects a message with a stray < or &, so names, course names and the teacher's own
+ * text go through here. The lang strings themselves carry the markup (<b>).
+ *
+ * @param string $text Plain text.
+ * @return string
+ */
+function local_saipa_telegram_escape(string $text): string {
+    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}

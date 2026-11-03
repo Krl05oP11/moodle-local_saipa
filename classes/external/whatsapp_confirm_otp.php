@@ -76,14 +76,23 @@ class whatsapp_confirm_otp extends external_api {
             return ['success' => false, 'error' => 'otp_expired'];
         }
 
-        if ($record->otp !== $params['otp']) {
-            // Five wrong codes cancel this one: guessing six digits needs far more tries.
-            $cache = \cache::make('local_saipa', 'otp');
-            $attempts = (int) $cache->get('attempts_u' . $USER->id) + 1;
-            $cache->set('attempts_u' . $USER->id, $attempts);
-            if ($attempts >= self::MAX_ATTEMPTS) {
-                $DB->set_field('local_saipa_phone_verify', 'timeexpires', 0, ['id' => $record->id]);
-                return ['success' => false, 'error' => 'otp_expired'];
+        if (!hash_equals((string) $record->otp, $params['otp'])) {
+            // Five wrong codes cancel this one: guessing six digits needs far more tries. The
+            // counter is updated under a per-user lock, so parallel guesses all count.
+            $lock = \core\lock\lock_config::get_lock_factory('local_saipa_otp')->get_lock('confirm_u' . $USER->id, 5);
+            if (!$lock) {
+                return ['success' => false, 'error' => 'otp_invalid'];
+            }
+            try {
+                $cache = \cache::make('local_saipa', 'otp');
+                $attempts = (int) $cache->get('attempts_u' . $USER->id) + 1;
+                $cache->set('attempts_u' . $USER->id, $attempts);
+                if ($attempts >= self::MAX_ATTEMPTS) {
+                    $DB->set_field('local_saipa_phone_verify', 'timeexpires', 0, ['id' => $record->id]);
+                    return ['success' => false, 'error' => 'otp_expired'];
+                }
+            } finally {
+                $lock->release();
             }
             return ['success' => false, 'error' => 'otp_invalid'];
         }

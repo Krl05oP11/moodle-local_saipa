@@ -47,12 +47,12 @@ $string['advisor_tab_risk']       = 'ROI de Risco';
 $string['advisor_tab_summary']    = 'Resumo';
 $string['advisor_title']          = 'SAIPA — Painel do Assessor';
 $string['alert_cancel_btn']         = 'Cancelar';
-$string['alert_custom_message'] = 'Mensagem de {$a->teacher}, docente de *{$a->course}*:
+$string['alert_custom_message'] = 'Mensagem de {$a->teacher}, docente de <b>{$a->course}</b>:
 
 {$a->message}';
 $string['alert_default_message']    = 'Olá {$a->student} 👋
 
-Seu professor {$a->teacher} percebeu que você pode precisar de apoio no curso *{$a->course}*.
+Seu professor {$a->teacher} percebeu que você pode precisar de apoio no curso <b>{$a->course}</b>.
 
 {$a->risk_detail}
 
@@ -74,9 +74,9 @@ $string['alert_factor_saipa_sessions'] = 'consultas ao SAIPA';
 $string['alert_factor_submission_rate'] = 'taxa de entregas concluídas';
 $string['alert_not_linked']         = '{$a} não tem o Telegram vinculado.';
 $string['alert_risk_default'] = '📊 Seu nível de participação no curso merece atenção.';
-$string['alert_risk_level_high'] = '🔴 *Risco ALTO* de evasão ({$a}%)';
-$string['alert_risk_level_low'] = '🟢 *Risco BAIXO* de evasão ({$a}%)';
-$string['alert_risk_level_medium'] = '🟡 *Risco MÉDIO* de evasão ({$a}%)';
+$string['alert_risk_level_high'] = '🔴 <b>Risco ALTO</b> de evasão ({$a}%)';
+$string['alert_risk_level_low'] = '🟢 <b>Risco BAIXO</b> de evasão ({$a}%)';
+$string['alert_risk_level_medium'] = '🟡 <b>Risco MÉDIO</b> de evasão ({$a}%)';
 $string['alert_risk_level_unknown'] = '📊 Nível de risco detectado ({$a}%)';
 $string['alert_send_btn']           = 'Enviar';
 $string['alert_sent_error']         = 'Não foi possível enviar a mensagem: {$a}.';
@@ -228,8 +228,8 @@ $string['msgs_count'] = '{$a} msgs';
 $string['my_courses_heading'] = 'Meus Cursos SAIPA';
 $string['my_courses_title']   = 'SAIPA — Meus Cursos';
 $string['no_data_yet']        = 'Ainda não há dados suficientes — volte em alguns dias.';
-$string['notenrolled']              = 'O usuário especificado não está matriculado neste curso.';
-$string['notify_student_telegram'] = '🤖 Olá {$a->firstname}! O SAIPA percebeu que você pode precisar de um pouco de apoio no curso *{$a->course}*.
+$string['notenrolled']              = 'O usuário especificado não é um aluno ativo deste curso.';
+$string['notify_student_telegram'] = '🤖 Olá {$a->firstname}! O SAIPA percebeu que você pode precisar de um pouco de apoio no curso <b>{$a->course}</b>.
 
 Seu professor já está ciente e pode ajudar você. Se quiser conversar ou tiver alguma dúvida sobre o curso, escreva para mim aqui! Você não está sozinho(a). 💪';
 $string['notify_teacher_body'] = 'O SAIPA detectou que os seguintes alunos passaram para RISCO ALTO no curso "{$a->course}":

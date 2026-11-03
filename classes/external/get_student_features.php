@@ -95,23 +95,19 @@ class get_student_features extends external_api {
             $submissionrate = 1.0;   // No assignments → neutral.
         }
 
-        // 3 & 4. Visits to this course (the engine still calls them login counts).
-        // Only this course's log rows are read: site-wide logins are not course data.
+        // 3 & 4. Visits to this course (the engine still calls them login counts), read through
+        // the site's SQL log reader. Only this course's rows: site-wide logins are not course data.
         $since7  = $now - 7 * $day;
         $since30 = $now - 30 * $day;
-        $visits = "courseid = :cid AND userid = :uid AND eventname = :event AND timecreated >= :since";
-        $visitparams = ['cid' => $cid, 'uid' => $uid, 'event' => '\\core\\event\\course_viewed'];
-
-        $logincount7d  = (int) $DB->count_records_select(
-            'logstore_standard_log',
-            $visits,
-            $visitparams + ['since' => $since7]
-        );
-        $logincount30d = (int) $DB->count_records_select(
-            'logstore_standard_log',
-            $visits,
-            $visitparams + ['since' => $since30]
-        );
+        $logincount7d = $logincount30d = 0;
+        $readers = get_log_manager()->get_readers('\\core\\log\\sql_internal_table_reader');
+        $reader = reset($readers);
+        if ($reader) {
+            $visits = "courseid = :cid AND userid = :uid AND eventname = :event AND timecreated >= :since";
+            $visitparams = ['cid' => $cid, 'uid' => $uid, 'event' => '\\core\\event\\course_viewed'];
+            $logincount7d = (int) $reader->get_events_select_count($visits, $visitparams + ['since' => $since7]);
+            $logincount30d = (int) $reader->get_events_select_count($visits, $visitparams + ['since' => $since30]);
+        }
 
         // 5 & 6. SAIPA chat activity.
         $session = $DB->get_record(

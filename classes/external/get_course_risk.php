@@ -118,7 +118,7 @@ class get_course_risk extends external_api {
         require_capability('local/saipa:view', $context);
 
         // Collect enrolled students (users who can chat but NOT view = not teachers).
-        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id');
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id', null, 0, 0, true);
         $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
         $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
 

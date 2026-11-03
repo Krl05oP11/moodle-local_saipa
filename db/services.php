@@ -176,7 +176,8 @@ $functions = [
         'description'   => 'Removes the Telegram link for the current Moodle user (AJAX)',
         'type'          => 'write',
         'ajax'          => true,
-        'capabilities'  => 'local/saipa:chat',
+        // Removing your own link needs no capability.
+        'capabilities'  => '',
         'loginrequired' => true,
     ],
 
@@ -228,7 +229,8 @@ $functions = [
         'description'   => 'Removes the WhatsApp phone verification for the current user',
         'type'          => 'write',
         'ajax'          => true,
-        'capabilities'  => 'local/saipa:chat',
+        // Removing your own link needs no capability.
+        'capabilities'  => '',
         'loginrequired' => true,
     ],
 

@@ -129,7 +129,7 @@ class risk_evaluation extends \core\task\scheduled_task {
         $context = \context_course::instance($cid);
 
         // Collect students (chat capability but NOT view/teacher capability).
-        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname');
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname', null, 0, 0, true);
         $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
         $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
 
@@ -335,9 +335,10 @@ class risk_evaluation extends \core\task\scheduled_task {
             $firstname = explode(' ', trim($name))[0];
 
             $lang = $DB->get_field('user', 'lang', ['id' => $uid]) ?: current_language();
+            // Telegram reads the message as HTML.
             $message = get_string_manager()->get_string('notify_student_telegram', 'local_saipa', (object) [
-                'firstname' => $firstname,
-                'course'    => $coursename,
+                'firstname' => local_saipa_telegram_escape($firstname),
+                'course'    => local_saipa_telegram_escape(format_string($course->fullname, true, ['escape' => false])),
             ], $lang);
 
             $response = local_saipa_engine_request('/telegram/notify', [
