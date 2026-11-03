@@ -49,7 +49,9 @@ class telegram_unlink extends external_api {
     public static function execute(): array {
         global $USER, $DB;
 
-        require_login();
+        // Only the user's own link is removed. Removing it needs no SAIPA capability, so a user
+        // who left every SAIPA course can still disconnect the account.
+        self::validate_context(\context_user::instance($USER->id));
 
         $DB->delete_records('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
 

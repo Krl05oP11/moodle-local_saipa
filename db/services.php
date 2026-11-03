@@ -156,7 +156,7 @@ $functions = [
         'description'   => 'Validates an HMAC token and binds a Telegram chat_id to the Moodle user (server-to-server)',
         'type'          => 'write',
         'ajax'          => false,
-        'capabilities'  => '',
+        'capabilities'  => 'local/saipa:enginebridge',
         'loginrequired' => false,
     ],
 

@@ -36,12 +36,16 @@ use core_external\external_value;
  * Whatsapp_confirm_otp.
  */
 class whatsapp_confirm_otp extends external_api {
+    /** @var int Wrong codes accepted before the code is cancelled. */
+    public const MAX_ATTEMPTS = 5;
+
     /**
      * Define the parameters for this web service.
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'otp' => new external_value(PARAM_ALPHANUMEXT, '6-digit OTP code'),
+            'otp'       => new external_value(PARAM_ALPHANUMEXT, '6-digit OTP code'),
+            'course_id' => new external_value(PARAM_INT, 'Course the call comes from (0 = none)', VALUE_DEFAULT, 0),
         ]);
     }
 
@@ -49,13 +53,13 @@ class whatsapp_confirm_otp extends external_api {
      * Execute the web service.
      *
      * @param string $otp 6-digit OTP code.
+     * @param int $courseid Course the call comes from (0 = none).
      */
-    public static function execute(string $otp): array {
+    public static function execute(string $otp, int $courseid = 0): array {
         global $USER, $DB;
 
-        require_login();
-
-        $params = self::validate_parameters(self::execute_parameters(), ['otp' => $otp]);
+        $params = self::validate_parameters(self::execute_parameters(), ['otp' => $otp, 'course_id' => $courseid]);
+        \local_saipa\local\access::require_chat_user($params['course_id']);
 
         $record = $DB->get_record('local_saipa_phone_verify', ['userid' => (int) $USER->id]);
 
@@ -73,6 +77,14 @@ class whatsapp_confirm_otp extends external_api {
         }
 
         if ($record->otp !== $params['otp']) {
+            // Five wrong codes cancel this one: guessing six digits needs far more tries.
+            $cache = \cache::make('local_saipa', 'otp');
+            $attempts = (int) $cache->get('attempts_u' . $USER->id) + 1;
+            $cache->set('attempts_u' . $USER->id, $attempts);
+            if ($attempts >= self::MAX_ATTEMPTS) {
+                $DB->set_field('local_saipa_phone_verify', 'timeexpires', 0, ['id' => $record->id]);
+                return ['success' => false, 'error' => 'otp_expired'];
+            }
             return ['success' => false, 'error' => 'otp_invalid'];
         }
 

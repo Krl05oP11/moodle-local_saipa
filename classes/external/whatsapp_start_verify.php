@@ -37,12 +37,20 @@ use core_external\external_value;
  * Whatsapp_start_verify.
  */
 class whatsapp_start_verify extends external_api {
+    /** @var int Seconds an account waits between two codes. */
+    public const MIN_INTERVAL = 60;
+    /** @var int Codes one account can request per hour. */
+    public const MAX_PER_ACCOUNT = 5;
+    /** @var int Codes one phone number can receive per hour, whoever asks. */
+    public const MAX_PER_NUMBER = 3;
+
     /**
      * Define the parameters for this web service.
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'phone' => new external_value(PARAM_TEXT, 'Phone number in international format (e.g. 5491112345678)'),
+            'phone'     => new external_value(PARAM_TEXT, 'Phone number in international format (e.g. 5491112345678)'),
+            'course_id' => new external_value(PARAM_INT, 'Course the call comes from (0 = none)', VALUE_DEFAULT, 0),
         ]);
     }
 
@@ -50,15 +58,15 @@ class whatsapp_start_verify extends external_api {
      * Execute the web service.
      *
      * @param string $phone Phone number in international format (e.g. 5491112345678).
+     * @param int $courseid Course the call comes from (0 = none).
      */
-    public static function execute(string $phone): array {
+    public static function execute(string $phone, int $courseid = 0): array {
         global $CFG;
         require_once($CFG->dirroot . '/local/saipa/lib.php');
         global $USER, $DB;
 
-        require_login();
-
-        $params = self::validate_parameters(self::execute_parameters(), ['phone' => $phone]);
+        $params = self::validate_parameters(self::execute_parameters(), ['phone' => $phone, 'course_id' => $courseid]);
+        \local_saipa\local\access::require_chat_user($params['course_id']);
 
         // Sanitise phone: keep only digits.
         $phoneclean = preg_replace('/\D/', '', $params['phone']);
@@ -66,7 +74,26 @@ class whatsapp_start_verify extends external_api {
             throw new \invalid_parameter_exception('Invalid phone number format.');
         }
 
-        $now     = time();
+        $now = time();
+
+        // Sending limits: each code is a WhatsApp message paid by the institution and received by
+        // whoever owns the number, so an account and a number get only a few codes per hour.
+        $cache = \cache::make('local_saipa', 'otp');
+        $accountkey = 'send_u' . $USER->id;
+        $numberkey = 'send_p' . sha1($phoneclean);
+        $recent = fn($times) => array_values(array_filter($times ?: [], fn($t) => $t > $now - HOURSECS));
+        $accountsends = $recent($cache->get($accountkey));
+        $numbersends = $recent($cache->get($numberkey));
+        $toosoon = $accountsends && max($accountsends) > $now - self::MIN_INTERVAL;
+        if ($toosoon || count($accountsends) >= self::MAX_PER_ACCOUNT || count($numbersends) >= self::MAX_PER_NUMBER) {
+            return ['sent' => false, 'expires' => 0, 'detail' => get_string('whatsapp_otp_rate_limited', 'local_saipa')];
+        }
+        $accountsends[] = $now;
+        $numbersends[] = $now;
+        $cache->set($accountkey, $accountsends);
+        $cache->set($numberkey, $numbersends);
+        $cache->delete('attempts_u' . $USER->id);   // A new code gets a fresh set of attempts.
+
         $expires = $now + (10 * MINSECS);   // 10-minute OTP window
         $otp     = (string) random_int(100000, 999999);
 
@@ -102,7 +129,7 @@ class whatsapp_start_verify extends external_api {
         return [
             'sent'    => $sent,
             'expires' => $expires,
-            'detail'  => $sent ? '' : 'WhatsApp message could not be sent. Check engine WhatsApp configuration.',
+            'detail'  => $sent ? '' : get_string('whatsapp_otp_send_failed', 'local_saipa'),
         ];
     }
 

@@ -55,8 +55,8 @@ class telegram_generate_link extends external_api {
 
         $params = self::validate_parameters(self::execute_parameters(), ['course_id' => $courseid]);
 
-        // Check login. Capability is deliberately low — any enrolled user may link.
-        require_login();
+        // Linking a Telegram account is for users who can use the SAIPA chat.
+        \local_saipa\local\access::require_chat_user($params['course_id']);
 
         $now     = time();
         $expires = $now + (15 * MINSECS);   // 15-minute window

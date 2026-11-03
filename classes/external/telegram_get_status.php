@@ -40,16 +40,21 @@ class telegram_get_status extends external_api {
      * Define the parameters for this web service.
      */
     public static function execute_parameters(): external_function_parameters {
-        return new external_function_parameters([]);
+        return new external_function_parameters([
+            'course_id' => new external_value(PARAM_INT, 'Course the call comes from (0 = none)', VALUE_DEFAULT, 0),
+        ]);
     }
 
     /**
      * Execute the web service.
+     *
+     * @param int $courseid Course the call comes from (0 = none).
      */
-    public static function execute(): array {
+    public static function execute(int $courseid = 0): array {
         global $USER, $DB;
 
-        require_login();
+        $params = self::validate_parameters(self::execute_parameters(), ['course_id' => $courseid]);
+        \local_saipa\local\access::require_chat_user($params['course_id']);
 
         $record = $DB->get_record('local_saipa_telegram_links', ['userid' => (int) $USER->id]);
 

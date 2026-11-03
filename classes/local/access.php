@@ -52,6 +52,30 @@ class access {
     }
 
     /**
+     * Validates the context of a service that acts on the current user's own SAIPA chat channels.
+     *
+     * With a course id, the course context is validated and local/saipa:chat is required there,
+     * which is how block_saipa calls these services. Without one (course id 0), the user's own
+     * context is validated and the user must hold local/saipa:chat in at least one course.
+     *
+     * @param int $courseid Course the call comes from, or 0.
+     * @throws \required_capability_exception If the user cannot use the SAIPA chat.
+     */
+    public static function require_chat_user(int $courseid): void {
+        global $USER;
+        if ($courseid > 0) {
+            $context = \context_course::instance($courseid);
+            \core_external\external_api::validate_context($context);
+            require_capability('local/saipa:chat', $context);
+            return;
+        }
+        \core_external\external_api::validate_context(\context_user::instance($USER->id));
+        if (!get_user_capability_course('local/saipa:chat', $USER->id, true, '', '', 1)) {
+            throw new \required_capability_exception(\context_system::instance(), 'local/saipa:chat', 'nopermissions', '');
+        }
+    }
+
+    /**
      * Filters a list of user ids down to the ones the current user may see in the course.
      *
      * In courses without separate groups, or when the current user can access

@@ -63,6 +63,12 @@ class telegram_confirm_link extends external_api {
             'telegram_username' => $telegramusername,
         ]);
 
+        // Server-to-server only, like the other engine-bridge calls: the caller's token must belong
+        // to the account granted local/saipa:enginebridge, not just any account with a token.
+        $context = \context_system::instance();
+        self::validate_context($context);
+        require_capability('local/saipa:enginebridge', $context);
+
         $now = time();
 
         // Look up the pending link record.
