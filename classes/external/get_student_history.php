@@ -63,9 +63,7 @@ class get_student_history extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
 
-        if (!is_enrolled($context, $params['student_id'])) {
-            throw new \moodle_exception('notenrolled', 'local_saipa');
-        }
+        \local_saipa\local\access::require_course_user($context, $params['student_id']);
 
         $session = $DB->get_record('local_saipa_sessions', [
             'userid'   => $params['student_id'],

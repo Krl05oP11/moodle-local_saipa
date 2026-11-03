@@ -59,10 +59,17 @@ class get_student_list extends external_api {
         require_capability('local/saipa:view', $context);
 
         // Get all enrolled users who can chat (students + teachers).
-        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id, u.firstname, u.lastname, u.email');
+        // All the name fields: fullname() needs them (phonetic, middle and alternate names too).
+        $namefields = implode(', ', array_map(fn($f) => "u.$f", \core_user\fields::get_name_fields()));
+        $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, "u.id, u.email, $namefields");
         // Exclude those with :view (teachers).
         $teacherids = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
         $students = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
+        // Separate groups: only the students of the caller's groups.
+        $visible = \local_saipa\local\access::filter_visible_users($context, array_keys($students));
+        $students = array_intersect_key($students, array_flip($visible));
+        // The email goes out only where the site shows it as an identity field to this user.
+        $showemail = in_array('email', \core_user\fields::get_identity_fields($context, false), true);
 
         if (empty($students)) {
             return ['students' => []];
@@ -136,7 +143,7 @@ class get_student_list extends external_api {
             $result[] = [
                 'userid'                      => (int) $u->id,
                 'fullname'                    => fullname($u),
-                'email'                       => $u->email,
+                'email'                       => $showemail ? $u->email : '',
                 'message_count'               => $act ? (int) $act->message_count : 0,
                 'last_message'                => $act ? (int) $act->last_message : 0,
                 'has_session'                 => $act !== null,
@@ -167,7 +174,7 @@ class get_student_list extends external_api {
                 new external_single_structure([
                     'userid'        => new external_value(PARAM_INT, 'Student user ID'),
                     'fullname'      => new external_value(PARAM_TEXT, 'Full name'),
-                    'email'         => new external_value(PARAM_TEXT, 'Email address'),
+                    'email'         => new external_value(PARAM_TEXT, 'Email, empty if hidden from the caller'),
                     'message_count' => new external_value(PARAM_INT, 'Number of messages sent by student'),
                     'last_message'  => new external_value(PARAM_INT, 'Timestamp of last message (0 if none)'),
                     'has_session'                 => new external_value(PARAM_BOOL, 'Whether student has started a chat'),

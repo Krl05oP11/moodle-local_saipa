@@ -217,4 +217,17 @@ final class external_cross_user_access_test extends \advanced_testcase {
         $result = get_course_risk::execute($course->id, true);
         $this->assertSame([(int) $mine->id], array_column($result['results'], 'userid'));
     }
+
+    /**
+     * The student list and a student's chat history follow separate groups too.
+     */
+    public function test_student_list_and_history_respect_separate_groups(): void {
+        [$teacher, $mine, $theirs, $course] = $this->separate_groups_course();
+        $this->setUser($teacher);
+        $list = \local_saipa\external\get_student_list::execute($course->id);
+        $this->assertSame([(int) $mine->id], array_column($list['students'], 'userid'));
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('notsamegroup', 'local_saipa'));
+        \local_saipa\external\get_student_history::execute($course->id, $theirs->id);
+    }
 }
