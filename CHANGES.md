@@ -4,7 +4,7 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
-### Marketplace review MMR-462 (0.5.7, 2026-11-02)
+### Marketplace review MMR-462 (0.5.7, 2026-11-02; build 2026110301)
 The reviewer's findings are the GitHub issues 1-15 of this repository; the
 items marked "audit" come from our own review of every web service afterwards.
 
