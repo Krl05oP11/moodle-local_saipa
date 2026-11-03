@@ -234,7 +234,17 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                     btn.disabled = false;
                 }, 3000);
             } else {
-                Str.get_string('alert_sent_error', 'local_saipa', result.error).then(alert).catch(Log.error);
+                // Known error codes have their own message; anything else is shown as it came.
+                var known = {
+                    cooldown: ['alert_error_cooldown'],
+                    engine_failed: ['alert_error_engine_failed'],
+                    message_too_long: ['alert_error_message_too_long'],
+                    student_not_linked: ['alert_not_linked', fullname],
+                }[result.error];
+                (known
+                    ? Str.get_string(known[0], 'local_saipa', known[1])
+                    : Str.get_string('alert_sent_error', 'local_saipa', result.error)
+                ).then(alert).catch(Log.error);
                 btn.textContent = '📨';
                 btn.disabled = false;
             }
