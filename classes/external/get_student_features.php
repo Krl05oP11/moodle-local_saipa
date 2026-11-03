@@ -65,6 +65,7 @@ class get_student_features extends external_api {
         $context = \context_course::instance($cid);
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
+        \local_saipa\local\access::require_course_user($context, $uid);
 
         $now  = time();
         $day  = 86400;
@@ -94,19 +95,22 @@ class get_student_features extends external_api {
             $submissionrate = 1.0;   // No assignments → neutral.
         }
 
-        // 3 & 4. login counts.
+        // 3 & 4. Visits to this course (the engine still calls them login counts).
+        // Only this course's log rows are read: site-wide logins are not course data.
         $since7  = $now - 7 * $day;
         $since30 = $now - 30 * $day;
+        $visits = "courseid = :cid AND userid = :uid AND eventname = :event AND timecreated >= :since";
+        $visitparams = ['cid' => $cid, 'uid' => $uid, 'event' => '\\core\\event\\course_viewed'];
 
         $logincount7d  = (int) $DB->count_records_select(
             'logstore_standard_log',
-            "userid = :uid AND action = 'loggedin' AND timecreated >= :since",
-            ['uid' => $uid, 'since' => $since7]
+            $visits,
+            $visitparams + ['since' => $since7]
         );
         $logincount30d = (int) $DB->count_records_select(
             'logstore_standard_log',
-            "userid = :uid AND action = 'loggedin' AND timecreated >= :since",
-            ['uid' => $uid, 'since' => $since30]
+            $visits,
+            $visitparams + ['since' => $since30]
         );
 
         // 5 & 6. SAIPA chat activity.
@@ -161,14 +165,17 @@ class get_student_features extends external_api {
                    AND fp.userid = :uid";
         $forumpostcount = (int) $DB->get_field_sql($sql, ['cid' => $cid, 'uid' => $uid]);
 
-        // 10. positive_feedback_ratio.
-        $totalfb = (int) $DB->count_records('local_saipa_feedback', ['userid' => $uid]);
+        // 10. positive_feedback_ratio, from the ratings given in this course's SAIPA chat.
+        $sql = "SELECT COUNT(1) AS total, COALESCE(SUM(CASE WHEN f.rating = 1 THEN 1 ELSE 0 END), 0) AS positive
+                  FROM {local_saipa_feedback} f
+                  JOIN {local_saipa_messages} m ON m.id = f.messageid
+                  JOIN {local_saipa_sessions} s ON s.id = m.sessionid
+                 WHERE f.userid = :uid
+                   AND s.courseid = :cid";
+        $fb = $DB->get_record_sql($sql, ['uid' => $uid, 'cid' => $cid]);
+        $totalfb = (int) $fb->total;
         if ($totalfb > 0) {
-            $posfb = (int) $DB->count_records(
-                'local_saipa_feedback',
-                ['userid' => $uid, 'rating' => 1]
-            );
-            $positivefeedbackratio = round($posfb / $totalfb, 4);
+            $positivefeedbackratio = round((int) $fb->positive / $totalfb, 4);
         } else {
             $positivefeedbackratio = 0.5;   // Neutral.
         }
@@ -217,14 +224,14 @@ class get_student_features extends external_api {
             'course_id'                  => new external_value(PARAM_INT, 'Course ID'),
             'last_access_days'           => new external_value(PARAM_FLOAT, 'Days since last course access'),
             'submission_rate'            => new external_value(PARAM_FLOAT, 'Assignment submission rate 0-1'),
-            'login_count_7d'             => new external_value(PARAM_INT, 'Moodle logins in last 7 days'),
-            'login_count_30d'            => new external_value(PARAM_INT, 'Moodle logins in last 30 days'),
+            'login_count_7d'             => new external_value(PARAM_INT, 'Visits to this course in the last 7 days'),
+            'login_count_30d'            => new external_value(PARAM_INT, 'Visits to this course in the last 30 days'),
             'saipa_days_since_last_chat' => new external_value(PARAM_FLOAT, 'Days since last SAIPA message'),
             'saipa_message_count'        => new external_value(PARAM_INT, 'Total SAIPA messages by student'),
             'quiz_avg_score'             => new external_value(PARAM_FLOAT, 'Average quiz score 0-100'),
             'quiz_attempt_count'         => new external_value(PARAM_INT, 'Number of quiz attempts'),
             'forum_post_count'           => new external_value(PARAM_INT, 'Forum posts in this course'),
-            'positive_feedback_ratio'    => new external_value(PARAM_FLOAT, 'Ratio of positive SAIPA feedback'),
+            'positive_feedback_ratio'    => new external_value(PARAM_FLOAT, 'Ratio of positive SAIPA feedback in this course'),
             'completion_rate'            => new external_value(PARAM_FLOAT, 'Activity completion rate 0-1'),
         ]);
     }

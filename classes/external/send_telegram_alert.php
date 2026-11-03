@@ -37,6 +37,9 @@ use core_external\external_value;
  * Send_telegram_alert.
  */
 class send_telegram_alert extends external_api {
+    /** @var int Longest message a teacher can write, in characters. */
+    public const MAX_MESSAGE_LENGTH = 1000;
+
     /** @var array Lang string key (local_saipa) for each risk factor key returned by the engine. */
     private const FACTOR_STRINGS = [
         'last_access_days'     => 'alert_factor_last_access_days',
@@ -116,6 +119,23 @@ class send_telegram_alert extends external_api {
         $context = \context_course::instance($params['course_id']);
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
+        \local_saipa\local\access::require_course_user($context, $params['student_id']);
+
+        $text = trim($params['message']);
+        if (\core_text::strlen($text) > self::MAX_MESSAGE_LENGTH) {
+            return ['sent' => false, 'error' => 'message_too_long'];
+        }
+
+        // Alert cooldown: the site setting sets the minimum hours between alerts to the same student.
+        $cooldownhours = (int) get_config('local_saipa', 'alert_cooldown_hours');
+        $recentalert = $cooldownhours > 0 && $DB->record_exists_select(
+            'local_saipa_notifications',
+            "userid = :uid AND template = :tpl AND timesent >= :since",
+            ['uid' => $params['student_id'], 'tpl' => 'teacher_alert', 'since' => time() - $cooldownhours * HOURSECS]
+        );
+        if ($recentalert) {
+            return ['sent' => false, 'error' => 'cooldown'];
+        }
 
         // Look up student's confirmed Telegram link.
         $link = $DB->get_record('local_saipa_telegram_links', [
@@ -132,16 +152,22 @@ class send_telegram_alert extends external_api {
         $course  = $DB->get_record('course', ['id' => $params['course_id']], 'fullname');
         $teacher = fullname($USER);
 
-        $text = trim($params['message']);
-        if ($text === '') {
+        // The message goes to the student, so write it in the student's language.
+        $lang = ($student && !empty($student->lang)) ? $student->lang : current_language();
+
+        if ($text !== '') {
+            // The teacher's own words always go out signed with their name and the course.
+            $text = get_string_manager()->get_string('alert_custom_message', 'local_saipa', (object) [
+                'teacher' => $teacher,
+                'course'  => $course ? format_string($course->fullname) : '',
+                'message' => $text,
+            ], $lang);
+        } else {
             // Look up last risk score for contextualised default message.
             $risk = $DB->get_record('local_saipa_risk_scores', [
                 'userid'   => $params['student_id'],
                 'courseid' => $params['course_id'],
             ]);
-
-            // The message goes to the student, so write it in the student's language.
-            $lang = ($student && !empty($student->lang)) ? $student->lang : current_language();
 
             $riskdetail = self::build_risk_detail($risk, $lang);
 

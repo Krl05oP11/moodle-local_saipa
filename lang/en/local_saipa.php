@@ -47,6 +47,9 @@ $string['advisor_tab_risk']       = 'Risk ROI';
 $string['advisor_tab_summary']    = 'Summary';
 $string['advisor_title']          = 'SAIPA — Advisor Dashboard';
 $string['alert_cancel_btn']         = 'Cancel';
+$string['alert_custom_message'] = 'Message from {$a->teacher}, teacher of *{$a->course}*:
+
+{$a->message}';
 $string['alert_default_message']    = 'Hi {$a->student} 👋
 
 Your teacher {$a->teacher} noticed that you might need some support in the course *{$a->course}*.
@@ -54,14 +57,17 @@ Your teacher {$a->teacher} noticed that you might need some support in the cours
 {$a->risk_detail}
 
 Remember that you can write to me at any time with questions about the course topics. I am here to help you! 📚';
+$string['alert_error_cooldown'] = 'This student already received an alert recently. Wait until the alert cooldown set by the administrator has passed.';
+$string['alert_error_engine_failed'] = 'The SAIPA engine could not deliver the message.';
+$string['alert_error_message_too_long'] = 'The message is too long: the limit is 1000 characters.';
 $string['alert_factor_completion_rate'] = 'overall course progress';
 $string['alert_factor_days_enrolled'] = 'days enrolled';
 $string['alert_factor_forum_posts'] = 'forum posts';
 $string['alert_factor_grade_avg'] = 'grade average';
 $string['alert_factor_last_access_days'] = 'days without accessing the course';
 $string['alert_factor_line'] = '• Key indicator: {$a}';
-$string['alert_factor_login_count_30d'] = 'logins in the last 30 days';
-$string['alert_factor_login_count_7d'] = 'logins in the last 7 days';
+$string['alert_factor_login_count_30d'] = 'visits to the course in the last 30 days';
+$string['alert_factor_login_count_7d'] = 'visits to the course in the last 7 days';
 $string['alert_factor_quiz_avg_score'] = 'quiz average';
 $string['alert_factor_resource_views'] = 'materials viewed';
 $string['alert_factor_saipa_sessions'] = 'SAIPA queries';
@@ -237,6 +243,7 @@ $string['notify_teacher_body_html'] = '<p>SAIPA detected that the following stud
 $string['notify_teacher_contexturlname'] = 'Teacher dashboard';
 $string['notify_teacher_small'] = 'SAIPA: {$a->count} student(s) at high risk in {$a->course}';
 $string['notify_teacher_subject'] = '[SAIPA] Risk alert — {$a}';
+$string['notsamegroup'] = 'You do not share a group with this user in this course.';
 $string['period_30d']             = 'Last 30 days';
 $string['period_7d']              = 'Last 7 days';
 $string['period_all']             = 'All time';

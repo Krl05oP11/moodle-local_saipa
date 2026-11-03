@@ -126,7 +126,11 @@ class get_course_risk extends external_api {
             return ['results' => [], 'errors' => []];
         }
 
-        $userids = array_values(array_map(fn($u) => (int) $u->id, $students));
+        $userids = array_map(fn($u) => (int) $u->id, $students);
+        $userids = array_values(\local_saipa\local\access::filter_visible_users($context, $userids));
+        if (empty($userids)) {
+            return ['results' => [], 'errors' => []];
+        }
 
         $now     = time();
         $results = [];

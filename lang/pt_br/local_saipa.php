@@ -47,6 +47,9 @@ $string['advisor_tab_risk']       = 'ROI de Risco';
 $string['advisor_tab_summary']    = 'Resumo';
 $string['advisor_title']          = 'SAIPA — Painel do Assessor';
 $string['alert_cancel_btn']         = 'Cancelar';
+$string['alert_custom_message'] = 'Mensagem de {$a->teacher}, docente de *{$a->course}*:
+
+{$a->message}';
 $string['alert_default_message']    = 'Olá {$a->student} 👋
 
 Seu professor {$a->teacher} percebeu que você pode precisar de apoio no curso *{$a->course}*.
@@ -54,14 +57,17 @@ Seu professor {$a->teacher} percebeu que você pode precisar de apoio no curso *
 {$a->risk_detail}
 
 Lembre-se que pode me escrever a qualquer momento para tirar dúvidas sobre os temas da disciplina. Estou aqui para ajudar! 📚';
+$string['alert_error_cooldown'] = 'Este aluno já recebeu um alerta recentemente. Aguarde o fim do intervalo entre alertas definido pelo administrador.';
+$string['alert_error_engine_failed'] = 'O motor do SAIPA não conseguiu entregar a mensagem.';
+$string['alert_error_message_too_long'] = 'A mensagem é longa demais: o limite é de 1000 caracteres.';
 $string['alert_factor_completion_rate'] = 'progresso geral no curso';
 $string['alert_factor_days_enrolled'] = 'dias inscrito';
 $string['alert_factor_forum_posts'] = 'participações nos fóruns';
 $string['alert_factor_grade_avg'] = 'média das notas';
 $string['alert_factor_last_access_days'] = 'dias sem acessar o curso';
 $string['alert_factor_line'] = '• Indicador em destaque: {$a}';
-$string['alert_factor_login_count_30d'] = 'acessos nos últimos 30 dias';
-$string['alert_factor_login_count_7d'] = 'acessos nos últimos 7 dias';
+$string['alert_factor_login_count_30d'] = 'acessos ao curso nos últimos 30 dias';
+$string['alert_factor_login_count_7d'] = 'acessos ao curso nos últimos 7 dias';
 $string['alert_factor_quiz_avg_score'] = 'média nos questionários';
 $string['alert_factor_resource_views'] = 'materiais visualizados';
 $string['alert_factor_saipa_sessions'] = 'consultas ao SAIPA';
@@ -237,6 +243,7 @@ $string['notify_teacher_body_html'] = '<p>O SAIPA detectou que os seguintes alun
 $string['notify_teacher_contexturlname'] = 'Painel do professor';
 $string['notify_teacher_small'] = 'SAIPA: {$a->count} aluno(s) em risco alto em {$a->course}';
 $string['notify_teacher_subject'] = '[SAIPA] Alerta de risco — {$a}';
+$string['notsamegroup'] = 'Você não compartilha nenhum grupo com este usuário neste curso.';
 $string['period_30d']             = 'Últimos 30 dias';
 $string['period_7d']              = 'Últimos 7 dias';
 $string['period_all']             = 'Todo o período';
