@@ -29,6 +29,13 @@ jobs:
       matrix:
         php: ['8.1', '8.2', '8.3']
         moodle-branch: ['MOODLE_404_STABLE', 'MOODLE_405_STABLE']
+        # Moodle 5.0 needs PHP 8.2 or later. The plugins declare 4.4 and 4.5; 5.0 runs here
+        # so that a change that breaks it shows up (Marketplace review MMR-462 tested on 5.x).
+        include:
+          - php: '8.2'
+            moodle-branch: 'MOODLE_500_STABLE'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_500_STABLE'
 
     steps:
       - name: Check out plugin

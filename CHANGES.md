@@ -4,6 +4,48 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
+### Marketplace review MMR-462 (0.5.7, 2026-11-02)
+The reviewer's findings are the GitHub issues 1-15 of this repository; the
+items marked "audit" come from our own review of every web service afterwards.
+
+#### Security
+- A teacher reaches only the students of their course and, in separate-groups
+  courses, of their groups (`\local_saipa\local\access`): get_student_features
+  and send_telegram_alert (issues 4 and 5), get_student_history, get_student_list
+  and get_course_risk (audit).
+- get_student_features reads only this course's data: visits to the course
+  instead of site-wide logins (same field names for the engine), ratings given in
+  this course's chat.
+- send_telegram_alert: 1000-character limit, the teacher's text goes out signed
+  with their name and the course, and `alert_cooldown_hours` is enforced (it was
+  saved but never applied).
+- Telegram and WhatsApp services validate their context and require
+  `local/saipa:chat`; unlinking your own account needs no capability;
+  telegram_confirm_link requires `local/saipa:enginebridge` (issue 7).
+- WhatsApp codes: 60 s between codes and 5 per hour per account, 3 per hour per
+  number, the code is cancelled after 5 wrong tries (issue 13, new `otp` cache).
+- Telegram link tokens are random; they were an HMAC keyed with a secret that a
+  fresh install never set (audit). telegram_get_session only returns a course
+  the user can still chat in (audit).
+- The chat index leaves out hidden modules, modules in hidden sections and hidden
+  book chapters (audit).
+
+#### Added
+- Course backup and restore of SAIPA's data (issue 3).
+- Moodle 5.0 jobs in the CI.
+
+#### Changed
+- Advisor dashboard tabs work with Bootstrap 5 (Moodle 5.x) as well as 4 (issue 6).
+- Saving an activity queues an adhoc task (`index_module`) instead of calling the
+  engine while the teacher waits (issue 11).
+- The setup wizard's script is an AMD module (`setup_wizard`), and the setup and
+  advisor CSS moved to `styles.css`, scoped to each page (issues 9 and 12).
+- No whole-table reads in lib.php, get_course_settings and get_my_courses (issue 10).
+- Global functions carry the `local_saipa_` prefix (issue 1); block_saipa's
+  version is read with get_config() (issue 2); GPL boilerplate in every template
+  and AMD source (issue 8); language strings are single literals (issue 14).
+- The teacher panel explains why an alert was not sent.
+
 ### Changed
 - **Every user-visible string now comes from the language packs.** The JS
   dashboards (teacher, advisor, My courses), `status.php`, `setup.php`,
