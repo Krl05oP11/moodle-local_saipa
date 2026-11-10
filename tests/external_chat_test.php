@@ -253,4 +253,44 @@ final class external_chat_test extends \advanced_testcase {
         $this->assertArrayHasKey('reply', $result);
         $this->assertArrayHasKey('session_id', $result);
     }
+
+    /**
+     * get_history returns the last 20 messages in chronological order, every one of them (two rows with the
+     * same role are two messages) and with the message_id that block_saipa uses for the feedback buttons.
+     *
+     * @covers \local_saipa\external\get_history::execute
+     */
+    public function test_get_history_last_20_in_order_with_ids(): void {
+        global $DB;
+        $this->setUser($this->student);
+        $sessionid = (int) $DB->insert_record('local_saipa_sessions', (object) [
+            'userid'       => $this->student->id,
+            'courseid'     => $this->course->id,
+            'contextid'    => \context_course::instance($this->course->id)->id,
+            'timecreated'  => time(),
+            'timemodified' => time(),
+        ]);
+        $base = time() - 1000;
+        $ids = [];
+        for ($i = 1; $i <= 25; $i++) {
+            $ids[$i] = (int) $DB->insert_record('local_saipa_messages', (object) [
+                'sessionid'   => $sessionid,
+                'role'        => $i % 2 ? 'user' : 'assistant',
+                'content'     => "Message {$i}",
+                'timecreated' => $base + $i,
+            ]);
+        }
+
+        $result = \local_saipa\external\get_history::execute($this->course->id);
+        $result = \core_external\external_api::clean_returnvalue(
+            \local_saipa\external\get_history::execute_returns(),
+            $result
+        );
+
+        $this->assertCount(20, $result['messages']);
+        $this->assertSame('Message 6', $result['messages'][0]['content']);
+        $this->assertSame('Message 25', $result['messages'][19]['content']);
+        $this->assertSame($ids[25], $result['messages'][19]['message_id']);
+        $this->assertSame('user', $result['messages'][19]['role']);
+    }
 }

@@ -80,20 +80,23 @@ class get_history extends external_api {
             $session->id = $DB->insert_record('local_saipa_sessions', $session);
         }
 
-        // Fetch last 20 messages ordered chronologically.
+        // The last 20 messages, returned in chronological order. The id goes first so that get_records()
+        // keys the rows by it: keyed by role, all but one message per role were lost. The block uses
+        // message_id for the feedback buttons of the assistant's earlier answers.
         $rows = $DB->get_records(
             'local_saipa_messages',
             ['sessionid' => $session->id],
-            'timecreated ASC',
-            'role,content',
+            'timecreated DESC, id DESC',
+            'id, role, content, timecreated',
             0,
             20
         );
 
-        $messages = array_values(array_map(fn($r) => [
-            'role'    => $r->role,
-            'content' => $r->content,
-        ], $rows));
+        $messages = array_reverse(array_values(array_map(fn($r) => [
+            'message_id' => (int) $r->id,
+            'role'       => $r->role,
+            'content'    => $r->content,
+        ], $rows)));
 
         return [
             'session_id' => $session->id,
@@ -109,8 +112,9 @@ class get_history extends external_api {
             'session_id' => new external_value(PARAM_INT, 'Session ID'),
             'messages'   => new external_multiple_structure(
                 new external_single_structure([
-                    'role'    => new external_value(PARAM_TEXT, 'user or assistant'),
-                    'content' => new external_value(PARAM_RAW, 'Message content'),
+                    'message_id' => new external_value(PARAM_INT, 'Message ID, used to rate the assistant answers'),
+                    'role'       => new external_value(PARAM_TEXT, 'user or assistant'),
+                    'content'    => new external_value(PARAM_RAW, 'Message content'),
                 ]),
                 'Previous messages in this session'
             ),
