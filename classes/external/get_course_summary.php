@@ -29,8 +29,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-
-
+use local_saipa\local\access;
 
 /**
  * Get_course_summary.
@@ -61,45 +60,54 @@ class get_course_summary extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
 
-        // Enrolled students.
+        // Enrolled students the current user may see: in a separate-groups course, a teacher without
+        // moodle/site:accessallgroups only sees the students of their groups (MMR-462 #17). Every
+        // per-student figure below is limited to this set, like get_student_list and get_course_risk.
         $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id');
         $teacherids  = array_keys(get_enrolled_users($context, 'local/saipa:view', 0, 'u.id'));
-        $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
-        $enrolled     = count($students);
+        $studentids  = array_diff(array_map('intval', array_keys($allchatters)), array_map('intval', $teacherids));
+        $studentids  = array_values(access::filter_visible_users($context, array_values($studentids)));
+        $enrolled    = count($studentids);
+
+        // A placeholder that matches no user keeps the SQL valid when nobody is visible.
+        [$insql, $inparams] = $DB->get_in_or_equal($studentids ?: [0], SQL_PARAMS_NAMED, 'stu');
 
         // Active SAIPA users (at least 1 message sent).
         $activeusers = (int) $DB->count_records_sql(
-            'SELECT COUNT(DISTINCT s.userid)
+            "SELECT COUNT(DISTINCT s.userid)
                FROM {local_saipa_messages} m
                JOIN {local_saipa_sessions} s ON s.id = m.sessionid
-              WHERE s.courseid = :cid AND m.role = :role',
-            ['cid' => $cid, 'role' => 'user']
+              WHERE s.courseid = :cid AND m.role = :role AND s.userid $insql",
+            ['cid' => $cid, 'role' => 'user'] + $inparams
         );
         $adoptionrate = $enrolled > 0 ? round($activeusers / $enrolled, 4) : 0.0;
 
-        // Message counts.
+        // Message counts, all time and in the last 7 days (the "Msgs (7d)" card of the teacher dashboard).
+        $since7d = time() - (7 * 86400);
         $msgcounts = $DB->get_record_sql(
-            'SELECT COUNT(*) AS total,
+            "SELECT COUNT(*) AS total,
                     SUM(CASE WHEN m.role = :user THEN 1 ELSE 0 END) AS user_msgs,
-                    SUM(CASE WHEN m.role = :assistant THEN 1 ELSE 0 END) AS asst_msgs
+                    SUM(CASE WHEN m.role = :assistant THEN 1 ELSE 0 END) AS asst_msgs,
+                    SUM(CASE WHEN m.timecreated >= :since THEN 1 ELSE 0 END) AS msgs_7d
                FROM {local_saipa_messages} m
                JOIN {local_saipa_sessions} s ON s.id = m.sessionid
-              WHERE s.courseid = :cid',
-            ['cid' => $cid, 'user' => 'user', 'assistant' => 'assistant']
+              WHERE s.courseid = :cid AND s.userid $insql",
+            ['cid' => $cid, 'user' => 'user', 'assistant' => 'assistant', 'since' => $since7d] + $inparams
         );
         $totalmessages     = (int) ($msgcounts->total ?? 0);
         $usermessages      = (int) ($msgcounts->user_msgs ?? 0);
         $assistantmessages = (int) ($msgcounts->asst_msgs ?? 0);
+        $messages7d        = (int) ($msgcounts->msgs_7d ?? 0);
 
         // Feedback.
         $fb = $DB->get_record_sql(
-            'SELECT SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
+            "SELECT SUM(CASE WHEN f.rating > 0 THEN 1 ELSE 0 END) AS pos,
                     SUM(CASE WHEN f.rating < 0 THEN 1 ELSE 0 END) AS neg
                FROM {local_saipa_feedback} f
                JOIN {local_saipa_messages} m ON m.id = f.messageid
                JOIN {local_saipa_sessions} s ON s.id = m.sessionid
-              WHERE s.courseid = :cid',
-            ['cid' => $cid]
+              WHERE s.courseid = :cid AND s.userid $insql",
+            ['cid' => $cid] + $inparams
         );
         $positivefeedback = (int) ($fb->pos ?? 0);
         $negativefeedback = (int) ($fb->neg ?? 0);
@@ -108,13 +116,13 @@ class get_course_summary extends external_api {
 
         // Risk scores.
         $risk = $DB->get_record_sql(
-            'SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS high_cnt,
+            "SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS high_cnt,
                     SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS med_cnt,
                     SUM(CASE WHEN risk_level = :l THEN 1 ELSE 0 END) AS low_cnt,
                     MAX(timecomputed) AS last_computed
                FROM {local_saipa_risk_scores}
-              WHERE courseid = :cid',
-            ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low']
+              WHERE courseid = :cid AND userid $insql",
+            ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low'] + $inparams
         );
         $highriskcount   = (int) ($risk->high_cnt ?? 0);
         $mediumriskcount = (int) ($risk->med_cnt ?? 0);
@@ -130,14 +138,15 @@ class get_course_summary extends external_api {
         // Alerts last 30 days.
         $since30d = time() - (30 * 86400);
         $alerts = $DB->get_record_sql(
-            'SELECT COUNT(*) AS sent,
+            "SELECT COUNT(*) AS sent,
                     SUM(CASE WHEN n.responded_at > 0 THEN 1 ELSE 0 END) AS responded
                FROM {local_saipa_notifications} n
               WHERE n.userid IN (
                 SELECT DISTINCT userid FROM {local_saipa_sessions} WHERE courseid = :cid
               )
-              AND n.timesent >= :since',
-            ['cid' => $cid, 'since' => $since30d]
+              AND n.userid $insql
+              AND n.timesent >= :since",
+            ['cid' => $cid, 'since' => $since30d] + $inparams
         );
         $alertssent30d      = (int) ($alerts->sent ?? 0);
         $alertsresponded30d = (int) ($alerts->responded ?? 0);
@@ -149,6 +158,7 @@ class get_course_summary extends external_api {
             'active_saipa_users'    => $activeusers,
             'adoption_rate'         => $adoptionrate,
             'total_messages'        => $totalmessages,
+            'messages_7d'           => $messages7d,
             'user_messages'         => $usermessages,
             'assistant_messages'    => $assistantmessages,
             'positive_feedback'     => $positivefeedback,
@@ -175,7 +185,8 @@ class get_course_summary extends external_api {
             'enrolled_students'     => new external_value(PARAM_INT, 'Total enrolled students'),
             'active_saipa_users'    => new external_value(PARAM_INT, 'Students who sent at least 1 message'),
             'adoption_rate'         => new external_value(PARAM_FLOAT, 'active/enrolled ratio (0-1)'),
-            'total_messages'        => new external_value(PARAM_INT, 'All messages ever in this course'),
+            'total_messages'        => new external_value(PARAM_INT, 'All messages ever in the chats of the visible students'),
+            'messages_7d'           => new external_value(PARAM_INT, 'Messages in the chats of the visible students, last 7 days'),
             'user_messages'         => new external_value(PARAM_INT, 'Messages sent by students'),
             'assistant_messages'    => new external_value(PARAM_INT, 'Messages sent by assistant'),
             'positive_feedback'     => new external_value(PARAM_INT, 'Thumbs-up count'),

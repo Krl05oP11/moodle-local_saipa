@@ -560,11 +560,13 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                     + (r.alerts_responded_30d ? ' / ' + r.alerts_responded_30d : '');
             }
             if (el('ss-risk')) {
-                var hi = r.high_risk;
-                var riskHtml = hi > 0
-                    ? '<span class="text-danger font-weight-bold">' + hi + '</span>'
-                    : '<span class="text-success">0</span>';
-                el('ss-risk').innerHTML = riskHtml;
+                // The service returns high_risk_count (MMR-462 #19: this card read a field that does not exist).
+                var hi = r.high_risk_count;
+                var riskSpan = document.createElement('span');
+                riskSpan.className = hi > 0 ? 'text-danger font-weight-bold' : 'text-success';
+                riskSpan.textContent = hi > 0 ? hi : 0;
+                el('ss-risk').textContent = '';
+                el('ss-risk').appendChild(riskSpan);
             }
             if (el('ss-index')) {
                 el('ss-index').innerHTML = indexStatusBadge(r.index_status);

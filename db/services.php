@@ -262,7 +262,7 @@ $functions = [
         'description'   => 'Returns summary metrics for all courses the user teaches (or all courses for admins)',
         'type'          => 'read',
         'ajax'          => true,
-        'capabilities'  => 'local/saipa:viewall',
+        'capabilities'  => 'local/saipa:view',
         'loginrequired' => true,
     ],
 

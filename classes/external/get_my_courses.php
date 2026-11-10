@@ -31,7 +31,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
-
+use local_saipa\local\access;
 
 /**
  * Get_my_courses.
@@ -50,9 +50,11 @@ class get_my_courses extends external_api {
     public static function execute(): array {
         global $DB, $USER;
 
+        // No system-level capability here: my_courses.php admits teachers through local/saipa:view in each
+        // course, so the service checks that capability per course below (MMR-462 #18). Admins with
+        // local/saipa:manage see every course that uses SAIPA.
         $syscontext = \context_system::instance();
         self::validate_context($syscontext);
-        require_capability('local/saipa:viewall', $syscontext);
 
         $isadmin = has_capability('local/saipa:manage', $syscontext);
 
@@ -93,40 +95,42 @@ class get_my_courses extends external_api {
             $cid = (int) $course->id;
             $ctx = \context_course::instance($cid);
 
-            // Enrolled students.
+            // Enrolled students the current user may see (separate groups), as in get_course_summary.
             $allchatters = get_enrolled_users($ctx, 'local/saipa:chat', 0, 'u.id');
             $teacherids  = array_keys(get_enrolled_users($ctx, 'local/saipa:view', 0, 'u.id'));
-            $students     = array_filter($allchatters, fn($u) => !in_array($u->id, $teacherids));
-            $enrolledcnt = count($students);
+            $studentids  = array_diff(array_map('intval', array_keys($allchatters)), array_map('intval', $teacherids));
+            $studentids  = array_values(access::filter_visible_users($ctx, array_values($studentids)));
+            $enrolledcnt = count($studentids);
+            [$insql, $inparams] = $DB->get_in_or_equal($studentids ?: [0], SQL_PARAMS_NAMED, 'stu');
 
             // Active SAIPA users.
             $active = (int) $DB->count_records_sql(
-                'SELECT COUNT(DISTINCT s.userid)
+                "SELECT COUNT(DISTINCT s.userid)
                    FROM {local_saipa_messages} m
                    JOIN {local_saipa_sessions} s ON s.id = m.sessionid
-                  WHERE s.courseid = :cid AND m.role = :role',
-                ['cid' => $cid, 'role' => 'user']
+                  WHERE s.courseid = :cid AND m.role = :role AND s.userid $insql",
+                ['cid' => $cid, 'role' => 'user'] + $inparams
             );
             $adoption = $enrolledcnt > 0 ? round($active / $enrolledcnt, 4) : 0.0;
 
             // Messages last 7 days.
             $since7d    = time() - (7 * 86400);
             $msgs7d    = (int) $DB->count_records_sql(
-                'SELECT COUNT(*)
+                "SELECT COUNT(*)
                    FROM {local_saipa_messages} m
                    JOIN {local_saipa_sessions} s ON s.id = m.sessionid
-                  WHERE s.courseid = :cid AND m.timecreated >= :since',
-                ['cid' => $cid, 'since' => $since7d]
+                  WHERE s.courseid = :cid AND m.timecreated >= :since AND s.userid $insql",
+                ['cid' => $cid, 'since' => $since7d] + $inparams
             );
 
             // Risk distribution.
             $risk = $DB->get_record_sql(
-                'SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS hi,
+                "SELECT SUM(CASE WHEN risk_level = :h THEN 1 ELSE 0 END) AS hi,
                         SUM(CASE WHEN risk_level = :m THEN 1 ELSE 0 END) AS me,
                         SUM(CASE WHEN risk_level = :l THEN 1 ELSE 0 END) AS lo
                    FROM {local_saipa_risk_scores}
-                  WHERE courseid = :cid',
-                ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low']
+                  WHERE courseid = :cid AND userid $insql",
+                ['cid' => $cid, 'h' => 'high', 'm' => 'medium', 'l' => 'low'] + $inparams
             );
 
             $s   = $settingsmap[$cid] ?? null;
@@ -134,7 +138,7 @@ class get_my_courses extends external_api {
 
             $result[] = [
                 'courseid'        => $cid,
-                'coursename'      => $course->fullname,
+                'coursename'      => format_string($course->fullname, true, ['context' => $ctx]),
                 'shortname'       => $course->shortname,
                 'enrolled_students' => $enrolledcnt,
                 'active_saipa_users' => $active,

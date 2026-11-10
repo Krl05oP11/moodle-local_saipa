@@ -169,6 +169,91 @@ final class external_v050_test extends \advanced_testcase {
     }
 
     /**
+     * Every field the teacher dashboard reads is returned, including the 7-day message count of its
+     * "Msgs (7d)" card and high_risk_count (MMR-462 #19).
+     *
+     * @covers \local_saipa\external\get_course_summary::execute
+     */
+    public function test_get_course_summary_messages_7d_and_risk(): void {
+        global $DB;
+        $this->setUser($this->teacher);
+
+        $sid = $this->create_session($this->student->id, $this->course->id);
+        $this->create_message($sid, 'user', 'Recent');
+        $old = $this->create_message($sid, 'assistant', 'Old');
+        $DB->set_field('local_saipa_messages', 'timecreated', time() - 10 * 86400, ['id' => $old]);
+        $DB->insert_record('local_saipa_risk_scores', (object) [
+            'userid' => $this->student->id, 'courseid' => $this->course->id, 'score' => 0.9,
+            'risk_level' => 'high', 'factors' => '{}', 'timecomputed' => time(),
+        ]);
+
+        $r = \local_saipa\external\get_course_summary::execute($this->course->id);
+        $r = \core_external\external_api::clean_returnvalue(\local_saipa\external\get_course_summary::execute_returns(), $r);
+
+        $this->assertSame(2, $r['total_messages']);
+        $this->assertSame(1, $r['messages_7d']);
+        $this->assertSame(1, $r['high_risk_count']);
+        $read = ['enrolled_students', 'active_saipa_users', 'adoption_rate', 'messages_7d', 'alerts_sent_30d',
+            'alerts_responded_30d', 'high_risk_count', 'index_status'];
+        foreach ($read as $field) {
+            $this->assertArrayHasKey($field, $r, "teacher_dashboard.js reads {$field}");
+        }
+    }
+
+    /**
+     * In a separate-groups course, a teacher without moodle/site:accessallgroups only counts the students of
+     * their groups (MMR-462 #17); one who can access all groups counts everyone.
+     *
+     * @covers \local_saipa\external\get_course_summary::execute
+     * @covers \local_saipa\external\get_my_courses::execute
+     */
+    public function test_get_course_summary_respects_separate_groups(): void {
+        global $DB;
+        $gen = $this->getDataGenerator();
+        $course = $gen->create_course(['groupmode' => SEPARATEGROUPS, 'groupmodeforce' => 1]);
+        $ga = $gen->create_group(['courseid' => $course->id]);
+        $gb = $gen->create_group(['courseid' => $course->id]);
+
+        $teachera = $gen->create_user();
+        $gen->enrol_user($teachera->id, $course->id, 'teacher');
+        $gen->create_group_member(['groupid' => $ga->id, 'userid' => $teachera->id]);
+
+        $ina = $gen->create_user();
+        $inb = $gen->create_user();
+        foreach ([[$ina, $ga], [$inb, $gb]] as [$u, $g]) {
+            $gen->enrol_user($u->id, $course->id, 'student');
+            $gen->create_group_member(['groupid' => $g->id, 'userid' => $u->id]);
+            $sid = $this->create_session($u->id, $course->id);
+            $this->create_message($sid, 'user', 'Hello');
+            $DB->insert_record('local_saipa_risk_scores', (object) [
+                'userid' => $u->id, 'courseid' => $course->id, 'score' => 0.9,
+                'risk_level' => 'high', 'factors' => '{}', 'timecomputed' => time(),
+            ]);
+        }
+
+        // Non-editing teacher of group A: no moodle/site:accessallgroups.
+        $this->setUser($teachera);
+        $r = \local_saipa\external\get_course_summary::execute($course->id);
+        $this->assertSame(1, $r['enrolled_students']);
+        $this->assertSame(1, $r['active_saipa_users']);
+        $this->assertSame(1, $r['total_messages']);
+        $this->assertSame(1, $r['high_risk_count']);
+
+        $mine = \local_saipa\external\get_my_courses::execute();
+        $this->assertCount(1, $mine['courses']);
+        $this->assertSame(1, $mine['courses'][0]['enrolled_students']);
+        $this->assertSame(1, $mine['courses'][0]['high_risk']);
+
+        // Editing teacher: can access all groups.
+        $editor = $gen->create_user();
+        $gen->enrol_user($editor->id, $course->id, 'editingteacher');
+        $this->setUser($editor);
+        $r = \local_saipa\external\get_course_summary::execute($course->id);
+        $this->assertSame(2, $r['enrolled_students']);
+        $this->assertSame(2, $r['high_risk_count']);
+    }
+
+    /**
      * Student without view capability is rejected.
      *
      * @covers \local_saipa\external\get_course_summary::execute
@@ -230,14 +315,33 @@ final class external_v050_test extends \advanced_testcase {
     }
 
     /**
-     * Student without viewall capability is rejected.
+     * A teacher with only a course role (no system capability) gets their course: my_courses.php admits them
+     * through local/saipa:view in the course, and the service no longer requires local/saipa:viewall in the
+     * system context (MMR-462 #18).
      *
      * @covers \local_saipa\external\get_my_courses::execute
      */
-    public function test_get_my_courses_requires_viewall_capability(): void {
+    public function test_get_my_courses_course_teacher(): void {
+        $this->assertFalse(has_capability('local/saipa:viewall', \context_system::instance(), $this->teacher));
+        $this->setUser($this->teacher);
+
+        $r = \local_saipa\external\get_my_courses::execute();
+        $r = \core_external\external_api::clean_returnvalue(\local_saipa\external\get_my_courses::execute_returns(), $r);
+
+        $this->assertCount(1, $r['courses']);
+        $this->assertSame((int) $this->course->id, (int) $r['courses'][0]['courseid']);
+        $this->assertSame(1, $r['courses'][0]['enrolled_students']);
+    }
+
+    /**
+     * A student (no local/saipa:view anywhere) gets an empty list, not someone else's course.
+     *
+     * @covers \local_saipa\external\get_my_courses::execute
+     */
+    public function test_get_my_courses_student_gets_no_courses(): void {
         $this->setUser($this->student);
-        $this->expectException(\required_capability_exception::class);
-        \local_saipa\external\get_my_courses::execute();
+        $r = \local_saipa\external\get_my_courses::execute();
+        $this->assertSame([], $r['courses']);
     }
 
     // 3. get_institution_summary
