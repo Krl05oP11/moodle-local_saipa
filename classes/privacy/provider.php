@@ -34,7 +34,10 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
- * Privacy provider covering all 7 personal-data tables in local_saipa.
+ * Privacy provider for local_saipa.
+ *
+ * Covers the 8 tables with personal data (5 in course contexts, 3 in the system context) and the three
+ * external locations the plugin sends personal data to: the SAIPA engine, and Telegram and WhatsApp through it.
  */
 class provider implements
     \core_privacy\local\metadata\provider,
@@ -96,10 +99,29 @@ class provider implements
             'confirmed'          => 'privacy:metadata:saipa_telegram_links:confirmed',
         ], 'privacy:metadata:saipa_telegram_links');
 
+        // Everything the plugin sends to the engine (lib.php local_saipa_engine_request()):
+        // chat.php and admin_chat.php (message, history, course, user, role), get_course_risk.php and
+        // task\risk_evaluation (per-student features). Course material sent for indexing is not personal data.
         $collection->add_external_location_link('saipa_engine', [
-            'userid'  => 'privacy:metadata:saipa_engine:userid',
-            'message' => 'privacy:metadata:saipa_engine:message',
+            'userid'       => 'privacy:metadata:saipa_engine:userid',
+            'courseid'     => 'privacy:metadata:saipa_engine:courseid',
+            'userrole'     => 'privacy:metadata:saipa_engine:userrole',
+            'message'      => 'privacy:metadata:saipa_engine:message',
+            'history'      => 'privacy:metadata:saipa_engine:history',
+            'riskfeatures' => 'privacy:metadata:saipa_engine:riskfeatures',
         ], 'privacy:metadata:saipa_engine');
+
+        // Telegram alerts (send_telegram_alert.php, task\risk_evaluation): the engine relays them to Telegram.
+        $collection->add_external_location_link('saipa_telegram', [
+            'telegramid' => 'privacy:metadata:saipa_telegram:telegramid',
+            'message'    => 'privacy:metadata:saipa_telegram:message',
+        ], 'privacy:metadata:saipa_telegram');
+
+        // WhatsApp phone verification (whatsapp_start_verify.php): the engine relays the code to WhatsApp.
+        $collection->add_external_location_link('saipa_whatsapp', [
+            'phone' => 'privacy:metadata:saipa_whatsapp:phone',
+            'otp'   => 'privacy:metadata:saipa_whatsapp:otp',
+        ], 'privacy:metadata:saipa_whatsapp');
 
         $collection->add_database_table('local_saipa_risk_history', [
             'userid'    => 'privacy:metadata:risk_history:userid',
@@ -144,8 +166,19 @@ class provider implements
                  WHERE rh.userid = :userid';
         $contextlist->add_from_sql($sql, ['ctxlevel' => CONTEXT_COURSE, 'userid' => $userid]);
 
-        // System context for phone_verify, notifications, telegram_links.
-        $contextlist->add_system_context();
+        // System context, only when the user has rows in phone_verify, notifications or telegram_links.
+        $sql = 'SELECT ctx.id
+                  FROM {context} ctx
+                 WHERE ctx.contextlevel = :ctxlevel
+                   AND (EXISTS (SELECT 1 FROM {local_saipa_phone_verify} pv WHERE pv.userid = :userid1)
+                        OR EXISTS (SELECT 1 FROM {local_saipa_notifications} n WHERE n.userid = :userid2)
+                        OR EXISTS (SELECT 1 FROM {local_saipa_telegram_links} tl WHERE tl.userid = :userid3))';
+        $contextlist->add_from_sql($sql, [
+            'ctxlevel' => CONTEXT_SYSTEM,
+            'userid1'  => $userid,
+            'userid2'  => $userid,
+            'userid3'  => $userid,
+        ]);
 
         return $contextlist;
     }
@@ -351,6 +384,11 @@ class provider implements
             $DB->delete_records('local_saipa_sessions', ['courseid' => $context->instanceid]);
             $DB->delete_records('local_saipa_risk_scores', ['courseid' => $context->instanceid]);
             $DB->delete_records('local_saipa_risk_history', ['courseid' => $context->instanceid]);
+        } else if ($context->contextlevel == CONTEXT_SYSTEM) {
+            // The system-context tables that get_users_in_context() reports for this context.
+            $DB->delete_records('local_saipa_phone_verify');
+            $DB->delete_records('local_saipa_notifications');
+            $DB->delete_records('local_saipa_telegram_links');
         }
     }
 

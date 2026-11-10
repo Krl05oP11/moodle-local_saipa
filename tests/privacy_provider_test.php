@@ -193,6 +193,38 @@ final class privacy_provider_test extends \advanced_testcase {
         $this->assertContains('local_saipa_telegram_links', $names);
     }
 
+    /**
+     * Every personal field sent outside Moodle is declared (MMR-462 #16): the engine, and Telegram and WhatsApp
+     * through it, with a language string for each field and summary.
+     *
+     * @covers \local_saipa\privacy\provider::get_metadata
+     */
+    public function test_get_metadata_external_locations(): void {
+        $collection = provider::get_metadata(new collection('local_saipa'));
+
+        $external = [];
+        foreach ($collection->get_collection() as $item) {
+            if ($item instanceof \core_privacy\local\metadata\types\external_location) {
+                $external[$item->get_name()] = $item;
+            }
+        }
+        $expected = [
+            'saipa_engine'   => ['userid', 'courseid', 'userrole', 'message', 'history', 'riskfeatures'],
+            'saipa_telegram' => ['telegramid', 'message'],
+            'saipa_whatsapp' => ['phone', 'otp'],
+        ];
+        $this->assertEqualsCanonicalizing(array_keys($expected), array_keys($external));
+
+        $sm = get_string_manager();
+        foreach ($expected as $name => $fields) {
+            $this->assertEqualsCanonicalizing($fields, array_keys($external[$name]->get_privacy_fields()));
+            $this->assertTrue($sm->string_exists($external[$name]->get_summary(), 'local_saipa'), $name);
+            foreach ($external[$name]->get_privacy_fields() as $field => $identifier) {
+                $this->assertTrue($sm->string_exists($identifier, 'local_saipa'), "{$name}:{$field}");
+            }
+        }
+    }
+
     // Context discovery -- this is where the real bug lived.
 
     /**
@@ -203,9 +235,37 @@ final class privacy_provider_test extends \advanced_testcase {
     public function test_get_contexts_for_userid_no_data(): void {
         $other = $this->getDataGenerator()->create_user();
         $contextlist = provider::get_contexts_for_userid($other->id);
-        // The system context is always added, but no course context should be.
-        $courseids = array_map('intval', $contextlist->get_contextids());
-        $this->assertNotContains((int) \context_course::instance($this->course->id)->id, $courseids);
+        // Neither a course context nor the system context: the user has no data at all.
+        $this->assertCount(0, $contextlist->get_contextids());
+    }
+
+    /**
+     * The system context is listed only for users with phone, notification or Telegram rows.
+     *
+     * @covers \local_saipa\privacy\provider::get_contexts_for_userid
+     */
+    public function test_get_contexts_for_userid_system_only_with_data(): void {
+        global $DB;
+        $systemid = (int) \context_system::instance()->id;
+
+        // The scoresonly user has phone_verify and telegram_links rows.
+        $ids = array_map('intval', provider::get_contexts_for_userid($this->scoresonly->id)->get_contextids());
+        $this->assertContains($systemid, $ids);
+
+        // The sessiononly user has course data only.
+        $ids = array_map('intval', provider::get_contexts_for_userid($this->sessiononly->id)->get_contextids());
+        $this->assertNotContains($systemid, $ids);
+
+        // A notification row alone is enough.
+        $DB->insert_record('local_saipa_notifications', (object) [
+            'userid'   => $this->sessiononly->id,
+            'template' => 'telegram_alert',
+            'payload'  => '{}',
+            'status'   => 'sent',
+            'timesent' => time(),
+        ]);
+        $ids = array_map('intval', provider::get_contexts_for_userid($this->sessiononly->id)->get_contextids());
+        $this->assertContains($systemid, $ids);
     }
 
     /**
@@ -374,6 +434,58 @@ final class privacy_provider_test extends \advanced_testcase {
         $this->assertSame(0, $DB->count_records('local_saipa_sessions', ['courseid' => $this->course->id]));
         $this->assertSame(0, $DB->count_records('local_saipa_risk_scores', ['courseid' => $this->course->id]));
         $this->assertSame(0, $DB->count_records('local_saipa_risk_history', ['courseid' => $this->course->id]));
+    }
+
+    /**
+     * delete_data_for_all_users_in_context on the system context (the context that get_users_in_context()
+     * reports for these tables) wipes phone_verify, notifications and telegram_links, and leaves course data alone.
+     * MMR-462 #16.
+     *
+     * @covers \local_saipa\privacy\provider::delete_data_for_all_users_in_context
+     */
+    public function test_delete_data_for_all_users_in_system_context(): void {
+        global $DB;
+
+        $DB->insert_record('local_saipa_notifications', (object) [
+            'userid'   => $this->historyonly->id,
+            'template' => 'telegram_alert',
+            'payload'  => '{}',
+            'status'   => 'sent',
+            'timesent' => time(),
+        ]);
+
+        provider::delete_data_for_all_users_in_context(\context_system::instance());
+
+        $this->assertSame(0, $DB->count_records('local_saipa_phone_verify'));
+        $this->assertSame(0, $DB->count_records('local_saipa_notifications'));
+        $this->assertSame(0, $DB->count_records('local_saipa_telegram_links'));
+        $this->assertSame(2, $DB->count_records('local_saipa_risk_scores', ['courseid' => $this->course->id]));
+        $this->assertSame(2, $DB->count_records('local_saipa_sessions', ['courseid' => $this->course->id]));
+    }
+
+    /**
+     * delete_data_for_users on the system context removes only the approved users' system rows.
+     *
+     * @covers \local_saipa\privacy\provider::delete_data_for_users
+     */
+    public function test_delete_data_for_users_system_context(): void {
+        global $DB;
+
+        $DB->insert_record('local_saipa_telegram_links', (object) [
+            'userid'            => $this->historyonly->id,
+            'telegram_id'       => 888888,
+            'telegram_username' => 'keepme',
+            'confirmed'         => 1,
+            'timecreated'       => time(),
+            'timemodified'      => time(),
+        ]);
+
+        $approved = new approved_userlist(\context_system::instance(), 'local_saipa', [$this->scoresonly->id]);
+        provider::delete_data_for_users($approved);
+
+        $this->assertSame(0, $DB->count_records('local_saipa_phone_verify', ['userid' => $this->scoresonly->id]));
+        $this->assertSame(0, $DB->count_records('local_saipa_telegram_links', ['userid' => $this->scoresonly->id]));
+        $this->assertSame(1, $DB->count_records('local_saipa_telegram_links', ['userid' => $this->historyonly->id]));
     }
 
     /**
