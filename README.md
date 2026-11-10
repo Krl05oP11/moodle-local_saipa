@@ -1,8 +1,8 @@
 # SAIPA — AI Companion for Moodle
 
-**SAIPA** (Sistema de Acompañamiento Inteligente Pedagógico con IA) is an AI-powered companion plugin for Moodle 4.x that helps teachers detect at-risk students early, enables role-aware RAG chat over course materials, and delivers proactive alerts via Telegram.
+**SAIPA** (Sistema de Acompañamiento Inteligente Pedagógico con IA) is an AI-powered companion plugin for Moodle 4.4 to 5.3 that helps teachers detect at-risk students early, enables role-aware RAG chat over course materials, and delivers proactive alerts via Telegram.
 
-[![Moodle 4.4+](https://img.shields.io/badge/Moodle-4.4%2B-orange)](https://moodle.org)
+[![Moodle 4.4–5.3](https://img.shields.io/badge/Moodle-4.4%E2%80%935.3-orange)](https://moodle.org)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue)](https://php.net)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-green)](LICENSE)
 [![Maturity: Stable](https://img.shields.io/badge/Maturity-Stable-brightgreen)]()
@@ -52,11 +52,11 @@ Five-tab institutional overview for academic advisors and coordinators:
 
 | Requirement | Version |
 |-------------|---------|
-| Moodle | 4.4 or 4.5 |
-| PHP | 8.1+ |
+| Moodle | 4.4 to 5.3 (`$plugin->supported = [404, 503]`) |
+| PHP | 8.1+ on Moodle 4.4 and 4.5; 8.2+ on Moodle 5.x |
 | Database | MySQL 8+ / MariaDB 10.6+ / PostgreSQL 13+ |
 | **SAIPA Engine** | Python 3.11+, FastAPI, Ollama |
-| **block_saipa** | 2026032401+ (companion block) |
+| **block_saipa** | Optional course block for the chat; it requires this plugin |
 
 ### SAIPA Engine
 The plugin requires a separate Python service (`saipa-engine`) that handles:
