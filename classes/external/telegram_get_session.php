@@ -76,7 +76,8 @@ class telegram_get_session extends external_api {
         // alternate name fields too) -- fetch the full set or fullname()
         // fires a debugging() notice on every call.
         $namefields = implode(', ', \core_user\fields::get_name_fields());
-        $user       = \core_user::get_user($link->userid, "id, {$namefields}", MUST_EXIST);
+        $user       = \core_user::get_user($link->userid, "id, lang, {$namefields}", MUST_EXIST);
+        $userlang   = $user->lang ?: current_language();
         $fullname   = fullname($user);
 
         // The course of the user's most recent SAIPA session, as long as they can still chat there:
@@ -88,11 +89,16 @@ class telegram_get_session extends external_api {
             ['uid' => $link->userid]
         );
         $courseid = 0;
+        $chatoff = false;
         foreach ($sessions as $session) {
             $coursecontext = \context_course::instance($session->courseid, IGNORE_MISSING);
             // Skip courses where the chat is turned off in the course controls.
             $canchat = $coursecontext && is_enrolled($coursecontext, $link->userid, 'local/saipa:chat', true);
-            if ($canchat && local_saipa_course_feature_enabled((int) $session->courseid, 'chat')) {
+            if ($canchat && !local_saipa_course_feature_enabled((int) $session->courseid, 'chat')) {
+                $chatoff = true;
+                continue;
+            }
+            if ($canchat) {
                 $courseid = (int) $session->courseid;
                 break;
             }
@@ -104,6 +110,11 @@ class telegram_get_session extends external_api {
             'course_id' => $courseid,
             'fullname'  => $fullname,
             'use_rag'   => $courseid ? local_saipa_course_feature_enabled($courseid, 'rag') : false,
+            // The user's courses have the chat turned off: the engine answers with this notice, in the user's
+            // language, instead of chatting.
+            'chat_disabled_notice' => ($courseid === 0 && $chatoff)
+                ? get_string_manager()->get_string('feature_disabled_chat', 'local_saipa', null, $userlang)
+                : '',
         ];
     }
 
@@ -119,6 +130,11 @@ class telegram_get_session extends external_api {
             'use_rag'   => new external_value(
                 PARAM_BOOL,
                 'Whether to answer with the course material (course controls)',
+                VALUE_OPTIONAL
+            ),
+            'chat_disabled_notice' => new external_value(
+                PARAM_TEXT,
+                'When the chat is turned off in the user\'s courses: the notice to send instead of chatting',
                 VALUE_OPTIONAL
             ),
         ]);

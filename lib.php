@@ -338,7 +338,8 @@ function local_saipa_telegram_escape(string $text): string {
  * Whether a SAIPA feature is turned on in a course (advisor dashboard, "Course controls" tab).
  *
  * A course without a settings row has every feature on. saipa_enabled is the master switch: when it is
- * off, every feature of the course is off.
+ * off, every feature of the course is off. The site-wide risk_eval_enabled and rag_global_enabled settings
+ * turn risk evaluation and RAG off in every course.
  *
  * @param int $courseid Course ID.
  * @param string $feature 'chat', 'risk', 'alerts' or 'rag'; '' asks about SAIPA as a whole.
@@ -346,6 +347,12 @@ function local_saipa_telegram_escape(string $text): string {
  */
 function local_saipa_course_feature_enabled(int $courseid, string $feature = ''): bool {
     global $DB;
+    // Site-wide switches of the plugin settings (advisor dashboard, "Configuration"): off turns the feature off
+    // in every course. Unset means on.
+    $global = ['risk' => 'risk_eval_enabled', 'rag' => 'rag_global_enabled'];
+    if (isset($global[$feature]) && (string) get_config('local_saipa', $global[$feature]) === '0') {
+        return false;
+    }
     $row = $DB->get_record('local_saipa_course_settings', ['courseid' => $courseid]);
     if (!$row) {
         return true;

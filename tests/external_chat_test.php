@@ -184,6 +184,8 @@ final class external_chat_test extends \advanced_testcase {
         set_config('engine_url', '', 'local_saipa');
 
         $result = \local_saipa\external\chat::execute($this->course->id, 'Hola', 0);
+        // A valid response for AJAX and REST callers (message_id was missing on this path).
+        $result = \core_external\external_api::clean_returnvalue(\local_saipa\external\chat::execute_returns(), $result);
 
         $this->assertArrayHasKey('reply', $result);
         $this->assertNotEmpty($result['reply'], 'Error reply must not be empty');

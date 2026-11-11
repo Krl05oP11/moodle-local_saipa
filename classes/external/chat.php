@@ -78,6 +78,7 @@ class chat extends external_api {
             return [
                 'reply'      => get_string('feature_disabled_chat', 'local_saipa'),
                 'session_id' => $params['session_id'],
+                'message_id' => 0,
                 'sources'    => [],
             ];
         }
@@ -150,6 +151,7 @@ class chat extends external_api {
             return [
                 'reply'      => get_string('engine_error', 'local_saipa') . ': ' . $response['error'],
                 'session_id' => $session->id,
+                'message_id' => 0,
                 'sources'    => [],
             ];
         }

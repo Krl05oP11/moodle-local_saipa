@@ -95,6 +95,22 @@ final class course_controls_test extends \advanced_testcase {
     }
 
     /**
+     * The site-wide switches of the plugin settings turn risk evaluation and RAG off in every course.
+     *
+     * @covers ::local_saipa_course_feature_enabled
+     */
+    public function test_global_switches(): void {
+        set_config('risk_eval_enabled', 0, 'local_saipa');
+        set_config('rag_global_enabled', 0, 'local_saipa');
+        $this->assertFalse(local_saipa_course_feature_enabled($this->course->id, 'risk'));
+        $this->assertFalse(local_saipa_course_feature_enabled($this->course->id, 'rag'));
+        $this->assertTrue(local_saipa_course_feature_enabled($this->course->id, 'chat'));
+
+        set_config('risk_eval_enabled', 1, 'local_saipa');
+        $this->assertTrue(local_saipa_course_feature_enabled($this->course->id, 'risk'));
+    }
+
+    /**
      * With the chat off, the chat service answers with a notice and stores nothing.
      *
      * @covers \local_saipa\external\chat::execute
@@ -105,6 +121,8 @@ final class course_controls_test extends \advanced_testcase {
         $this->setUser($this->student);
 
         $result = \local_saipa\external\chat::execute($this->course->id, 'Hello', 0);
+        // Through clean_returnvalue, as every AJAX and REST call: block_saipa must get a valid response.
+        $result = \core_external\external_api::clean_returnvalue(\local_saipa\external\chat::execute_returns(), $result);
 
         $this->assertSame(get_string('feature_disabled_chat', 'local_saipa'), $result['reply']);
         $this->assertSame(0, $DB->count_records('local_saipa_messages'));
@@ -173,5 +191,16 @@ final class course_controls_test extends \advanced_testcase {
 
         $this->assertSame((int) $second->id, $result['course_id']);
         $this->assertFalse($result['use_rag']);
+        $this->assertSame('', $result['chat_disabled_notice']);
+
+        // With the chat off in every course of the user, the engine gets the notice in the user's language.
+        $DB->set_field('local_saipa_course_settings', 'chat_enabled', 0, ['courseid' => $second->id]);
+        $result = \local_saipa\external\telegram_get_session::execute(4242);
+        $result = \core_external\external_api::clean_returnvalue(
+            \local_saipa\external\telegram_get_session::execute_returns(),
+            $result
+        );
+        $this->assertSame(0, $result['course_id']);
+        $this->assertSame(get_string('feature_disabled_chat', 'local_saipa'), $result['chat_disabled_notice']);
     }
 }
