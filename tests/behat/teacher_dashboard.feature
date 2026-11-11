@@ -23,7 +23,7 @@ Feature: SAIPA teacher dashboard
   Scenario: Teacher can access the dashboard page
     Given I am on the "SAIPATEST" "local_saipa > teacher dashboard" page logged in as "teacher1"
     Then I should see "SAIPA" in the page title
-    And I should see "Student Activity"
+    And I should see "Student activity"
 
   @javascript
   Scenario: Teacher sees enrolled students listed in the dashboard

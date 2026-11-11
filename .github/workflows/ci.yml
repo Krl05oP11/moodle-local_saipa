@@ -24,30 +24,60 @@ jobs:
           --health-timeout 5s
           --health-retries 3
 
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_USER: 'root'
+          MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+          MYSQL_CHARACTER_SET_SERVER: "utf8mb4"
+          MYSQL_COLLATION_SERVER: "utf8mb4_unicode_ci"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
     strategy:
       fail-fast: false
       matrix:
         php: ['8.1', '8.2', '8.3']
         moodle-branch: ['MOODLE_404_STABLE', 'MOODLE_405_STABLE']
         pgsql: ['14']
+        database: ['pgsql']
         # Moodle 5.0 needs PHP 8.2; 5.2 and 5.3 need PHP 8.3. PostgreSQL follows each branch's
         # minimum: 14 up to 5.0, then 15, 16 and 17 (admin/environment.xml).
         include:
           - php: '8.2'
             moodle-branch: 'MOODLE_500_STABLE'
             pgsql: '14'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_500_STABLE'
             pgsql: '14'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_501_STABLE'
             pgsql: '15'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_502_STABLE'
             pgsql: '16'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_503_STABLE'
             pgsql: '17'
+            database: 'pgsql'
+          # MySQL family: the Marketplace guidelines ask for MySQL and PostgreSQL.
+          - php: '8.3'
+            moodle-branch: 'MOODLE_405_STABLE'
+            pgsql: '14'
+            database: 'mariadb'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+            pgsql: '17'
+            database: 'mariadb'
 
     steps:
       - name: Check out plugin
@@ -66,7 +96,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: pgsql, zip, gd, xmlrpc, soap, intl, mbstring
+          extensions: pgsql, mysqli, zip, gd, xmlrpc, soap, intl, mbstring
           ini-values: max_input_vars=5000
           coverage: none
 
@@ -80,9 +110,9 @@ jobs:
 
       - name: Install moodle-plugin-ci
         run: |
-          moodle-plugin-ci install --plugin ./plugin --extra-plugins ./extra-plugins --db-type pgsql --branch ${{ matrix.moodle-branch }}
+          moodle-plugin-ci install --plugin ./plugin --extra-plugins ./extra-plugins --db-type ${{ matrix.database }} --branch ${{ matrix.moodle-branch }}
         env:
-          DB: pgsql
+          DB: ${{ matrix.database }}
 
       - name: PHP Lint
         if: ${{ !cancelled() }}

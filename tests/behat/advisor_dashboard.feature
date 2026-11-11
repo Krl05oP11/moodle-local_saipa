@@ -23,5 +23,5 @@ Feature: SAIPA advisor dashboard tabs
     When I click on "#tab-controls-link" "css_element"
     Then I should see "Enable all" in the "#tab-controls-content" "css_element"
     When I click on "#tab-config-link" "css_element"
-    Then I should see "Risk Thresholds" in the "#tab-config-content" "css_element"
+    Then I should see "Risk thresholds" in the "#tab-config-content" "css_element"
     And "#tab-controls" "css_element" should not be visible
