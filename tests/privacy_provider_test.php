@@ -209,7 +209,8 @@ final class privacy_provider_test extends \advanced_testcase {
             }
         }
         $expected = [
-            'saipa_engine'   => ['userid', 'courseid', 'userrole', 'message', 'history', 'riskfeatures'],
+            'saipa_engine'   => ['userid', 'fullname', 'email', 'username', 'courseid', 'userrole', 'message', 'history',
+                'riskfeatures'],
             'saipa_telegram' => ['telegramid', 'message'],
             'saipa_whatsapp' => ['phone', 'otp'],
         ];

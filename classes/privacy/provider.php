@@ -102,8 +102,13 @@ class provider implements
         // Everything the plugin sends to the engine (lib.php local_saipa_engine_request()):
         // chat.php and admin_chat.php (message, history, course, user, role), get_course_risk.php and
         // task\risk_evaluation (per-student features). Course material sent for indexing is not personal data.
+        // The engine also reads names, emails and usernames through this plugin's web services, with its
+        // service token: get_student_list (advisor assistant), telegram_confirm_link and telegram_get_session.
         $collection->add_external_location_link('saipa_engine', [
             'userid'       => 'privacy:metadata:saipa_engine:userid',
+            'fullname'     => 'privacy:metadata:saipa_engine:fullname',
+            'email'        => 'privacy:metadata:saipa_engine:email',
+            'username'     => 'privacy:metadata:saipa_engine:username',
             'courseid'     => 'privacy:metadata:saipa_engine:courseid',
             'userrole'     => 'privacy:metadata:saipa_engine:userrole',
             'message'      => 'privacy:metadata:saipa_engine:message',
