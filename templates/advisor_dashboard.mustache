@@ -41,7 +41,7 @@
             <option value="semester">{{#str}} period_semester, local_saipa {{/str}}</option>
             <option value="all">{{#str}} period_all, local_saipa {{/str}}</option>
         </select>
-        <div id="saipa-adv-spinner" class="ml-2 text-muted" style="display:none;">
+        <div id="saipa-adv-spinner" class="ml-2 text-muted" style="display: none;">
             <div class="spinner-border spinner-border-sm" role="status"></div>
         </div>
         <a href="{{help_url}}" target="_blank"
@@ -95,7 +95,7 @@
             <div id="tab-summary-loading" class="text-center py-4">
                 <div class="spinner-border text-secondary" role="status"></div>
             </div>
-            <div id="tab-summary-content" style="display:none;">
+            <div id="tab-summary-content" style="display: none;">
                 {{! KPI cards row }}
                 <div class="row mb-4" id="adv-kpi-row">
                     <div class="col-6 col-md-3 mb-3">
@@ -114,7 +114,7 @@
                         <div class="card text-center py-3">
                             <div class="text-muted small">{{#str}} kpi_saipa_users, local_saipa {{/str}}</div>
                             <div id="kpi-saipa-users" class="h3 font-weight-bold mb-0 text-success">—</div>
-                            <div id="kpi-adoption" class="text-muted" style="font-size:0.8rem;"></div>
+                            <div id="kpi-adoption" class="text-muted saipa-ad1"></div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3 mb-3">
@@ -139,7 +139,7 @@
                         <div class="card text-center py-3">
                             <div class="text-muted small">{{#str}} kpi_alerts_resp, local_saipa {{/str}}</div>
                             <div id="kpi-alerts-resp" class="h3 font-weight-bold mb-0">—</div>
-                            <div id="kpi-resp-rate" class="text-muted" style="font-size:0.8rem;"></div>
+                            <div id="kpi-resp-rate" class="text-muted saipa-ad1"></div>
                         </div>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                         <div class="card p-3">
                             <h6>{{#str}} sparkline_messages, local_saipa {{/str}}</h6>
                             <canvas id="spark-messages" height="80"></canvas>
-                            <div class="spark-no-data text-muted small text-center mt-2" style="display:none;">
+                            <div class="spark-no-data text-muted small text-center mt-2" style="display: none;">
                                 {{#str}} no_data_yet, local_saipa {{/str}}
                             </div>
                         </div>
@@ -158,14 +158,14 @@
                         <div class="card p-3">
                             <h6>{{#str}} sparkline_users, local_saipa {{/str}}</h6>
                             <canvas id="spark-users" height="80"></canvas>
-                            <div class="spark-no-data text-muted small text-center mt-2" style="display:none;">
+                            <div class="spark-no-data text-muted small text-center mt-2" style="display: none;">
                                 {{#str}} no_data_yet, local_saipa {{/str}}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="tab-summary-error" class="alert alert-danger" style="display:none;"></div>
+            <div id="tab-summary-error" class="alert alert-danger" style="display: none;"></div>
         </div>
 
         {{! ── Tab 2: Risk ROI ─────────────────────────────────────────────────── }}
@@ -173,11 +173,11 @@
             <div id="tab-risk-loading" class="text-center py-4">
                 <div class="spinner-border text-secondary" role="status"></div>
             </div>
-            <div id="tab-risk-content" style="display:none;">
+            <div id="tab-risk-content" style="display: none;">
                 {{! Funnel }}
                 <div class="card mb-4 p-3">
                     <h6>{{#str}} funnel_title, local_saipa {{/str}}</h6>
-                    <div class="d-flex align-items-end text-center" id="adv-funnel" style="min-height:100px;">
+                    <div class="d-flex align-items-end text-center saipa-ad2" id="adv-funnel">
                     </div>
                 </div>
                 {{! Risk trend chart }}
@@ -202,13 +202,13 @@
                             </thead>
                             <tbody id="effectiveness-tbody"></tbody>
                         </table>
-                        <p id="effectiveness-empty" class="text-muted text-center" style="display:none;">
+                        <p id="effectiveness-empty" class="text-muted text-center" style="display: none;">
                             {{#str}} eff_no_data, local_saipa {{/str}}
                         </p>
                     </div>
                 </div>
             </div>
-            <div id="tab-risk-error" class="alert alert-danger" style="display:none;"></div>
+            <div id="tab-risk-error" class="alert alert-danger" style="display: none;"></div>
         </div>
 
         {{! ── Tab 3: Engagement ───────────────────────────────────────────────── }}
@@ -216,7 +216,7 @@
             <div id="tab-engagement-loading" class="text-center py-4">
                 <div class="spinner-border text-secondary" role="status"></div>
             </div>
-            <div id="tab-engagement-content" style="display:none;">
+            <div id="tab-engagement-content" style="display: none;">
                 {{! Per-course usage table }}
                 <div class="card mb-4 p-3">
                     <h6>{{#str}} eng_course_usage_title, local_saipa {{/str}}</h6>
@@ -247,7 +247,7 @@
                     <canvas id="eng-depth-chart" height="120"></canvas>
                 </div>
             </div>
-            <div id="tab-engagement-error" class="alert alert-danger" style="display:none;"></div>
+            <div id="tab-engagement-error" class="alert alert-danger" style="display: none;"></div>
         </div>
 
         {{! ── Tab 4: Course controls ──────────────────────────────────────────── }}
@@ -255,7 +255,7 @@
             <div id="tab-controls-loading" class="text-center py-4">
                 <div class="spinner-border text-secondary" role="status"></div>
             </div>
-            <div id="tab-controls-content" style="display:none;">
+            <div id="tab-controls-content" style="display: none;">
                 <div class="mb-2 d-flex justify-content-end">
                     <button id="ctrl-enable-all" class="btn btn-sm btn-outline-success mr-1" type="button">
                         {{#str}} ctrl_enable_all, local_saipa {{/str}}
@@ -282,7 +282,7 @@
                 </div>
                 <div id="ctrl-save-status" class="text-muted small mt-1"></div>
             </div>
-            <div id="tab-controls-error" class="alert alert-danger" style="display:none;"></div>
+            <div id="tab-controls-error" class="alert alert-danger" style="display: none;"></div>
         </div>
 
         {{! ── Tab 5: Institution config (managers only) ───────────────────────── }}
@@ -291,7 +291,7 @@
             <div id="tab-config-loading" class="text-center py-4">
                 <div class="spinner-border text-secondary" role="status"></div>
             </div>
-            <div id="tab-config-content" style="display:none;">
+            <div id="tab-config-content" style="display: none;">
                 <form id="adv-config-form" class="needs-validation" novalidate>
                     <div class="card p-3 mb-3">
                         <h6>{{#str}} cfg_heading_thresholds, local_saipa {{/str}}</h6>
@@ -371,7 +371,7 @@
                     <span id="cfg-save-status" class="ml-2 text-muted small"></span>
                 </form>
             </div>
-            <div id="tab-config-error" class="alert alert-danger" style="display:none;"></div>
+            <div id="tab-config-error" class="alert alert-danger" style="display: none;"></div>
         </div>
         {{/is_manager}}
 
@@ -385,9 +385,9 @@
     <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA">
 </button>
 
-<div id="saipa-chat-panel" class="saipa-chat-panel" style="display:none;">
+<div id="saipa-chat-panel" class="saipa-chat-panel" style="display: none;">
     <div class="saipa-chat-header">
-        <img src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA" style="width:28px;height:28px;border-radius:50%;margin-right:8px;">
+        <img class="saipa-ad3" src="{{wwwroot}}/local/saipa/pix/icon.svg" alt="SAIPA">
         <span>{{#str}} adv_assistant_title, local_saipa {{/str}}</span>
         <button id="saipa-chat-close" class="saipa-chat-close" aria-label="{{#str}} closebuttontitle, core {{/str}}">&times;</button>
     </div>

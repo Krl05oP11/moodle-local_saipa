@@ -694,3 +694,42 @@
 #page-local-saipa-setup .spwiz-result-lg {
     font-size: .85rem;
 }
+
+/* Former inline styles of my_courses_dashboard.mustache (Marketplace review, inline styles to styles.css). */
+
+/* Former inline styles of help_advisor.mustache (Marketplace review, inline styles to styles.css). */
+#page-local-saipa-help .saipa-hl1 {
+    max-width:860px;
+    margin:0 auto;
+}
+#page-local-saipa-help .saipa-hl2 {
+    font-size:2.5rem;
+    margin-right:0.75rem;
+}
+
+/* Former inline styles of teacher_dashboard.mustache (Marketplace review, inline styles to styles.css). */
+#page-local-saipa-teacher .saipa-td1 {
+    font-size:0.75rem;
+}
+#page-local-saipa-teacher .saipa-td2 {
+    font-size:1.5rem;
+}
+#page-local-saipa-teacher .saipa-td3 {
+    height:520px;
+    overflow-y:auto;
+    background:#f8f9fa;
+}
+
+/* Former inline styles of advisor_dashboard.mustache (Marketplace review, inline styles to styles.css). */
+#page-local-saipa-advisor .saipa-ad1 {
+    font-size:0.8rem;
+}
+#page-local-saipa-advisor .saipa-ad2 {
+    min-height:100px;
+}
+#page-local-saipa-advisor .saipa-ad3 {
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    margin-right:8px;
+}
