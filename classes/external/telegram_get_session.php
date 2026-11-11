@@ -51,7 +51,8 @@ class telegram_get_session extends external_api {
      * @param int $telegramid Telegram chat_id.
      */
     public static function execute(int $telegramid): array {
-        global $DB;
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/local/saipa/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), ['telegram_id' => $telegramid]);
 
@@ -89,7 +90,9 @@ class telegram_get_session extends external_api {
         $courseid = 0;
         foreach ($sessions as $session) {
             $coursecontext = \context_course::instance($session->courseid, IGNORE_MISSING);
-            if ($coursecontext && is_enrolled($coursecontext, $link->userid, 'local/saipa:chat', true)) {
+            // Skip courses where the chat is turned off in the course controls.
+            $canchat = $coursecontext && is_enrolled($coursecontext, $link->userid, 'local/saipa:chat', true);
+            if ($canchat && local_saipa_course_feature_enabled((int) $session->courseid, 'chat')) {
                 $courseid = (int) $session->courseid;
                 break;
             }
@@ -100,6 +103,7 @@ class telegram_get_session extends external_api {
             'user_id'   => (int) $link->userid,
             'course_id' => $courseid,
             'fullname'  => $fullname,
+            'use_rag'   => $courseid ? local_saipa_course_feature_enabled($courseid, 'rag') : false,
         ];
     }
 
@@ -112,6 +116,11 @@ class telegram_get_session extends external_api {
             'user_id'   => new external_value(PARAM_INT, 'Moodle user ID (0 if not linked)'),
             'course_id' => new external_value(PARAM_INT, 'Most-recently active course ID (0 if none)'),
             'fullname'  => new external_value(PARAM_TEXT, 'User full name'),
+            'use_rag'   => new external_value(
+                PARAM_BOOL,
+                'Whether to answer with the course material (course controls)',
+                VALUE_OPTIONAL
+            ),
         ]);
     }
 }

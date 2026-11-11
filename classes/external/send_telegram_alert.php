@@ -120,6 +120,9 @@ class send_telegram_alert extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
         \local_saipa\local\access::require_course_user($context, $params['student_id']);
+        if (!local_saipa_course_feature_enabled($params['course_id'], 'alerts')) {
+            return ['sent' => false, 'error' => get_string('feature_disabled_alerts', 'local_saipa')];
+        }
 
         $text = trim($params['message']);
         if (\core_text::strlen($text) > self::MAX_MESSAGE_LENGTH) {

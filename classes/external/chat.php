@@ -72,6 +72,16 @@ class chat extends external_api {
         self::validate_context($context);
         require_capability('local/saipa:chat', $context);
 
+        // Chat turned off in this course (advisor dashboard, "Course controls"): answer with a notice instead
+        // of an error, so that every version of block_saipa shows it as a normal reply.
+        if (!local_saipa_course_feature_enabled($params['course_id'], 'chat')) {
+            return [
+                'reply'      => get_string('feature_disabled_chat', 'local_saipa'),
+                'session_id' => $params['session_id'],
+                'sources'    => [],
+            ];
+        }
+
         $now = time();
 
         // Find or create session.
@@ -130,6 +140,8 @@ class chat extends external_api {
             'session_id' => $session->id,
             'history'    => $history,
             'user_role'  => $userrole,
+            // RAG turned off in this course: the engine answers without the course material.
+            'use_rag'    => local_saipa_course_feature_enabled($params['course_id'], 'rag'),
         ];
 
         $response = local_saipa_engine_request('/chat', $payload, 60);

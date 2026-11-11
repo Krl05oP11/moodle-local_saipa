@@ -126,6 +126,10 @@ class risk_evaluation extends \core\task\scheduled_task {
             return [0, 0];
         }
 
+        if (!local_saipa_course_feature_enabled($cid, 'risk')) {
+            mtrace("  Course {$cid} ({$course->shortname}): risk evaluation turned off in the course controls, skipping.");
+            return [0, 0];
+        }
         $context = \context_course::instance($cid);
 
         // Collect students (chat capability but NOT view/teacher capability).
@@ -202,10 +206,13 @@ class risk_evaluation extends \core\task\scheduled_task {
             }
         }
 
-        // Send notifications for escalations.
+        // Send notifications for escalations. The Telegram alerts to students follow the course's "Alerts"
+        // switch; the teachers' Moodle notifications always go.
         if (!empty($newhigh)) {
             $this->notify_teachers($cid, $course, $context, $newhigh);
-            $this->notify_students_telegram($course, $newhigh);
+            if (local_saipa_course_feature_enabled($cid, 'alerts')) {
+                $this->notify_students_telegram($course, $newhigh);
+            }
         }
 
         return [$evaluated, $escalated];

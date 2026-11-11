@@ -142,6 +142,9 @@ $string['eng_heatmap_desc']       = 'When do students chat? Day 0=Monday, Day 6=
 $string['eng_heatmap_title']      = 'Activity heatmap (hour × day of week)';
 $string['engine_error'] = 'SAIPA engine error';
 $string['error_detail'] = 'Error: {$a}';
+$string['feature_disabled_alerts'] = 'Alerts are turned off in this course.';
+$string['feature_disabled_chat'] = 'The SAIPA chat is turned off in this course.';
+$string['feature_disabled_risk'] = 'Risk evaluation is turned off in this course.';
 $string['funnel_title']         = 'Alert funnel';
 $string['healthcheck:fail']    = 'Cannot reach SAIPA Engine at configured URL';
 $string['healthcheck:heading'] = 'Engine Connection Test';

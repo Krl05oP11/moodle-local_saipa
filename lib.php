@@ -333,3 +333,26 @@ function local_saipa_delete_course_data(int $courseid): void {
 function local_saipa_telegram_escape(string $text): string {
     return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
+/**
+ * Whether a SAIPA feature is turned on in a course (advisor dashboard, "Course controls" tab).
+ *
+ * A course without a settings row has every feature on. saipa_enabled is the master switch: when it is
+ * off, every feature of the course is off.
+ *
+ * @param int $courseid Course ID.
+ * @param string $feature 'chat', 'risk', 'alerts' or 'rag'; '' asks about SAIPA as a whole.
+ * @return bool
+ */
+function local_saipa_course_feature_enabled(int $courseid, string $feature = ''): bool {
+    global $DB;
+    $row = $DB->get_record('local_saipa_course_settings', ['courseid' => $courseid]);
+    if (!$row) {
+        return true;
+    }
+    if (empty($row->saipa_enabled)) {
+        return false;
+    }
+    $field = $feature . '_enabled';
+    return $feature === '' || !property_exists($row, $field) || !empty($row->$field);
+}

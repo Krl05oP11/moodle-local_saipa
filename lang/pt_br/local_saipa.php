@@ -142,6 +142,9 @@ $string['eng_heatmap_desc']       = 'Quando os alunos conversam? Dia 0=Segunda, 
 $string['eng_heatmap_title']      = 'Mapa de atividade (hora × dia da semana)';
 $string['engine_error'] = 'Erro do motor SAIPA';
 $string['error_detail'] = 'Erro: {$a}';
+$string['feature_disabled_alerts'] = 'Os alertas estão desativados neste curso.';
+$string['feature_disabled_chat'] = 'O chat do SAIPA está desativado neste curso.';
+$string['feature_disabled_risk'] = 'A avaliação de risco está desativada neste curso.';
 $string['funnel_title']         = 'Funil de alertas';
 $string['healthcheck:fail']    = 'Não é possível alcançar o motor SAIPA na URL configurada';
 $string['healthcheck:heading'] = 'Teste de conexão com o motor';

@@ -116,6 +116,9 @@ class get_course_risk extends external_api {
         $context = \context_course::instance($cid);
         self::validate_context($context);
         require_capability('local/saipa:view', $context);
+        if (!local_saipa_course_feature_enabled($cid, 'risk')) {
+            throw new \moodle_exception('feature_disabled_risk', 'local_saipa');
+        }
 
         // Collect enrolled students (users who can chat but NOT view = not teachers).
         $allchatters = get_enrolled_users($context, 'local/saipa:chat', 0, 'u.id', null, 0, 0, true);
