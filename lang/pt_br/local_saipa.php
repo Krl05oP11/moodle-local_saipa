@@ -377,6 +377,7 @@ $string['status_cron_detail'] = 'Última execução: {$a->last} | Próxima execu
 $string['status_cron_disabled'] = 'A tarefa está DESATIVADA. Ative-a em Administração do site → Servidor → Tarefas agendadas.';
 $string['status_cron_missing'] = 'Tarefa não encontrada. Execute php admin/cli/upgrade.php --non-interactive';
 $string['status_engine_detail'] = 'Versão: {$a->version} | URL: {$a->url}';
+$string['status_engine_running'] = 'Em funcionamento';
 $string['status_engine_url_missing'] = 'A URL do motor não está configurada. Vá em Administração do site → Plugins → SAIPA → Configurações.';
 $string['status_intro'] = 'Verificação completa do estado de todos os componentes do SAIPA. Atualize a página depois de fazer alterações.';
 $string['status_link_messages'] = 'Configurações de notificações de mensagens';

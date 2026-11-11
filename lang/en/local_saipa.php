@@ -377,6 +377,7 @@ $string['status_cron_detail'] = 'Last run: {$a->last} | Next run: {$a->next}';
 $string['status_cron_disabled'] = 'Task is DISABLED. Enable it at Site Administration → Server → Scheduled Tasks.';
 $string['status_cron_missing'] = 'Task not found. Run php admin/cli/upgrade.php --non-interactive';
 $string['status_engine_detail'] = 'Version: {$a->version} | URL: {$a->url}';
+$string['status_engine_running'] = 'Running';
 $string['status_engine_url_missing'] = 'Engine URL is not configured. Go to Site Administration → Plugins → SAIPA → Settings.';
 $string['status_intro'] = 'Comprehensive health check for all SAIPA components. Refresh after making changes.';
 $string['status_link_messages'] = 'Message notification settings';

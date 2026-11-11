@@ -138,7 +138,7 @@ $telegramwarn    = false;
 if (!$telegramenabled) {
     $telegramok   = true;   // Disabled = not an error.
     $telegramwarn = false;
-    $telegramdetail = get_string('status_telegram_disabled', 'local_saipa', htmlspecialchars($channel));
+    $telegramdetail = get_string('status_telegram_disabled', 'local_saipa', $channel);
 } else if ($enginereachable) {
     $tgresp = local_saipa_engine_request('/telegram/status', null, 8);
     if (isset($tgresp['status'])) {

@@ -95,9 +95,9 @@ if ($action === 'health') {
         'ok'      => true,
         'version' => $decoded['version'] ?? '?',
         'uptime'  => isset($decoded['uptime_seconds'])
-            ? round($decoded['uptime_seconds'] / 60, 1) . ' min'
+            ? round($decoded['uptime_seconds'] / 60, 1) . ' ' . get_string('min')
             : '?',
-        'message' => $decoded['message'] ?? 'Running',
+        'message' => $decoded['message'] ?? get_string('status_engine_running', 'local_saipa'),
     ]);
     die();
 }
@@ -189,7 +189,8 @@ if ($action === 'save' && data_submitted()) {
 $done         = optional_param('done', 0, PARAM_INT);
 $sesskey      = sesskey();
 $settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(false);
-$teacherurl  = (new moodle_url('/local/saipa/teacher.php'))->out(false);
+// The teacher dashboard needs a course: the wizard links to My Courses, which lists them.
+$teacherurl  = (new moodle_url('/local/saipa/my_courses.php'))->out(false);
 
 // Pre-fill from existing config (wizard re-run).
 $cfgmode    = get_config('local_saipa', 'engine_mode') ?: 'local_ollama';
@@ -200,8 +201,9 @@ $cfgtguser = get_config('local_saipa', 'telegram_bot_username') ?: '';
 $cfgriskmed  = get_config('local_saipa', 'risk_threshold_medium') ?: '0.40';
 $cfgriskhigh = get_config('local_saipa', 'risk_threshold_high') ?: '0.75';
 $cfgcooldown  = get_config('local_saipa', 'alert_cooldown_hours') ?: '24';
-$cfgriskon   = get_config('local_saipa', 'risk_eval_enabled') ?? '1';
-$cfgragon    = get_config('local_saipa', 'rag_global_enabled') ?? '1';
+// Unset (false) means on.
+$cfgriskon   = (string) get_config('local_saipa', 'risk_eval_enabled') === '0' ? '0' : '1';
+$cfgragon    = (string) get_config('local_saipa', 'rag_global_enabled') === '0' ? '0' : '1';
 
 // Strings and labels for amd/src/setup_wizard.js, passed in the wizard's data-config attribute.
 $wizardconfig = [

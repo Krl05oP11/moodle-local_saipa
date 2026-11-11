@@ -27,6 +27,9 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 
 $page = optional_param('page', 'advisor', PARAM_ALPHA);
+if (!in_array($page, ['advisor'], true)) {
+    $page = 'advisor';
+}
 
 $PAGE->set_url('/local/saipa/help.php', ['page' => $page]);
 $PAGE->set_context(context_system::instance());
