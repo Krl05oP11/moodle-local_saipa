@@ -10,7 +10,8 @@ The reviewer's findings are the GitHub issues 16-20; 12 and 15 come from the fir
 #### Privacy (#16)
 - The engine location declares every personal field the plugin sends (user, course, role, message,
   chat history, per-student risk features); Telegram alerts and WhatsApp verification codes, relayed
-  by the engine, are declared external locations. The system context (phone verification,
+  by the engine, are declared external locations, and so are the names, emails and usernames the engine
+  reads through the plugin's web services. The system context (phone verification,
   notifications, Telegram links) is deleted for all users and listed only for users with data there.
 
 #### Access
@@ -21,7 +22,9 @@ The reviewer's findings are the GitHub issues 16-20; 12 and 15 come from the fir
 - The teacher dashboard's 7-day message and high-risk cards read the fields the service returns;
   the service now returns messages_7d (#19). README and setup wizard: Moodle 4.4 to 5.3 (#20).
 - get_history returns the last 20 messages, all of them (it kept one per role), with their ids.
-- The course controls of the advisor dashboard take effect: chat, RAG, risk evaluation and alerts.
+- The course controls of the advisor dashboard take effect: chat (also on Telegram), RAG, risk
+  evaluation and alerts, and so do the site-wide risk and RAG switches.
+- The setup wizard's teacher dashboard button no longer leads to a missing-parameter error.
 - The engagement heatmap no longer uses PostgreSQL-only SQL; it works on MySQL/MariaDB.
 
 #### Templates and styles
@@ -30,8 +33,8 @@ The reviewer's findings are the GitHub issues 16-20; 12 and 15 come from the fir
 - English strings in sentence case. No superglobals or $CFG writes in the pages.
 
 #### Tests
-- Privacy, groups, My Courses, history, heatmap and course-controls tests (143 in total); Behat
-  15/15 locally. The CI adds MariaDB.
+- Privacy, groups, My Courses, history, heatmap and course-controls tests (144 in total); Behat
+  15/15 locally. The CI adds MariaDB and PHP 8.4.
 
 
 ### Marketplace review MMR-462 (0.5.7, 2026-11-02; build 2026110301)
