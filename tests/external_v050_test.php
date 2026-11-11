@@ -472,6 +472,36 @@ final class external_v050_test extends \advanced_testcase {
     }
 
     /**
+     * The activity heatmap counts the students' messages by weekday (0 = Monday) and hour in the user's
+     * timezone, computed in PHP so that it works on every database (it used PostgreSQL-only SQL).
+     *
+     * @covers \local_saipa\external\get_engagement_stats::execute
+     */
+    public function test_get_engagement_stats_heatmap(): void {
+        global $DB;
+        $this->setTimezone('America/Argentina/Buenos_Aires');
+        $this->setUser($this->manager);
+        $sid = $this->create_session($this->student->id, $this->course->id);
+        // Two minutes into an hour (Buenos Aires is a whole number of hours from UTC): both messages share it.
+        $when = intdiv(time() - 2 * 86400, 3600) * 3600 + 60;
+        foreach ([$when, $when + 60] as $t) {
+            $id = $this->create_message($sid, 'user', 'Hi');
+            $DB->set_field('local_saipa_messages', 'timecreated', $t, ['id' => $id]);
+        }
+        $this->create_message($sid, 'assistant', 'Hello');
+
+        $r = \local_saipa\external\get_engagement_stats::execute('30d');
+
+        $local = (new \DateTime('@' . $when))->setTimezone(\core_date::get_user_timezone_object());
+        $expectedhour = (int) $local->format('G');
+        $this->assertCount(1, $r['hourly_heatmap']);
+        $cell = $r['hourly_heatmap'][0];
+        $this->assertSame(2, $cell['count']);
+        $this->assertSame($expectedhour, $cell['hour']);
+        $this->assertSame((int) $local->format('N') - 1, $cell['day_of_week']);
+    }
+
+    /**
      * With messages, course_usage and session_depth reflect data.
      *
      * @covers \local_saipa\external\get_engagement_stats::execute

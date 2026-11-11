@@ -166,22 +166,28 @@ class get_risk_dashboard extends external_api {
             $afterts = $alertts + (14 * 86400);
 
             // Score closest to alert time (before).
-            $before = $DB->get_record_sql(
-                'SELECT score FROM {local_saipa_risk_history}
+            $before = $DB->get_records_sql(
+                'SELECT id, score FROM {local_saipa_risk_history}
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed <= :ts
-                  ORDER BY timecomputed DESC LIMIT 1',
-                ['uid' => $uid, 'cid' => $acid, 'ts' => $alertts + 86400]
+                  ORDER BY timecomputed DESC',
+                ['uid' => $uid, 'cid' => $acid, 'ts' => $alertts + 86400],
+                0,
+                1
             );
+            $before = $before ? reset($before) : false;
 
             // Score closest to 14 days after.
-            $after = $DB->get_record_sql(
-                'SELECT score FROM {local_saipa_risk_history}
+            $after = $DB->get_records_sql(
+                'SELECT id, score FROM {local_saipa_risk_history}
                   WHERE userid = :uid AND courseid = :cid
                     AND timecomputed >= :ts
-                  ORDER BY timecomputed ASC LIMIT 1',
-                ['uid' => $uid, 'cid' => $acid, 'ts' => $afterts - 86400]
+                  ORDER BY timecomputed ASC',
+                ['uid' => $uid, 'cid' => $acid, 'ts' => $afterts - 86400],
+                0,
+                1
             );
+            $after = $after ? reset($after) : false;
 
             if ($before && $after) {
                 $scorebefore = (float) $before->score;

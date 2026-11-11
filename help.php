@@ -33,7 +33,6 @@ $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('help_title', 'local_saipa'));
 $PAGE->set_heading(get_string('help_title', 'local_saipa'));
-$CFG->docroot = '';   // No recursive docs button on this page.
 
 $PAGE->navbar->add(
     get_string('advisor_title', 'local_saipa'),

@@ -108,24 +108,30 @@ class get_engagement_stats extends external_api {
         // Hourly heatmap (7 days of week × 24 hours).
         // Returns 168 cells: {hour: 0-23, day_of_week: 0-6, count: N}.
         // day_of_week: 0=Monday … 6=Sunday (ISO standard).
-        $heatmaprows = $DB->get_records_sql(
-            "SELECT
-               EXTRACT(HOUR FROM TO_TIMESTAMP(m.timecreated)) AS hour,
-               EXTRACT(ISODOW FROM TO_TIMESTAMP(m.timecreated)) - 1 AS dow,
-               COUNT(*) AS cnt
-             FROM {local_saipa_messages} m
-            WHERE m.timecreated >= :since AND m.role = :role
-            GROUP BY hour, dow
-            ORDER BY dow, hour",
-            ['since' => $since, 'role' => 'user']
+        // Counted in PHP, in the user's timezone: EXTRACT(... FROM TO_TIMESTAMP()) only exists in PostgreSQL.
+        $tz = \core_date::get_user_timezone_object();
+        $cells = [];
+        $rs = $DB->get_recordset_select(
+            'local_saipa_messages',
+            'timecreated >= :since AND role = :role',
+            ['since' => $since, 'role' => 'user'],
+            '',
+            'id, timecreated'
         );
+        foreach ($rs as $row) {
+            $time = (new \DateTime('@' . (int) $row->timecreated))->setTimezone($tz);
+            $key = ((int) $time->format('N') - 1) * 24 + (int) $time->format('G');
+            $cells[$key] = ($cells[$key] ?? 0) + 1;
+        }
+        $rs->close();
+        ksort($cells);
 
         $hourlyheatmap = [];
-        foreach ($heatmaprows as $row) {
+        foreach ($cells as $key => $count) {
             $hourlyheatmap[] = [
-                'hour'        => (int) $row->hour,
-                'day_of_week' => (int) $row->dow,
-                'count'       => (int) $row->cnt,
+                'hour'        => $key % 24,
+                'day_of_week' => intdiv($key, 24),
+                'count'       => $count,
             ];
         }
 

@@ -142,7 +142,7 @@ if ($action === 'testbot') {
 }
 
 // POST: save all configuration.
-if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($action === 'save' && data_submitted()) {
     require_sesskey();
 
     $mode            = required_param('engine_mode', PARAM_ALPHANUMEXT);
