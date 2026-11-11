@@ -40,40 +40,6 @@ $PAGE->set_title(get_string('settings:status_page', 'local_saipa'));
 $PAGE->set_heading(get_string('settings:status_page', 'local_saipa'));
 $PAGE->set_pagelayout('admin');
 
-// Helper: render a status row.
-
-/**
- * Saipa status row.
- *
- * @param string $label Row label.
- * @param bool $ok Whether the check passed.
- * @param string $detail Optional detail shown under the label.
- * @param bool $warning Show a warning badge instead of an error when not OK.
- */
-function local_saipa_status_row(string $label, bool $ok, string $detail = '', bool $warning = false): string {
-    if ($ok) {
-        $icon  = '<span class="badge badge-success" style="font-size:1rem">&#10003; OK</span>';
-    } else if ($warning) {
-        $icon  = '<span class="badge badge-warning text-dark" style="font-size:1rem">&#9888; '
-               . get_string('status_badge_warning', 'local_saipa') . '</span>';
-    } else {
-        $icon  = '<span class="badge badge-danger" style="font-size:1rem">&#10007; '
-               . get_string('status_badge_error', 'local_saipa') . '</span>';
-    }
-    $detailhtml = $detail ? '<br><small class="text-muted">' . htmlspecialchars($detail) . '</small>' : '';
-    return '<tr><td class="py-2"><strong>' . htmlspecialchars($label) . '</strong>' . $detailhtml . '</td>'
-         . '<td class="py-2 text-right">' . $icon . '</td></tr>';
-}
-
-/**
- * Saipa section header.
- *
- * @param string $title Section title.
- */
-function local_saipa_section_header(string $title): string {
-    return '<tr class="table-secondary"><th colspan="2" class="py-2 px-3">' . htmlspecialchars($title) . '</th></tr>';
-}
-
 // Check 1: Engine URL configured.
 
 $engineurl   = get_config('local_saipa', 'engine_url');
@@ -331,7 +297,7 @@ foreach ($checks as $c) {
 
 $adminchecks = [
     [get_string('status_check_ws', 'local_saipa'), $wsenabled, $wsdetail, false],
-    ['SAIPA External Service', $serviceok, $servicedetail, false],
+    [get_string('status_check_service', 'local_saipa'), $serviceok, $servicedetail, false],
     [get_string('status_check_cron', 'local_saipa'), $cronok, $crondetail, $cronwarn],
     [get_string('status_check_msgprovider', 'local_saipa'), $msgok, $msgdetail, false],
     [get_string('status_check_tables', 'local_saipa'), $tablesok, $tablesdetail, false],
@@ -348,111 +314,47 @@ foreach ($adminchecks as $c) {
     }
 }
 
-// Overall status banner.
-if ($issues === 0 && $warnings === 0) {
-    $bannerclass = 'alert-success';
-    $bannertext  = '&#10003; ' . get_string('status_banner_ok', 'local_saipa');
-} else if ($issues === 0) {
-    $bannerclass = 'alert-warning';
-    $bannertext  = '&#9888; ' . get_string('status_banner_warnings', 'local_saipa', $warnings);
-} else {
-    $bannerclass = 'alert-danger';
-    $bannertext  = '&#10007; ' . get_string('status_banner_errors', 'local_saipa', $issues);
-}
+// The page is a Mustache template (templates/status_page.mustache); values are escaped there.
+$rows = function (array $list): array {
+    return array_map(fn($c) => [
+        'label'   => $c[0],
+        'detail'  => $c[2],
+        'ok'      => (bool) $c[1],
+        'warning' => !$c[1] && $c[3],
+        'error'   => !$c[1] && !$c[3],
+    ], $list);
+};
+
+$templatecontext = [
+    'bannerok'       => $issues === 0 && $warnings === 0,
+    'bannerwarnings' => $issues === 0 && $warnings > 0,
+    'bannererrors'   => $issues > 0,
+    'warnings'       => $warnings,
+    'issues'         => $issues,
+    'sections'       => [
+        ['title' => get_string('status_section_engine', 'local_saipa'), 'rows' => $rows($checks)],
+        ['title' => get_string('status_section_moodle', 'local_saipa'), 'rows' => $rows($adminchecks)],
+    ],
+    'settingsurl'    => (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out(false),
+    'tasksurl'       => (new moodle_url('/admin/tool/task/scheduledtasks.php'))->out(false),
+    'wsurl'          => (new moodle_url('/admin/webservice/service.php', ['id' => $wsservice->id ?? 0]))->out(false),
+    'messagesurl'    => (new moodle_url('/message/defaultoutputs.php'))->out(false),
+    'clireference'   => implode("\n", [
+        '# Apply DB upgrades (run after plugin update)',
+        'php admin/cli/upgrade.php --non-interactive',
+        '',
+        '# Purge all caches',
+        'php admin/cli/purge_caches.php',
+        '',
+        '# Run cron manually (test risk evaluation task)',
+        'php admin/cli/cron.php',
+        '',
+        '# Run only the SAIPA risk evaluation task',
+        "php admin/cli/scheduled_task.php --execute='\\local_saipa\\task\\risk_evaluation'",
+    ]),
+    'version'        => (string) $plugindisk,
+];
 
 echo $OUTPUT->header();
-
-// Build the status-table body in PHP so the markup below is a single string.
-// Inline PHP islands in HTML also make the file-docblock sniff misfire.
-$tablerows = local_saipa_section_header(get_string('status_section_engine', 'local_saipa'));
-foreach ($checks as $c) {
-    $tablerows .= local_saipa_status_row($c[0], $c[1], $c[2], $c[3]);
-}
-$tablerows .= local_saipa_section_header(get_string('status_section_moodle', 'local_saipa'));
-foreach ($adminchecks as $c) {
-    $tablerows .= local_saipa_status_row($c[0], $c[1], $c[2], $c[3]);
-}
-
-$settingsurl = (new moodle_url('/admin/settings.php', ['section' => 'local_saipa']))->out();
-$tasksurl    = (new moodle_url('/admin/tool/task/scheduledtasks.php'))->out();
-$wsurl       = (new moodle_url('/admin/webservice/service.php', ['id' => $wsservice->id ?? 0]))->out();
-$messagesurl = (new moodle_url('/message/defaultoutputs.php'))->out();
-
-$clireference = <<<'CLI'
-# Apply DB upgrades (run after plugin update)
-php admin/cli/upgrade.php --non-interactive
-
-# Purge all caches
-php admin/cli/purge_caches.php
-
-# Run cron manually (test risk evaluation task)
-php admin/cli/cron.php
-
-# Run only the SAIPA risk evaluation task
-php admin/cli/scheduled_task.php --execute='\local_saipa\task\risk_evaluation'
-CLI;
-
-$pluginversiondisplay = htmlspecialchars((string) $plugindisk);
-
-// Strings used in the markup below (heredocs cannot call functions).
-$markupkeys = [
-    'status_intro', 'status_col_component', 'status_col_status', 'status_quick_actions',
-    'status_link_settings', 'status_link_tasks', 'status_link_ws', 'status_link_messages',
-    'status_cli_heading', 'status_cli_intro',
-];
-$str = [];
-foreach ($markupkeys as $key) {
-    $str[$key] = s(get_string($key, 'local_saipa'));
-}
-$str['heading'] = s(get_string('settings:status_page', 'local_saipa'));
-
-echo <<<HTML
-<div class="container-fluid py-3" style="max-width:900px">
-
-    <h2>{$str['heading']}</h2>
-    <p class="text-muted">{$str['status_intro']}</p>
-
-    <div class="alert {$bannerclass} mb-4" role="alert">
-        {$bannertext}
-    </div>
-
-    <table class="table table-bordered table-sm mb-4">
-        <thead class="thead-light">
-            <tr>
-                <th>{$str['status_col_component']}</th>
-                <th class="text-right" style="width:140px">{$str['status_col_status']}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {$tablerows}
-        </tbody>
-    </table>
-
-    <h4 class="mt-4">{$str['status_quick_actions']}</h4>
-    <div class="list-group mb-4">
-        <a href="{$settingsurl}" class="list-group-item list-group-item-action">
-            &#9881; {$str['status_link_settings']}
-        </a>
-        <a href="{$tasksurl}" class="list-group-item list-group-item-action">
-            &#128336; {$str['status_link_tasks']}
-        </a>
-        <a href="{$wsurl}" class="list-group-item list-group-item-action">
-            &#128273; {$str['status_link_ws']}
-        </a>
-        <a href="{$messagesurl}" class="list-group-item list-group-item-action">
-            &#128276; {$str['status_link_messages']}
-        </a>
-    </div>
-
-    <h4 class="mt-4">{$str['status_cli_heading']}</h4>
-    <p class="text-muted small">{$str['status_cli_intro']}</p>
-    <pre class="bg-dark text-white p-3 rounded small">{$clireference}</pre>
-
-    <p class="text-muted small mt-3">
-        SAIPA v{$pluginversiondisplay} &mdash;
-        &copy; 2026 Schaller &amp; Ponce &lt;dev@schaller-ponce.com.ar&gt;
-    </p>
-</div>
-HTML;
-
+echo $OUTPUT->render_from_template('local_saipa/status_page', $templatecontext);
 echo $OUTPUT->footer();

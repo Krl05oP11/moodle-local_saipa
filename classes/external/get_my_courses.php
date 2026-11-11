@@ -138,7 +138,7 @@ class get_my_courses extends external_api {
 
             $result[] = [
                 'courseid'        => $cid,
-                'coursename'      => format_string($course->fullname, true, ['context' => $ctx]),
+                'coursename'      => $course->fullname,
                 'shortname'       => $course->shortname,
                 'enrolled_students' => $enrolledcnt,
                 'active_saipa_users' => $active,

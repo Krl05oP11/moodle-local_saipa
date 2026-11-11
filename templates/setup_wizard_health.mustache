@@ -1,0 +1,76 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_saipa/setup_wizard_health
+
+    Result of the engine connection test in step 6 of the setup wizard, rendered by amd/src/setup_wizard.js.
+    The success message and the troubleshooting tips are language strings with markup.
+
+    Context variables required for this template:
+    * ok - true when the engine answered
+    * url - engine URL that was tried
+    * version - engine version (when ok)
+    * uptime - engine uptime (when ok)
+    * error - error message (when not ok)
+
+    Example context (json):
+    {
+        "ok": false,
+        "url": "http://localhost:8052",
+        "version": "",
+        "uptime": "",
+        "error": "Connection refused"
+    }
+
+    @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+{{#ok}}
+<div class="health-row">
+    <div class="health-icon" aria-hidden="true">✅</div>
+    <div class="health-label"><strong>{{#str}}wizard_js_engine_reachable, local_saipa{{/str}}</strong></div>
+    <div class="health-value">{{url}}</div>
+</div>
+<div class="health-row">
+    <div class="health-icon" aria-hidden="true">🔢</div>
+    <div class="health-label">{{#str}}wizard_js_engine_version, local_saipa{{/str}}</div>
+    <div class="health-value">{{version}}</div>
+</div>
+<div class="health-row">
+    <div class="health-icon" aria-hidden="true">⏱️</div>
+    <div class="health-label">{{#str}}wizard_js_uptime, local_saipa{{/str}}</div>
+    <div class="health-value">{{uptime}}</div>
+</div>
+<div class="alert alert-success py-2 px-3 mt-3 mb-0 spwiz-result-lg">{{#str}}wizard_js_success, local_saipa{{/str}}</div>
+{{/ok}}
+{{^ok}}
+<div class="health-row">
+    <div class="health-icon" aria-hidden="true">❌</div>
+    <div class="health-label"><strong>{{#str}}wizard_js_connection_failed, local_saipa{{/str}}</strong></div>
+    <div class="health-value">{{url}}{{^url}}—{{/url}}</div>
+</div>
+<div class="alert alert-danger py-2 px-3 mt-3 mb-0 spwiz-result-md">
+    <strong>{{#str}}wizard_js_error, local_saipa{{/str}}</strong> {{error}}<br><br>
+    <strong>{{#str}}wizard_js_troubleshooting, local_saipa{{/str}}</strong>
+    <ul class="mb-0 mt-1">
+        <li>{{#str}}wizard_js_ts_running, local_saipa{{/str}}</li>
+        <li>{{#str}}wizard_js_ts_url, local_saipa{{/str}}</li>
+        <li>{{#str}}wizard_js_ts_docker, local_saipa{{/str}}</li>
+        <li>{{#str}}wizard_js_ts_token, local_saipa{{/str}}</li>
+    </ul>
+</div>
+{{/ok}}

@@ -600,3 +600,97 @@
 #page-local-saipa-advisor .saipa-heatmap .hm-cell:hover {
     opacity: 0.8;
 }
+
+/* Setup wizard: former inline styles of setup.php (MMR-462 #12). */
+#page-local-saipa-setup .spwiz-s1 {
+    font-size:2.8rem;
+    line-height:1;
+}
+#page-local-saipa-setup .spwiz-s2 {
+    font-size:.9rem;
+}
+#page-local-saipa-setup .spwiz-s3 {
+    font-size:.88rem;
+}
+#page-local-saipa-setup .spwiz-s4 {
+    background:#f8f9fa;
+}
+#page-local-saipa-setup .spwiz-s5 {
+    border-color:#f0ad4e;
+}
+#page-local-saipa-setup .spwiz-s6 {
+    background:#fff8e1;
+    color:#856404;
+    border-bottom:1px solid #f0e0a0;
+}
+#page-local-saipa-setup .spwiz-s7 {
+    font-size:.87rem;
+    margin-bottom:14px;
+}
+#page-local-saipa-setup .spwiz-s8 {
+    white-space:normal;
+    max-width:200px;
+    text-align:right;
+}
+#page-local-saipa-setup .spwiz-s9 {
+    font-size:.72rem;
+}
+#page-local-saipa-setup .spwiz-s10 {
+    border-color:#0d6efd;
+}
+#page-local-saipa-setup .spwiz-s11 {
+    background:#e7f1ff;
+    color:#084298;
+    border-bottom:1px solid #b6d4fe;
+}
+#page-local-saipa-setup .spwiz-s12 {
+    font-size:.85rem;
+    margin-bottom:14px;
+    color:#495057;
+}
+#page-local-saipa-setup .spwiz-s13 {
+    font-size:.84rem;
+}
+#page-local-saipa-setup .spwiz-s14 {
+    font-size:.82rem;
+}
+#page-local-saipa-setup .spwiz-s15 {
+    font-size:.95rem;
+}
+#page-local-saipa-setup .spwiz-s16 {
+    font-size:.83rem;
+}
+#page-local-saipa-setup .spwiz-s17 {
+    font-size:.75rem;
+    letter-spacing:.05em;
+    margin-bottom:10px;
+}
+#page-local-saipa-setup .spwiz-s18 {
+    max-width:160px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    direction:rtl;
+}
+
+/* Status page (status.php, templates/status_page.mustache; MMR-462 #12). */
+#page-local-saipa-status .saipa-status {
+    max-width: 900px;
+}
+#page-local-saipa-status .saipa-status-col {
+    width: 140px;
+}
+#page-local-saipa-status .saipa-status-badge {
+    font-size: 1rem;
+}
+
+/* Setup wizard: results of the bot and engine checks (amd/src/setup_wizard.js; MMR-462 #15). */
+#page-local-saipa-setup .spwiz-result {
+    font-size: .82rem;
+}
+#page-local-saipa-setup .spwiz-result-md {
+    font-size: .84rem;
+}
+#page-local-saipa-setup .spwiz-result-lg {
+    font-size: .85rem;
+}

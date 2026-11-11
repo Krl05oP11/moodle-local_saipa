@@ -1,0 +1,115 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_saipa/status_page
+
+    SAIPA status page (status.php): overall banner, the checks of the engine and of Moodle, quick links and
+    the CLI reference.
+
+    Context variables required for this template:
+    * bannerok - true when every check passed
+    * bannerwarnings - true when there are warnings and no errors
+    * bannererrors - true when at least one check failed
+    * warnings - number of warnings
+    * issues - number of errors
+    * sections - list of {title, rows: [{label, detail, ok, warning, error}]}
+    * settingsurl, tasksurl, wsurl, messagesurl - quick links
+    * clireference - CLI commands, shown as preformatted text
+    * version - plugin version on disk
+
+    Example context (json):
+    {
+        "bannerok": false,
+        "bannerwarnings": true,
+        "bannererrors": false,
+        "warnings": 1,
+        "issues": 0,
+        "sections": [
+            {"title": "AI engine", "rows": [
+                {"label": "Engine URL", "detail": "http://localhost:8052", "ok": true, "warning": false, "error": false},
+                {"label": "Cron", "detail": "Last run 2 hours ago", "ok": false, "warning": true, "error": false}
+            ]}
+        ],
+        "settingsurl": "https://example.edu/admin/settings.php?section=local_saipa",
+        "tasksurl": "https://example.edu/admin/tool/task/scheduledtasks.php",
+        "wsurl": "https://example.edu/admin/webservice/service.php?id=1",
+        "messagesurl": "https://example.edu/message/defaultoutputs.php",
+        "clireference": "php admin/cli/purge_caches.php",
+        "version": "2026111000"
+    }
+
+    @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="container-fluid py-3 saipa-status">
+
+    <h2>{{#str}}settings:status_page, local_saipa{{/str}}</h2>
+    <p class="text-muted">{{#str}}status_intro, local_saipa{{/str}}</p>
+
+    {{#bannerok}}
+    <div class="alert alert-success mb-4" role="alert">&#10003; {{#str}}status_banner_ok, local_saipa{{/str}}</div>
+    {{/bannerok}}
+    {{#bannerwarnings}}
+    <div class="alert alert-warning mb-4" role="alert">&#9888; {{#str}}status_banner_warnings, local_saipa, {{warnings}}{{/str}}</div>
+    {{/bannerwarnings}}
+    {{#bannererrors}}
+    <div class="alert alert-danger mb-4" role="alert">&#10007; {{#str}}status_banner_errors, local_saipa, {{issues}}{{/str}}</div>
+    {{/bannererrors}}
+
+    <table class="table table-bordered table-sm mb-4">
+        <thead class="thead-light">
+            <tr>
+                <th>{{#str}}status_col_component, local_saipa{{/str}}</th>
+                <th class="text-right saipa-status-col">{{#str}}status_col_status, local_saipa{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#sections}}
+            <tr class="table-secondary"><th colspan="2" class="py-2 px-3">{{title}}</th></tr>
+            {{#rows}}
+            <tr>
+                <td class="py-2">
+                    <strong>{{label}}</strong>
+                    {{#detail}}<br><small class="text-muted">{{detail}}</small>{{/detail}}
+                </td>
+                <td class="py-2 text-right">
+                    {{#ok}}<span class="badge badge-success saipa-status-badge">&#10003; OK</span>{{/ok}}
+                    {{#warning}}<span class="badge badge-warning text-dark saipa-status-badge">&#9888; {{#str}}status_badge_warning, local_saipa{{/str}}</span>{{/warning}}
+                    {{#error}}<span class="badge badge-danger saipa-status-badge">&#10007; {{#str}}status_badge_error, local_saipa{{/str}}</span>{{/error}}
+                </td>
+            </tr>
+            {{/rows}}
+            {{/sections}}
+        </tbody>
+    </table>
+
+    <h4 class="mt-4">{{#str}}status_quick_actions, local_saipa{{/str}}</h4>
+    <div class="list-group mb-4">
+        <a href="{{settingsurl}}" class="list-group-item list-group-item-action">&#9881; {{#str}}status_link_settings, local_saipa{{/str}}</a>
+        <a href="{{tasksurl}}" class="list-group-item list-group-item-action">&#128336; {{#str}}status_link_tasks, local_saipa{{/str}}</a>
+        <a href="{{wsurl}}" class="list-group-item list-group-item-action">&#128273; {{#str}}status_link_ws, local_saipa{{/str}}</a>
+        <a href="{{messagesurl}}" class="list-group-item list-group-item-action">&#128276; {{#str}}status_link_messages, local_saipa{{/str}}</a>
+    </div>
+
+    <h4 class="mt-4">{{#str}}status_cli_heading, local_saipa{{/str}}</h4>
+    <p class="text-muted small">{{#str}}status_cli_intro, local_saipa{{/str}}</p>
+    <pre class="bg-dark text-white p-3 rounded small">{{clireference}}</pre>
+
+    <p class="text-muted small mt-3">
+        SAIPA v{{version}} &mdash; &copy; 2026 Schaller &amp; Ponce &lt;dev@schaller-ponce.com.ar&gt;
+    </p>
+</div>

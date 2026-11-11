@@ -21,7 +21,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
+define(['core/ajax', 'core/log', 'core/str', 'local_saipa/dom'], function(Ajax, Log, Str, Dom) {
 
     'use strict';
 
@@ -31,35 +31,36 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
     var wwwroot = '';
 
     /**
-     * Build the HTML badge for a course RAG index status.
+     * Build the badge for a course RAG index status.
      *
      * @param {string} status Index status (ready, indexing, pending or error).
-     * @returns {string} Badge HTML.
+     * @returns {HTMLElement} Badge element.
      */
     function indexBadge(status) {
         var map = {
-            ready:    '<span class="badge badge-success">✓</span>',
-            indexing: '<span class="badge badge-info">⟳</span>',
-            pending:  '<span class="badge badge-secondary">—</span>',
-            error:    '<span class="badge badge-danger">✗</span>',
+            ready:    {cls: 'badge-success', text: '✓'},
+            indexing: {cls: 'badge-info', text: '⟳'},
+            pending:  {cls: 'badge-secondary', text: '—'},
+            error:    {cls: 'badge-danger', text: '✗'},
         };
-        return map[status] || '<span class="badge badge-light">' + (status || '—') + '</span>';
+        var cfg = map[status] || {cls: 'badge-light', text: status || '—'};
+        return Dom.el('span', 'badge ' + cfg.cls, cfg.text);
     }
 
     /**
-     * Build the HTML summary of high, medium and low risk student counts.
+     * Build the summary of high, medium and low risk student counts.
      *
      * @param {number} hi Number of high-risk students.
      * @param {number} med Number of medium-risk students.
      * @param {number} lo Number of low-risk students.
-     * @returns {string} Risk summary HTML, or a dash when all counts are zero.
+     * @returns {Array} Nodes for Dom.append(), or a dash when all counts are zero.
      */
-    function riskHtml(hi, med, lo) {
+    function riskParts(hi, med, lo) {
         var parts = [];
-        if (hi > 0) { parts.push('<span class="text-danger">🔴 ' + hi + '</span>'); }
-        if (med > 0) { parts.push('<span class="text-warning">🟡 ' + med + '</span>'); }
-        if (lo > 0) { parts.push('<span class="text-success">🟢 ' + lo + '</span>'); }
-        return parts.length ? parts.join(' ') : '<span class="text-muted">—</span>';
+        if (hi > 0) { parts.push(Dom.el('span', 'text-danger', '🔴 ' + hi)); }
+        if (med > 0) { parts.push(Dom.el('span', 'text-warning', '🟡 ' + med)); }
+        if (lo > 0) { parts.push(Dom.el('span', 'text-success', '🟢 ' + lo)); }
+        return parts.length ? Dom.join(parts, ' ') : [Dom.el('span', 'text-muted', '—')];
     }
 
     /**
@@ -72,7 +73,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         var empty = document.getElementById('saipa-mc-empty');
         if (!tbody) { return; }
 
-        tbody.innerHTML = '';
+        Dom.replace(tbody);
 
         if (!data || data.length === 0) {
             if (empty) { empty.style.display = ''; }
@@ -85,33 +86,23 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             var adoptionPct = Math.round((c.adoption_rate || 0) * 100);
             var href = wwwroot + 'local/saipa/teacher.php?courseid=' + c.courseid;
 
-            tr.innerHTML = ''
-                + '<td><a href="' + href + '">' + escapeHtml(c.coursename) + '</a>'
-                + '<br/><small class="text-muted">' + escapeHtml(c.shortname) + '</small></td>'
-                + '<td class="text-right">' + c.enrolled_students + '</td>'
-                + '<td class="text-right">' + c.active_saipa_users + '</td>'
-                + '<td class="text-right">' + adoptionPct + '%</td>'
-                + '<td class="text-right">' + c.messages_7d + '</td>'
-                + '<td class="text-center">' + riskHtml(c.high_risk, c.medium_risk, c.low_risk) + '</td>'
-                + '<td class="text-center">' + indexBadge(c.index_status) + '</td>'
-                + '<td><a href="' + href + '" class="btn btn-sm btn-outline-primary">&#128065;</a></td>';
+            Dom.append(tr, [
+                Dom.el('td', '', [
+                    Dom.el('a', '', c.coursename, {href: href}),
+                    Dom.el('br'),
+                    Dom.el('small', 'text-muted', c.shortname)
+                ]),
+                Dom.el('td', 'text-right', c.enrolled_students),
+                Dom.el('td', 'text-right', c.active_saipa_users),
+                Dom.el('td', 'text-right', adoptionPct + '%'),
+                Dom.el('td', 'text-right', c.messages_7d),
+                Dom.el('td', 'text-center', riskParts(c.high_risk, c.medium_risk, c.low_risk)),
+                Dom.el('td', 'text-center', indexBadge(c.index_status)),
+                Dom.el('td', '', Dom.el('a', 'btn btn-sm btn-outline-primary', '\uD83D\uDC41', {href: href}))
+            ]);
 
             tbody.appendChild(tr);
         });
-    }
-
-    /**
-     * Escape HTML special characters in a value.
-     *
-     * @param {string} str Value to escape (converted to string).
-     * @returns {string} The escaped string.
-     */
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
     }
 
     /**

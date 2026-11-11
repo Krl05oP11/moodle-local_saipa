@@ -1,0 +1,754 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_saipa/setup_wizard
+
+    SAIPA setup wizard (setup.php): seven steps, or the final screen once the setup is done.
+    The steps are driven by amd/src/setup_wizard.js, which reads its strings from data-config.
+
+    Context variables required for this template:
+    * adminurl
+    * blockinstalled
+    * cfgcooldown
+    * cfgragon
+    * cfgriskhigh
+    * cfgriskmed
+    * cfgriskon
+    * cfgtguser
+    * cfgtoken
+    * cfgurl
+    * channelboth
+    * channelnone
+    * channeltelegram
+    * channelwhatsapp
+    * coursesurl
+    * curlok
+    * done
+    * modecloud
+    * modecustom
+    * modelocal
+    * moodleverok
+    * moodleverstr
+    * phpverok
+    * phpverstr
+    * ragon
+    * riskon
+    * saveurl
+    * sesskey
+    * settingsurl
+    * teacherurl
+    * wizardconfig
+
+    Example context (json):
+    {
+        "done": false,
+        "wizardconfig": "{}",
+        "settingsurl": "https://example.edu/admin/settings.php?section=local_saipa",
+        "teacherurl": "https://example.edu/local/saipa/teacher.php",
+        "coursesurl": "https://example.edu/course/index.php",
+        "saveurl": "https://example.edu/local/saipa/setup.php?action=save",
+        "adminurl": "https://example.edu/admin/index.php",
+        "sesskey": "abc123",
+        "moodleverok": true,
+        "phpverok": true,
+        "curlok": true,
+        "blockinstalled": true,
+        "moodleverstr": "4.4.12",
+        "phpverstr": "8.2.32",
+        "cfgurl": "http://localhost:8052",
+        "cfgtoken": "",
+        "cfgtguser": "",
+        "cfgriskmed": "0.40",
+        "cfgriskhigh": "0.75",
+        "cfgcooldown": "24",
+        "cfgriskon": "1",
+        "cfgragon": "1",
+        "riskon": true,
+        "ragon": true,
+        "modelocal": true,
+        "modecloud": false,
+        "modecustom": false,
+        "channelnone": false,
+        "channeltelegram": true,
+        "channelwhatsapp": false,
+        "channelboth": false
+    }
+
+    @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="spwiz mt-4" data-config="{{wizardconfig}}">
+
+{{#done}}
+  <!-- Completion screen (after save + redirect) -->
+  <div class="card shadow-sm">
+    <div class="card-body done-card">
+      <div class="done-icon">🎉</div>
+      <h3>{{#str}}wizard_done_title, local_saipa{{/str}}</h3>
+      <p>{{#str}}wizard_done_desc, local_saipa{{/str}}</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{{settingsurl}}" class="btn btn-outline-secondary">{{#str}}wizard_btn_admin, local_saipa{{/str}}</a>
+        <a href="{{teacherurl}}" class="btn btn-outline-primary">{{#str}}wizard_btn_teacher, local_saipa{{/str}}</a>
+        <a href="{{coursesurl}}" class="btn btn-primary btn-lg px-5">
+          {{#str}}wizard_btn_courses, local_saipa{{/str}}
+        </a>
+      </div>
+    </div>
+  </div>
+
+{{/done}}
+{{^done}}
+  <!-- Progress bar -->
+  <div class="spwiz-progress" id="spwiz-progress">
+    <div class="step active" data-step="1">
+      <div class="step-circle">1</div>
+      <div class="step-label">{{#str}}wizard_step_welcome, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="2">
+      <div class="step-circle">2</div>
+      <div class="step-label">{{#str}}wizard_step_requirements, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="3">
+      <div class="step-circle">3</div>
+      <div class="step-label">{{#str}}wizard_step_ai_mode, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="4">
+      <div class="step-circle">4</div>
+      <div class="step-label">{{#str}}wizard_step_engine, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="5">
+      <div class="step-circle">5</div>
+      <div class="step-label">{{#str}}wizard_step_telegram, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="6">
+      <div class="step-circle">6</div>
+      <div class="step-label">{{#str}}wizard_step_test, local_saipa{{/str}}</div>
+    </div>
+    <div class="step" data-step="7">
+      <div class="step-circle">7</div>
+      <div class="step-label">{{#str}}wizard_step_done, local_saipa{{/str}}</div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 1 — Welcome
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step active" id="spwiz-step-1">
+
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div>🤖</div>
+        <div>
+          <h3 class="mb-1">{{#str}}wizard_welcome_title, local_saipa{{/str}}</h3>
+          <p class="text-muted mb-0">
+            {{#str}}wizard_welcome_intro, local_saipa{{/str}}
+          </p>
+        </div>
+      </div>
+      <hr class="my-3">
+
+      <p class="mb-3 spwiz-s2">
+        {{#str}}wizard_welcome_about, local_saipa{{/str}}
+      </p>
+
+      <div class="feature-grid mb-4">
+        <div class="feature-item">
+          <div class="fi-icon">🔴</div>
+          <div><h6>{{#str}}wizard_feat_dropout_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_dropout_desc, local_saipa{{/str}}</p></div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">💬</div>
+          <div><h6>{{#str}}wizard_feat_chat_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_chat_desc, local_saipa{{/str}}</p></div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">📲</div>
+          <div><h6>{{#str}}wizard_feat_alerts_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_alerts_desc, local_saipa{{/str}}</p></div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">📊</div>
+          <div><h6>{{#str}}wizard_feat_advisor_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_advisor_desc, local_saipa{{/str}}</p></div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">📚</div>
+          <div><h6>{{#str}}wizard_feat_index_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_index_desc, local_saipa{{/str}}</p></div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">🤝</div>
+          <div><h6>{{#str}}wizard_feat_evalia_title, local_saipa{{/str}}</h6>
+            <p>{{#str}}wizard_feat_evalia_desc, local_saipa{{/str}}</p></div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-primary px-5" data-spwiz-goto="2">{{#str}}wizard_btn_next, local_saipa{{/str}}</button>
+      </div>
+    </div><!-- /step 1 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 2 — Requirements (CRITICAL)
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-2">
+
+      <h4 class="mb-1">{{#str}}wizard_req_title, local_saipa{{/str}}</h4>
+      <p class="text-muted mb-4 spwiz-s3">
+        {{#str}}wizard_req_intro, local_saipa{{/str}}
+      </p>
+
+      <!-- Platform -->
+      <div class="req-section">
+        <div class="req-section-header spwiz-s4">{{#str}}wizard_req_platform, local_saipa{{/str}}</div>
+        <div class="req-section-body">
+
+          <div class="req-row">
+            <div class="req-status">{{#moodleverok}}✅{{/moodleverok}}{{^moodleverok}}❌{{/moodleverok}}</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_moodle_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_moodle_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">{{moodleverstr}}</div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">{{#phpverok}}✅{{/phpverok}}{{^phpverok}}❌{{/phpverok}}</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_php_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_php_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">{{phpverstr}}</div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">{{#curlok}}✅{{/curlok}}{{^curlok}}❌{{/curlok}}</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_curl_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_curl_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">
+              {{#curlok}}{{#str}}wizard_req_curl_enabled, local_saipa{{/str}}{{/curlok}}
+              {{^curlok}}<span class="text-danger">{{#str}}wizard_req_curl_missing, local_saipa{{/str}}</span>{{/curlok}}
+            </div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">ℹ️</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_block_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_block_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">
+              {{#blockinstalled}}<span class="text-success">{{#str}}wizard_req_block_installed, local_saipa{{/str}}</span>{{/blockinstalled}}
+              {{^blockinstalled}}<span class="text-warning">{{#str}}wizard_req_block_missing, local_saipa, {{adminurl}}{{/str}}</span>{{/blockinstalled}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AI Engine -->
+      <div class="req-section spwiz-s5">
+        <div class="req-section-header spwiz-s6">
+          {{#str}}wizard_req_ai_heading, local_saipa{{/str}}
+        </div>
+        <div class="req-section-body">
+
+          <p>
+            {{#str}}wizard_req_ai_intro, local_saipa{{/str}}
+          </p>
+
+          <div class="req-row">
+            <div class="req-status">🐍</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_enginepy_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_enginepy_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value spwiz-s8">
+              <span class="badge bg-warning text-dark spwiz-s9">
+                {{#str}}wizard_req_enginepy_value, local_saipa{{/str}}
+              </span>
+            </div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">🗄️</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_chroma_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_chroma_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">{{#str}}wizard_req_included, local_saipa{{/str}}</div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">🔤</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_llm_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_llm_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value spwiz-s8">
+              <span class="badge bg-danger spwiz-s9">
+                {{#str}}wizard_req_llm_value, local_saipa{{/str}}
+              </span>
+            </div>
+          </div>
+
+          <div class="req-row">
+            <div class="req-status">📊</div>
+            <div class="req-label">
+              <strong>{{#str}}wizard_req_xgb_title, local_saipa{{/str}}</strong>
+              <span>{{#str}}wizard_req_xgb_desc, local_saipa{{/str}}</span>
+            </div>
+            <div class="req-value">{{#str}}wizard_req_included, local_saipa{{/str}}</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AI Provisioning options -->
+      <div class="req-section spwiz-s10">
+        <div class="req-section-header spwiz-s11">
+          {{#str}}wizard_prov_heading, local_saipa{{/str}}
+        </div>
+        <div class="req-section-body">
+
+          <p>
+            {{#str}}wizard_prov_intro, local_saipa{{/str}}
+          </p>
+
+          <div class="ai-provision-cards">
+
+            <div class="ai-pcard pc-local">
+              <div class="pc-head"><div class="pc-icon">🖥️</div>
+                <h6>
+                  {{#str}}wizard_prov_local_title, local_saipa{{/str}}
+                  <span class="mode-badge badge-local">{{#str}}wizard_prov_local_badge, local_saipa{{/str}}</span>
+                </h6></div>
+              <p>{{#str}}wizard_prov_local_desc, local_saipa{{/str}}</p>
+              <ul>
+                <li>{{#str}}wizard_prov_local_i1, local_saipa{{/str}}</li>
+                <li>{{#str}}wizard_prov_local_i2, local_saipa{{/str}}</li>
+                <li>{{#str}}wizard_prov_local_i3, local_saipa{{/str}}</li>
+              </ul>
+            </div>
+
+            <div class="ai-pcard pc-cloud">
+              <div class="pc-head"><div class="pc-icon">☁️</div>
+                <h6>
+                  {{#str}}wizard_prov_cloud_title, local_saipa{{/str}}
+                  <span class="mode-badge badge-cloud">{{#str}}wizard_prov_cloud_badge, local_saipa{{/str}}</span>
+                </h6></div>
+              <p>{{#str}}wizard_prov_cloud_desc, local_saipa{{/str}}</p>
+              <ul>
+                <li>{{#str}}wizard_prov_cloud_i1, local_saipa{{/str}}</li>
+                <li>{{#str}}wizard_prov_cloud_i2, local_saipa{{/str}}</li>
+                <li>{{#str}}wizard_prov_cloud_i3, local_saipa{{/str}}</li>
+              </ul>
+            </div>
+
+            <div class="ai-pcard pc-custom">
+              <div class="pc-head"><div class="pc-icon">⚙️</div>
+                <h6>
+                  {{#str}}wizard_prov_custom_title, local_saipa{{/str}}
+                  <span class="mode-badge badge-custom">{{#str}}wizard_prov_custom_badge, local_saipa{{/str}}</span>
+                </h6></div>
+              <p>{{#str}}wizard_prov_custom_desc, local_saipa{{/str}}</p>
+              <ul>
+                <li>{{#str}}wizard_prov_custom_i1, local_saipa{{/str}}</li>
+                <li>{{#str}}wizard_prov_custom_i2, local_saipa{{/str}}</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div class="alert alert-danger mt-3 mb-0 py-2 px-3 spwiz-s13">
+            {{#str}}wizard_prov_warning, local_saipa{{/str}}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Confirmation checkbox -->
+      <div class="form-check mt-3 mb-1">
+        <input class="form-check-input" type="checkbox" id="req-confirm">
+        <label class="form-check-label spwiz-s3" for="req-confirm">
+          {{#str}}wizard_req_confirm, local_saipa{{/str}}
+        </label>
+      </div>
+
+      <div class="d-flex justify-content-between mt-3">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="1">
+            {{#str}}wizard_btn_back, local_saipa{{/str}}
+        </button>
+        <button class="btn btn-primary px-5" id="req-next-btn" disabled data-spwiz-goto="3">
+            {{#str}}wizard_btn_next, local_saipa{{/str}}
+        </button>
+      </div>
+    </div><!-- /step 2 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 3 — AI Mode
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-3">
+
+      <h4 class="mb-1">{{#str}}wizard_mode_title, local_saipa{{/str}}</h4>
+      <p class="text-muted mb-4 spwiz-s3">{{#str}}wizard_mode_intro, local_saipa{{/str}}</p>
+
+      <div class="mode-cards">
+        <label class="mode-card {{#modelocal}}selected{{/modelocal}}" for="sp-mode-local">
+          <input type="radio" name="engine_mode" id="sp-mode-local" value="local_ollama"
+                 {{#modelocal}}checked{{/modelocal}}>
+          <div class="mc-icon">🖥️</div>
+          <h5>
+            {{#str}}wizard_prov_local_title, local_saipa{{/str}}
+            <span class="mode-badge badge-local">{{#str}}wizard_prov_local_badge, local_saipa{{/str}}</span>
+          </h5>
+          <p>{{#str}}wizard_mode_local_desc, local_saipa{{/str}}</p>
+        </label>
+        <label class="mode-card {{#modecloud}}selected{{/modecloud}}" for="sp-mode-cloud">
+          <input type="radio" name="engine_mode" id="sp-mode-cloud" value="cloud_api"
+                 {{#modecloud}}checked{{/modecloud}}>
+          <div class="mc-icon">☁️</div>
+          <h5>
+            {{#str}}wizard_prov_cloud_title, local_saipa{{/str}}
+            <span class="mode-badge badge-cloud">{{#str}}wizard_prov_cloud_badge, local_saipa{{/str}}</span>
+          </h5>
+          <p>{{#str}}wizard_mode_cloud_desc, local_saipa{{/str}}</p>
+        </label>
+        <label class="mode-card {{#modecustom}}selected{{/modecustom}}" for="sp-mode-custom">
+          <input type="radio" name="engine_mode" id="sp-mode-custom" value="custom"
+                 {{#modecustom}}checked{{/modecustom}}>
+          <div class="mc-icon">⚙️</div>
+          <h5>
+            {{#str}}wizard_prov_custom_title, local_saipa{{/str}}
+            <span class="mode-badge badge-custom">{{#str}}wizard_prov_custom_badge, local_saipa{{/str}}</span>
+          </h5>
+          <p>{{#str}}wizard_mode_custom_desc, local_saipa{{/str}}</p>
+        </label>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="2">
+            {{#str}}wizard_btn_back, local_saipa{{/str}}
+        </button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="4">{{#str}}wizard_btn_next, local_saipa{{/str}}</button>
+      </div>
+    </div><!-- /step 3 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 4 — Engine connection
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-4">
+
+      <h4 class="mb-1">{{#str}}wizard_engine_title, local_saipa{{/str}}</h4>
+      <p class="text-muted mb-4 spwiz-s3">{{#str}}wizard_engine_intro, local_saipa{{/str}}</p>
+
+      <div id="sp-hint-local_ollama" class="alert alert-light border mb-3 py-2 px-3 spwiz-s14">
+        {{#str}}wizard_hint_local, local_saipa{{/str}}
+      </div>
+      <div id="sp-hint-cloud_api" class="alert alert-light border mb-3 py-2 px-3 spwiz-s14" style="display: none;">
+        {{#str}}wizard_hint_cloud, local_saipa{{/str}}
+      </div>
+      <div id="sp-hint-custom" class="alert alert-light border mb-3 py-2 px-3 spwiz-s14" style="display: none;">
+        {{#str}}wizard_hint_custom, local_saipa{{/str}}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="sp-url">{{#str}}wizard_url_label, local_saipa{{/str}}
+            <span class="text-danger">*</span></label>
+        <input type="url" class="form-control" id="sp-url"
+               placeholder="{{#str}}wizard_url_placeholder, local_saipa{{/str}}"
+               value="{{cfgurl}}">
+        <div class="form-text">{{#str}}wizard_url_help, local_saipa{{/str}}</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="sp-token">{{#str}}wizard_token_label, local_saipa{{/str}}</label>
+        <input type="password" class="form-control" id="sp-token"
+               placeholder="{{#str}}wizard_token_placeholder, local_saipa{{/str}}"
+               value="{{cfgtoken}}">
+        <div class="form-text">{{#str}}wizard_token_help, local_saipa{{/str}}</div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="3">
+            {{#str}}wizard_btn_back, local_saipa{{/str}}
+        </button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="5">{{#str}}wizard_btn_next, local_saipa{{/str}}</button>
+      </div>
+    </div><!-- /step 4 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 5 — Telegram Bot (SAIPA-specific)
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-5">
+
+      <h4 class="mb-1">{{#str}}wizard_channels_title, local_saipa{{/str}}</h4>
+      <p class="text-muted mb-3 spwiz-s3">
+        {{#str}}wizard_channels_intro, local_saipa{{/str}}
+      </p>
+
+      <!-- Channel selector -->
+      <div class="channel-cards mb-4">
+        <label class="channel-card {{#channelnone}}selected{{/channelnone}}" for="ch-none">
+          <input type="radio" name="messaging_channel" id="ch-none" value="none"
+                 {{#channelnone}}checked{{/channelnone}}>
+          <div class="ch-icon">🔕</div><h6>{{#str}}wizard_ch_none_title, local_saipa{{/str}}</h6>
+          <p>{{#str}}wizard_ch_none_desc, local_saipa{{/str}}</p>
+        </label>
+        <label class="channel-card {{#channeltelegram}}selected{{/channeltelegram}}" for="ch-telegram">
+          <input type="radio" name="messaging_channel" id="ch-telegram" value="telegram"
+                 {{#channeltelegram}}checked{{/channeltelegram}}>
+          <div class="ch-icon">✈️</div><h6>{{#str}}wizard_ch_telegram_title, local_saipa{{/str}}</h6>
+          <p>{{#str}}wizard_ch_telegram_desc, local_saipa{{/str}}</p>
+        </label>
+        <label class="channel-card {{#channelwhatsapp}}selected{{/channelwhatsapp}}" for="ch-whatsapp">
+          <input type="radio" name="messaging_channel" id="ch-whatsapp" value="whatsapp"
+                 {{#channelwhatsapp}}checked{{/channelwhatsapp}}>
+          <div class="ch-icon">💬</div><h6>{{#str}}wizard_ch_whatsapp_title, local_saipa{{/str}}</h6>
+          <p>{{#str}}wizard_ch_whatsapp_desc, local_saipa{{/str}}</p>
+        </label>
+        <label class="channel-card {{#channelboth}}selected{{/channelboth}}" for="ch-both">
+          <input type="radio" name="messaging_channel" id="ch-both" value="both"
+                 {{#channelboth}}checked{{/channelboth}}>
+          <div class="ch-icon">📡</div><h6>{{#str}}wizard_ch_both_title, local_saipa{{/str}}</h6>
+          <p>{{#str}}wizard_ch_both_desc, local_saipa{{/str}}</p>
+        </label>
+      </div>
+
+      <!-- Telegram details (shown when telegram || both is selected) -->
+      <div id="sp-telegram-section">
+
+        <hr class="mb-3">
+        <h5 class="mb-1 spwiz-s15">{{#str}}wizard_tg_heading, local_saipa{{/str}}</h5>
+        <p class="text-muted mb-3 spwiz-s16">
+          {{#str}}wizard_tg_intro, local_saipa{{/str}}
+        </p>
+
+        <!-- How to create a bot -->
+        <div class="alert alert-light border mb-3 py-2 px-3 spwiz-s14">
+          <strong>{{#str}}wizard_tg_howto_title, local_saipa{{/str}}</strong>
+          <ol class="mb-0 mt-1 ps-3">
+            <li>{{#str}}wizard_tg_howto_1, local_saipa{{/str}}</li>
+            <li>{{#str}}wizard_tg_howto_2, local_saipa{{/str}}</li>
+            <li>{{#str}}wizard_tg_howto_3, local_saipa{{/str}}</li>
+            <li>{{#str}}wizard_tg_howto_4, local_saipa{{/str}}</li>
+            <li>{{#str}}wizard_tg_howto_5, local_saipa{{/str}}</li>
+          </ol>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-7">
+            <label class="form-label fw-semibold" for="sp-tg-token">
+              {{#str}}wizard_tg_token_label, local_saipa{{/str}}
+              <small class="text-muted fw-normal">{{#str}}wizard_tg_token_note, local_saipa{{/str}}</small>
+            </label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="sp-tg-token"
+                     placeholder="{{#str}}wizard_tg_token_placeholder, local_saipa{{/str}}"
+                     autocomplete="off">
+              <button class="btn btn-outline-primary" type="button" data-spwiz-action="testbot">
+                {{#str}}wizard_btn_validate, local_saipa{{/str}}
+              </button>
+            </div>
+            <div class="form-text">{{#str}}wizard_tg_token_help, local_saipa{{/str}}</div>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-semibold" for="sp-tg-username">{{#str}}wizard_tg_username_label, local_saipa{{/str}}
+                <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">@</span>
+              <input type="text" class="form-control" id="sp-tg-username"
+                     placeholder="{{#str}}wizard_tg_username_placeholder, local_saipa{{/str}}"
+                     value="{{cfgtguser}}">
+            </div>
+            <div class="form-text">{{#str}}wizard_tg_username_help, local_saipa{{/str}}</div>
+          </div>
+        </div>
+
+        <div id="sp-bot-result" class="mb-3"></div>
+
+        <div class="alert alert-info py-2 px-3 spwiz-s14">
+          {{#str}}wizard_tg_link_info, local_saipa{{/str}}
+        </div>
+
+      </div><!-- /telegram-section -->
+
+      <!-- WhatsApp note -->
+      <div id="sp-whatsapp-note" class="alert alert-secondary py-2 px-3 mb-3 spwiz-s14" style="display: none;">
+        {{#str}}wizard_wa_note, local_saipa, {{settingsurl}}{{/str}}
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="4">
+            {{#str}}wizard_btn_back, local_saipa{{/str}}
+        </button>
+        <button class="btn btn-primary px-5" data-spwiz-goto="6">{{#str}}wizard_btn_next, local_saipa{{/str}}</button>
+      </div>
+    </div><!-- /step 5 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 6 — Health check + summary
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-6">
+
+      <h4 class="mb-1">{{#str}}wizard_test_title, local_saipa{{/str}}</h4>
+      <p class="text-muted mb-4 spwiz-s3">{{#str}}wizard_test_intro, local_saipa{{/str}}</p>
+
+      <div id="sp-health-result" class="mb-4">
+        <div class="d-flex align-items-center gap-2 text-muted py-2">
+          <div class="spinner-border spinner-border-sm" role="status"></div>
+          <span>{{#str}}wizard_test_connecting, local_saipa{{/str}}</span>
+        </div>
+      </div>
+
+      <!-- Configuration summary (shown after test) -->
+      <div id="sp-summary" style="display: none;">
+        <h6 class="text-muted text-uppercase spwiz-s17">
+          {{#str}}wizard_summary_heading, local_saipa{{/str}}
+        </h6>
+        <div class="summary-grid mb-4">
+
+          <div class="summary-card">
+            <h6>{{#str}}wizard_summary_engine, local_saipa{{/str}}</h6>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_mode, local_saipa{{/str}}</span>
+              <span class="summary-value" id="sum-mode">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_url, local_saipa{{/str}}</span>
+              <span
+                class="summary-value spwiz-s18"
+                id="sum-url"
+               
+              >—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_token, local_saipa{{/str}}</span>
+              <span class="summary-value" id="sum-token">—</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h6>{{#str}}wizard_summary_notif, local_saipa{{/str}}</h6>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_channel, local_saipa{{/str}}</span>
+              <span class="summary-value" id="sum-channel">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_tgbot, local_saipa{{/str}}</span>
+              <span class="summary-value" id="sum-tg">—</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h6>{{#str}}wizard_summary_risk, local_saipa{{/str}}</h6>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_medium, local_saipa{{/str}}</span>
+              <span class="summary-value">≥ {{cfgriskmed}}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_high, local_saipa{{/str}}</span>
+              <span class="summary-value">≥ {{cfgriskhigh}}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_cooldown, local_saipa{{/str}}</span>
+              <span class="summary-value">{{cfgcooldown}}h</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h6>{{#str}}wizard_summary_features, local_saipa{{/str}}</h6>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_risk_eval, local_saipa{{/str}}</span>
+              <span class="summary-value">{{#riskon}}{{#str}}wizard_enabled, local_saipa{{/str}}{{/riskon}}{{^riskon}}{{#str}}wizard_disabled, local_saipa{{/str}}{{/riskon}}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">{{#str}}wizard_summary_rag, local_saipa{{/str}}</span>
+              <span class="summary-value">{{#ragon}}{{#str}}wizard_enabled, local_saipa{{/str}}{{/ragon}}{{^ragon}}{{#str}}wizard_disabled, local_saipa{{/str}}{{/ragon}}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-2">
+        <button class="btn btn-outline-secondary" data-spwiz-goto="5">
+            {{#str}}wizard_btn_back, local_saipa{{/str}}
+        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" id="sp-retry-btn" style="display: none;"
+                  data-spwiz-action="runtest">{{#str}}wizard_btn_retry, local_saipa{{/str}}</button>
+          <button class="btn btn-success px-5" id="sp-save-btn" style="display: none;"
+                  data-spwiz-action="save">{{#str}}wizard_btn_save_finish, local_saipa{{/str}}</button>
+        </div>
+      </div>
+    </div><!-- /step 6 -->
+
+
+    <!-- ══════════════════════════════════════════
+         STEP 7 — Done (inline)
+         ══════════════════════════════════════════ -->
+    <div class="spwiz-step" id="spwiz-step-7">
+      <div class="done-card">
+        <div class="done-icon">✅</div>
+        <h3>{{#str}}wizard_done_inline_title, local_saipa{{/str}}</h3>
+        <p>{{#str}}wizard_done_inline_desc, local_saipa{{/str}}</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <a href="{{settingsurl}}" class="btn btn-outline-secondary">
+            {{#str}}wizard_btn_admin, local_saipa{{/str}}
+          </a>
+          <a href="{{coursesurl}}" class="btn btn-primary btn-lg px-5">
+            {{#str}}wizard_btn_courses, local_saipa{{/str}}
+          </a>
+        </div>
+      </div>
+    </div><!-- /step 7 -->
+
+
+    </div><!-- /card-body -->
+  </div><!-- /card -->
+
+  <!-- Hidden save form -->
+  <form id="sp-save-form" method="post"
+        action="{{saveurl}}"
+        style="display: none;">
+    <input type="hidden" name="sesskey"              value="{{sesskey}}">
+    <input type="hidden" name="engine_mode"          id="sf-mode"    value="">
+    <input type="hidden" name="engine_url"           id="sf-url"     value="">
+    <input type="hidden" name="engine_token"         id="sf-token"   value="">
+    <input type="hidden" name="messaging_channel"    id="sf-channel" value="">
+    <input type="hidden" name="telegram_bot_username" id="sf-tguser" value="">
+    <input type="hidden" name="risk_threshold_medium" value="{{cfgriskmed}}">
+    <input type="hidden" name="risk_threshold_high"   value="{{cfgriskhigh}}">
+    <input type="hidden" name="alert_cooldown_hours"  value="{{cfgcooldown}}">
+    <input type="hidden" name="risk_eval_enabled"     value="{{cfgriskon}}">
+    <input type="hidden" name="rag_global_enabled"    value="{{cfgragon}}">
+  </form>
+
+{{/done}}
+</div><!-- /spwiz -->

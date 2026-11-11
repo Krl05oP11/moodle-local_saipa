@@ -21,7 +21,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
+define(['core/ajax', 'core/log', 'core/str', 'local_saipa/dom'], function(Ajax, Log, Str, Dom) {
 
     'use strict';
 
@@ -112,20 +112,6 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
     }
 
     /**
-     * Escape HTML special characters in a value.
-     *
-     * @param {string} str Value to escape (converted to string).
-     * @returns {string} The escaped string.
-     */
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
-
-    /**
      * Format a Unix timestamp as a short date and time string in the page language.
      *
      * @param {number} ts Unix timestamp in seconds.
@@ -138,14 +124,14 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
     }
 
     /**
-     * Build the HTML risk badge for a student from the cached risk data.
+     * Build the risk badge of a student from the cached risk data.
      *
      * @param {number} userid Moodle user id of the student.
-     * @returns {string} Badge HTML, or an empty string when no risk data is cached.
+     * @returns {(HTMLElement|null)} Badge element, or null when no risk data is cached.
      */
-    function riskBadgeHtml(userid) {
+    function riskBadge(userid) {
         var r = riskData[userid];
-        if (!r) { return ''; }
+        if (!r) { return null; }
         var map = {
             low:    {cls: 'badge-success', icon: '🟢'},
             medium: {cls: 'badge-warning', icon: '🟡'},
@@ -156,43 +142,40 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             level: S['risk_level_' + r.risk_level] || r.risk_level,
             score: (r.score * 100).toFixed(0)
         });
-        return '<span class="badge ' + cfg.cls + ' badge-pill ml-1" title="' + escapeHtml(title) + '">'
-            + cfg.icon + ' ' + (r.score * 100).toFixed(0) + '%</span>';
+        return Dom.el('span', 'badge ' + cfg.cls + ' badge-pill ml-1', cfg.icon + ' ' + (r.score * 100).toFixed(0) + '%',
+            {title: title});
     }
 
     /**
-     * Build the HTML summary of a student's engagement with the last Telegram alert.
+     * Build the summary of a student's engagement with the last Telegram alert.
      *
      * @param {Object} student Student record with the alert engagement fields.
-     * @returns {string} Engagement HTML, or an empty string when no alert was sent.
+     * @returns {Array} Nodes and separators for Dom.append(); empty when no alert was sent.
      */
-    function alertEngagementHtml(student) {
-        if (!student.last_alert_sent) { return ''; }
+    function alertEngagement(student) {
+        if (!student.last_alert_sent) { return []; }
 
         var parts = [];
 
-        // Alert sent indicator
-        parts.push('<span title="' + escapeHtml(fmt('teacher_alert_sent_on', formatDate(student.last_alert_sent))) + '" '
-            + 'style="color:#6c757d;">📨 ' + formatDate(student.last_alert_sent) + '</span>');
+        // Alert sent indicator.
+        parts.push(Dom.el('span', 'text-muted', '📨 ' + formatDate(student.last_alert_sent),
+            {title: fmt('teacher_alert_sent_on', formatDate(student.last_alert_sent))}));
 
         if (student.alert_responded) {
             var delay = student.alert_response_delay_min;
             var delayStr = delay < 60
                 ? fmt('teacher_alert_delay_minutes', delay)
                 : fmt('teacher_alert_delay_hours', Math.round(delay / 60));
-            parts.push('<span class="text-success" title="' + escapeHtml(fmt('teacher_alert_replied_in', delayStr)) + '">💬 '
-                + escapeHtml(delayStr) + '</span>');
+            parts.push(Dom.el('span', 'text-success', '💬 ' + delayStr, {title: fmt('teacher_alert_replied_in', delayStr)}));
         } else {
-            parts.push('<span class="text-warning" title="' + escapeHtml(S.teacher_alert_not_replied) + '">⏳ '
-                + escapeHtml(S.teacher_alert_no_reply) + '</span>');
+            parts.push(Dom.el('span', 'text-warning', '⏳ ' + S.teacher_alert_no_reply, {title: S.teacher_alert_not_replied}));
         }
 
         if (student.moodle_accessed_after_alert) {
-            parts.push('<span class="text-success" title="' + escapeHtml(S.teacher_alert_accessed_title) + '">✅ '
-                + escapeHtml(S.teacher_alert_accessed) + '</span>');
+            parts.push(Dom.el('span', 'text-success', '✅ ' + S.teacher_alert_accessed, {title: S.teacher_alert_accessed_title}));
         }
 
-        return parts.join(' · ');
+        return Dom.join(parts, ' · ');
     }
 
     /**
@@ -221,12 +204,12 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                 var now = Math.floor(Date.now() / 1000);
                 if (engEl) {
                     // Simulate a fresh student record with alert_sent but not responded.
-                    engEl.innerHTML = alertEngagementHtml({
+                    Dom.replace(engEl, alertEngagement({
                         last_alert_sent:             now,
                         alert_responded:             false,
                         alert_response_delay_min:    0,
                         moodle_accessed_after_alert: false,
-                    });
+                    }));
                 }
                 setTimeout(function() {
                     btn.textContent = '📨';
@@ -281,7 +264,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         // Risk badge placeholder — updated when risk data arrives
         var riskSpan = document.createElement('span');
         riskSpan.id = 'saipa-risk-badge-' + student.userid;
-        riskSpan.innerHTML = riskBadgeHtml(student.userid);
+        Dom.replace(riskSpan, riskBadge(student.userid));
         nameRow.appendChild(riskSpan);
 
         // Telegram alert button — shown for linked students, highlighted when high risk
@@ -312,7 +295,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             var engSpan = document.createElement('span');
             engSpan.id = 'saipa-eng-' + student.userid;
             engSpan.className = 'ml-2';
-            engSpan.innerHTML = alertEngagementHtml(student);
+            Dom.replace(engSpan, alertEngagement(student));
             meta.appendChild(engSpan);
         } else {
             var engSpan = document.createElement('span');
@@ -366,7 +349,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                 riskData[r.userid] = r;
                 // Update risk badge
                 var el = document.getElementById('saipa-risk-badge-' + r.userid);
-                if (el) { el.innerHTML = riskBadgeHtml(r.userid); }
+                if (el) { Dom.replace(el, riskBadge(r.userid)); }
                 // Highlight alert button for high-risk students with Telegram linked
                 var alertEl = document.getElementById('saipa-alert-btn-' + r.userid);
                 if (alertEl && !alertEl.classList.contains('d-none')) {
@@ -397,8 +380,8 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         }).always(function() {
             if (btn) { btn.disabled = false; }
             if (otherBtn) { otherBtn.disabled = false; }
-            if (btn && !isDemo) { btn.innerHTML = '&#128202; ' + escapeHtml(S.risk_button); }
-            if (btn && isDemo) { btn.innerHTML = '&#127922; ' + escapeHtml(S.risk_demo_button); }
+            if (btn && !isDemo) { btn.textContent = '\uD83D\uDCCA ' + S.risk_button; }
+            if (btn && isDemo) { btn.textContent = '\uD83C\uDFB2 ' + S.risk_demo_button; }
         });
     }
 
@@ -421,10 +404,10 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
             if (loadingEl) { loadingEl.style.display = 'none'; }
             if (!listEl) { return result; }
 
-            listEl.innerHTML = '';
+            Dom.replace(listEl);
 
             if (!result.students || result.students.length === 0) {
-                listEl.innerHTML = '<div class="text-muted p-3 text-center">' + escapeHtml(S.teacher_no_students) + '</div>';
+                Dom.replace(listEl, Dom.el('div', 'text-muted p-3 text-center', S.teacher_no_students));
             } else {
                 result.students.forEach(function(s) {
                     listEl.appendChild(renderStudentRow(s));
@@ -489,18 +472,19 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
         if (heading) { heading.textContent = studentName; }
 
         var msgContainer = document.getElementById('saipa-conversation-messages');
-        msgContainer.innerHTML = '<div class="text-muted small text-center py-4">'
-            + '<div class="spinner-border spinner-border-sm mr-2" role="status"></div>' + escapeHtml(S['core/loading']) + '</div>';
+        Dom.replace(msgContainer, Dom.el('div', 'text-muted small text-center py-4', [
+            Dom.el('div', 'spinner-border spinner-border-sm mr-2', null, {role: 'status'}),
+            S['core/loading']
+        ]));
 
         Ajax.call([{
             methodname: 'local_saipa_get_student_history',
             args: {course_id: courseId, student_id: studentId}
         }])[0].then(function(result) {
-            msgContainer.innerHTML = '';
+            Dom.replace(msgContainer);
 
             if (!result.messages || result.messages.length === 0) {
-                msgContainer.innerHTML = '<div class="text-muted p-3 text-center">'
-                    + escapeHtml(S.teacher_conv_empty) + '</div>';
+                Dom.replace(msgContainer, Dom.el('div', 'text-muted p-3 text-center', S.teacher_conv_empty));
                 return result;
             }
 
@@ -513,24 +497,25 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
 
         }).fail(function(err) {
             Log.error('SAIPA teacher_dashboard get_student_history error: ' + JSON.stringify(err));
-            msgContainer.innerHTML = '<div class="text-danger p-3">' + escapeHtml(S.teacher_conv_load_error) + '</div>';
+            Dom.replace(msgContainer, Dom.el('div', 'text-danger p-3', S.teacher_conv_load_error));
         });
     }
 
     /**
-     * Build the HTML badge for the course RAG index status.
+     * Build the badge for the course RAG index status.
      *
      * @param {string} status Index status (ready, indexing, pending or error).
-     * @returns {string} Badge HTML.
+     * @returns {HTMLElement} Badge element.
      */
     function indexStatusBadge(status) {
         var map = {
-            ready:      '<span class="badge badge-success">✓ ' + escapeHtml(S.index_status_ready) + '</span>',
-            indexing:   '<span class="badge badge-info">⟳ ' + escapeHtml(S.index_status_indexing) + '</span>',
-            pending:    '<span class="badge badge-secondary">— ' + escapeHtml(S.index_status_pending) + '</span>',
-            error:      '<span class="badge badge-danger">✗ ' + escapeHtml(S.index_status_error) + '</span>',
+            ready:    {cls: 'badge-success', text: '✓ ' + S.index_status_ready},
+            indexing: {cls: 'badge-info', text: '⟳ ' + S.index_status_indexing},
+            pending:  {cls: 'badge-secondary', text: '— ' + S.index_status_pending},
+            error:    {cls: 'badge-danger', text: '✗ ' + S.index_status_error},
         };
-        return map[status] || '<span class="badge badge-light">' + status + '</span>';
+        var cfg = map[status] || {cls: 'badge-light', text: status};
+        return Dom.el('span', 'badge ' + cfg.cls, cfg.text);
     }
 
     /**
@@ -569,7 +554,7 @@ define(['core/ajax', 'core/log', 'core/str'], function(Ajax, Log, Str) {
                 el('ss-risk').appendChild(riskSpan);
             }
             if (el('ss-index')) {
-                el('ss-index').innerHTML = indexStatusBadge(r.index_status);
+                Dom.replace(el('ss-index'), indexStatusBadge(r.index_status));
             }
 
             cards.style.display = '';

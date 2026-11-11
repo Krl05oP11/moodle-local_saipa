@@ -23,7 +23,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str, $) {
+define(['core/ajax', 'core/log', 'core/str', 'jquery', 'local_saipa/dom'], function(Ajax, Log, Str, $, Dom) {
 
     'use strict';
 
@@ -110,20 +110,6 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
-
-    /**
-     * Escape HTML special characters in a value (null/undefined become an empty string).
-     *
-     * @param {string} str Value to escape.
-     * @returns {string} The escaped string.
-     */
-    function escapeHtml(str) {
-        return String(str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
 
     /**
      * Format a Unix timestamp as a short date (2-digit day, month and year) in the page language.
@@ -306,7 +292,7 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
         ];
 
         var maxVal = Math.max(1, f.evaluated);
-        container.innerHTML = '';
+        Dom.replace(container);
 
         steps.forEach(function(s) {
             var widthPct = Math.round((s.value / maxVal) * 100);
@@ -323,7 +309,7 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
             var lbl = document.createElement('div');
             lbl.className = 'text-muted mt-1 text-center';
             lbl.style.fontSize = '0.7rem';
-            lbl.innerHTML = '<strong>' + s.value + '</strong><br/>' + escapeHtml(s.label);
+            Dom.append(lbl, [Dom.el('strong', '', s.value), Dom.el('br'), s.label]);
 
             col.appendChild(bar);
             col.appendChild(lbl);
@@ -419,7 +405,7 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
         var empty = document.getElementById('effectiveness-empty');
         if (!tbody) { return; }
 
-        tbody.innerHTML = '';
+        Dom.replace(tbody);
 
         if (!rows || rows.length === 0) {
             if (empty) { empty.style.display = ''; }
@@ -429,16 +415,16 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
 
         rows.forEach(function(r) {
             var improved = r.improved
-                ? '<span class="text-success">&#9650; ' + escapeHtml(S.adv_improved_yes) + '</span>'
-                : '<span class="text-danger">&#9660; ' + escapeHtml(S.adv_improved_no) + '</span>';
-            var tr = document.createElement('tr');
-            tr.innerHTML = ''
-                + '<td>' + r.userid + '</td>'
-                + '<td>' + r.courseid + '</td>'
-                + '<td>' + fmtDate(r.alert_time) + '</td>'
-                + '<td class="text-right">' + (r.risk_at_alert * 100).toFixed(1) + '%</td>'
-                + '<td class="text-right">' + (r.risk_14d_later * 100).toFixed(1) + '%</td>'
-                + '<td class="text-center">' + improved + '</td>';
+                ? Dom.el('span', 'text-success', '\u25B2 ' + S.adv_improved_yes)
+                : Dom.el('span', 'text-danger', '\u25BC ' + S.adv_improved_no);
+            var tr = Dom.el('tr', '', [
+                Dom.el('td', '', r.userid),
+                Dom.el('td', '', r.courseid),
+                Dom.el('td', '', fmtDate(r.alert_time)),
+                Dom.el('td', 'text-right', (r.risk_at_alert * 100).toFixed(1) + '%'),
+                Dom.el('td', 'text-right', (r.risk_14d_later * 100).toFixed(1) + '%'),
+                Dom.el('td', 'text-center', improved)
+            ]);
             tbody.appendChild(tr);
         });
     }
@@ -495,7 +481,7 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
             var vis = (parseInt(isoDow, 10) + 1) % 7;
             visualGrid[vis] = grid[isoDow];
         });
-        container.innerHTML = '';
+        Dom.replace(container);
 
         // Header row (hour labels every 3h, with larger font)
         var emptyHeader = document.createElement('div');
@@ -599,16 +585,16 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
             // Per-course table
             var tbody = document.getElementById('eng-course-tbody');
             if (tbody) {
-                tbody.innerHTML = '';
+                Dom.replace(tbody);
                 (r.course_usage || []).forEach(function(c) {
                     var fb = c.feedback_ratio >= 0 ? pct(c.feedback_ratio) : '—';
-                    var tr = document.createElement('tr');
-                    tr.innerHTML = ''
-                        + '<td>' + escapeHtml(c.coursename) + '</td>'
-                        + '<td class="text-right">' + c.message_count + '</td>'
-                        + '<td class="text-right">' + c.unique_users + '</td>'
-                        + '<td class="text-right">' + c.avg_session_msgs.toFixed(1) + '</td>'
-                        + '<td class="text-right">' + fb + '</td>';
+                    var tr = Dom.el('tr', '', [
+                        Dom.el('td', '', c.coursename),
+                        Dom.el('td', 'text-right', c.message_count),
+                        Dom.el('td', 'text-right', c.unique_users),
+                        Dom.el('td', 'text-right', c.avg_session_msgs.toFixed(1)),
+                        Dom.el('td', 'text-right', fb)
+                    ]);
                     tbody.appendChild(tr);
                 });
             }
@@ -737,7 +723,7 @@ define(['core/ajax', 'core/log', 'core/str', 'jquery'], function(Ajax, Log, Str,
         }])[0].then(function(r) {
             var tbody = document.getElementById('ctrl-tbody');
             if (!tbody) { showContent('controls'); return r; }
-            tbody.innerHTML = '';
+            Dom.replace(tbody);
 
             (r.courses || []).forEach(function(c) {
                 var tr = document.createElement('tr');

@@ -24,7 +24,7 @@
  * @copyright  2026 Schaller & Ponce <dev@schaller-ponce.com.ar>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['core/config'], function(Config) {
+define(['core/config', 'core/templates', 'core/log', 'local_saipa/dom'], function(Config, Templates, Log, Dom) {
 
     'use strict';
 
@@ -35,14 +35,43 @@ define(['core/config'], function(Config) {
     var currentStep = 1;
 
     /**
-     * Escape a value for HTML.
+     * Replace the contents of a result box with a spinner and a text.
      *
-     * @param {*} s Value to escape.
-     * @returns {string}
+     * @param {HTMLElement} el Result box.
+     * @param {string} pad Bootstrap padding class (py-1 or py-2).
+     * @param {string} text Plain text.
      */
-    function he(s) {
-        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function showSpinner(el, pad, text) {
+        Dom.replace(el, Dom.el('div', 'd-flex align-items-center gap-2 text-muted ' + pad, [
+            Dom.el('div', 'spinner-border spinner-border-sm', null, {role: 'status'}),
+            Dom.el('span', '', text)
+        ]));
+    }
+
+    /**
+     * Replace the contents of a result box with an alert.
+     *
+     * @param {HTMLElement} el Result box.
+     * @param {string} type Bootstrap alert type (success, warning or danger).
+     * @param {Array} content Texts and nodes for Dom.append().
+     */
+    function showAlert(el, type, content) {
+        Dom.replace(el, Dom.el('div', 'alert alert-' + type + ' py-2 px-3 mb-0 spwiz-result', content));
+    }
+
+    /**
+     * Render the engine test result (template local_saipa/setup_wizard_health) into the result box.
+     *
+     * @param {Object} context Template context: ok, url, version, uptime, error.
+     */
+    function renderHealth(context) {
+        var el = document.getElementById('sp-health-result');
+        Templates.render('local_saipa/setup_wizard_health', context).then(function(html, js) {
+            Templates.replaceNodeContents(el, html, js);
+            return el;
+        }).fail(function(err) {
+            Log.error('SAIPA setup wizard: could not render the engine test result', err);
+        });
     }
 
     /**
@@ -133,36 +162,25 @@ define(['core/config'], function(Config) {
         var usernameEl = document.getElementById('sp-tg-username');
 
         if (!tokenEl || !tokenEl.value.trim()) {
-            resultEl.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.82rem;">'
-                + he(L.enter_token) + '</div>';
+            showAlert(resultEl, 'warning', [L.enter_token]);
             return;
         }
 
-        resultEl.innerHTML =
-            '<div class="d-flex align-items-center gap-2 text-muted py-1">' +
-            '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>' + he(L.validating) + '</span></div>';
+        showSpinner(resultEl, 'py-1', L.validating);
 
         post({action: 'testbot', 'bot_token': tokenEl.value.trim()}).then(function(data) {
             if (data.ok) {
                 if (usernameEl && data.username) {
                     usernameEl.value = data.username;
                 }
-                resultEl.innerHTML =
-                    '<div class="alert alert-success py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '✅ <strong>' + he(L.bot_verified) + '</strong> @' + he(data.username) +
-                    ' (' + he((data.name || '').trim()) + '). ' +
-                    he(L.username_autofill) + '</div>';
+                showAlert(resultEl, 'success', ['✅ ', Dom.el('strong', '', L.bot_verified),
+                    ' @' + data.username + ' (' + (data.name || '').trim() + '). ' + L.username_autofill]);
             } else {
-                resultEl.innerHTML =
-                    '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                    '❌ <strong>' + he(L.error) + '</strong> ' + he(data.error || L.invalid_token) + '</div>';
+                showAlert(resultEl, 'danger', ['❌ ', Dom.el('strong', '', L.error), ' ' + (data.error || L.invalid_token)]);
             }
             return data;
         }).catch(function(e) {
-            resultEl.innerHTML =
-                '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem;">' +
-                '❌ ' + he(L.network_error) + ' ' + he(e.message) + '</div>';
+            showAlert(resultEl, 'danger', ['❌ ' + L.network_error + ' ' + e.message]);
         });
     }
 
@@ -173,20 +191,7 @@ define(['core/config'], function(Config) {
      * @param {string} url Engine URL that was tried.
      */
     function renderHealthError(msg, url) {
-        document.getElementById('sp-health-result').innerHTML =
-            '<div class="health-row">' +
-            '<div class="health-icon">❌</div>' +
-            '<div class="health-label"><strong>' + he(L.connection_failed) + '</strong></div>' +
-            '<div class="health-value">' + he(url || '—') + '</div></div>' +
-            '<div class="alert alert-danger py-2 px-3 mt-3 mb-0" style="font-size:.84rem;">' +
-            '<strong>' + he(L.error) + '</strong> ' + he(msg) + '<br><br>' +
-            '<strong>' + he(L.troubleshooting) + '</strong>' +
-            '<ul class="mb-0 mt-1">' +
-            '<li>' + L.ts_running + '</li>' +
-            '<li>' + L.ts_url + '</li>' +
-            '<li>' + L.ts_docker + '</li>' +
-            '<li>' + L.ts_token + '</li>' +
-            '</ul></div>';
+        renderHealth({ok: false, url: url || '', version: '', uptime: '', error: msg});
         document.getElementById('sp-retry-btn').style.display = '';
     }
 
@@ -205,10 +210,7 @@ define(['core/config'], function(Config) {
             summaryEl.style.display = 'none';
         }
 
-        resultEl.innerHTML =
-            '<div class="d-flex align-items-center gap-2 text-muted py-2">' +
-            '<div class="spinner-border spinner-border-sm" role="status"></div>' +
-            '<span>' + he(L.connecting) + '</span></div>';
+        showSpinner(resultEl, 'py-2', L.connecting);
 
         var url = ((document.getElementById('sp-url') || {}).value || '').trim();
         var token = (document.getElementById('sp-token') || {}).value || '';
@@ -220,21 +222,7 @@ define(['core/config'], function(Config) {
 
         post({action: 'health', 'engine_url': url, 'engine_token': token}).then(function(data) {
             if (data.ok) {
-                resultEl.innerHTML =
-                    '<div class="health-row">' +
-                    '<div class="health-icon">✅</div>' +
-                    '<div class="health-label"><strong>' + he(L.engine_reachable) + '</strong></div>' +
-                    '<div class="health-value">' + he(url) + '</div></div>' +
-                    '<div class="health-row">' +
-                    '<div class="health-icon">🔢</div>' +
-                    '<div class="health-label">' + he(L.engine_version) + '</div>' +
-                    '<div class="health-value">' + he(data.version) + '</div></div>' +
-                    '<div class="health-row">' +
-                    '<div class="health-icon">⏱️</div>' +
-                    '<div class="health-label">' + he(L.uptime) + '</div>' +
-                    '<div class="health-value">' + he(data.uptime) + '</div></div>' +
-                    '<div class="alert alert-success py-2 px-3 mt-3 mb-0" style="font-size:.85rem;">' +
-                    L.success + '</div>';
+                renderHealth({ok: true, url: url, version: data.version, uptime: data.uptime, error: ''});
 
                 var usernameEl = document.getElementById('sp-tg-username');
                 setText('sum-mode', modeLabels[getSelectedMode()] || getSelectedMode());

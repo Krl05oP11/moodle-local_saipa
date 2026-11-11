@@ -354,6 +354,7 @@ $string['status_check_cron'] = 'Tarefa cron de avaliação de risco';
 $string['status_check_engine'] = 'Motor acessível (/health)';
 $string['status_check_msgprovider'] = 'Provedor de mensagens (risk_alert)';
 $string['status_check_ollama'] = 'Modelo do Ollama disponível';
+$string['status_check_service'] = 'Serviço externo do SAIPA';
 $string['status_check_tables'] = 'Tabelas do banco de dados';
 $string['status_check_telegram'] = 'Bot do Telegram';
 $string['status_check_token'] = 'Token de API do motor configurado';

@@ -354,6 +354,7 @@ $string['status_check_cron'] = 'Risk Evaluation cron task';
 $string['status_check_engine'] = 'Engine reachable (/health)';
 $string['status_check_msgprovider'] = 'Message provider (risk_alert)';
 $string['status_check_ollama'] = 'Ollama model available';
+$string['status_check_service'] = 'SAIPA external service';
 $string['status_check_tables'] = 'Database tables';
 $string['status_check_telegram'] = 'Telegram bot';
 $string['status_check_token'] = 'Engine API token configured';
