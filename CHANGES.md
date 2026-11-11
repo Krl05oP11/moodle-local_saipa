@@ -4,6 +4,36 @@ All notable changes to the SAIPA plugin (local_saipa) are documented in this fil
 
 ## [Unreleased]
 
+### Marketplace review MMR-462, second round (0.5.8, 2026-11-10; build 2026111000)
+The reviewer's findings are the GitHub issues 16-20; 12 and 15 come from the first round.
+
+#### Privacy (#16)
+- The engine location declares every personal field the plugin sends (user, course, role, message,
+  chat history, per-student risk features); Telegram alerts and WhatsApp verification codes, relayed
+  by the engine, are declared external locations. The system context (phone verification,
+  notifications, Telegram links) is deleted for all users and listed only for users with data there.
+
+#### Access
+- Course summaries and My Courses count only the students the user may see in separate-groups
+  courses (#17). My Courses works for teachers with a course role only (#18).
+
+#### Fixes
+- The teacher dashboard's 7-day message and high-risk cards read the fields the service returns;
+  the service now returns messages_7d (#19). README and setup wizard: Moodle 4.4 to 5.3 (#20).
+- get_history returns the last 20 messages, all of them (it kept one per role), with their ids.
+- The course controls of the advisor dashboard take effect: chat, RAG, risk evaluation and alerts.
+- The engagement heatmap no longer uses PostgreSQL-only SQL; it works on MySQL/MariaDB.
+
+#### Templates and styles
+- The setup wizard and the status page are Mustache templates (#12); the dashboards build no HTML
+  strings, through a small DOM helper module (#15). Inline styles moved to styles.css.
+- English strings in sentence case. No superglobals or $CFG writes in the pages.
+
+#### Tests
+- Privacy, groups, My Courses, history, heatmap and course-controls tests (143 in total); Behat
+  15/15 locally. The CI adds MariaDB.
+
+
 ### Marketplace review MMR-462 (0.5.7, 2026-11-02; build 2026110301)
 The reviewer's findings are the GitHub issues 1-15 of this repository; the
 items marked "audit" come from our own review of every web service afterwards.
