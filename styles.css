@@ -603,74 +603,74 @@
 
 /* Setup wizard: former inline styles of setup.php (MMR-462 #12). */
 #page-local-saipa-setup .spwiz-s1 {
-    font-size:2.8rem;
-    line-height:1;
+    font-size: 2.8rem;
+    line-height: 1;
 }
 #page-local-saipa-setup .spwiz-s2 {
-    font-size:.9rem;
+    font-size: .9rem;
 }
 #page-local-saipa-setup .spwiz-s3 {
-    font-size:.88rem;
+    font-size: .88rem;
 }
 #page-local-saipa-setup .spwiz-s4 {
-    background:#f8f9fa;
+    background: #f8f9fa;
 }
 #page-local-saipa-setup .spwiz-s5 {
-    border-color:#f0ad4e;
+    border-color: #f0ad4e;
 }
 #page-local-saipa-setup .spwiz-s6 {
-    background:#fff8e1;
-    color:#856404;
-    border-bottom:1px solid #f0e0a0;
+    background: #fff8e1;
+    color: #856404;
+    border-bottom: 1px solid #f0e0a0;
 }
 #page-local-saipa-setup .spwiz-s7 {
-    font-size:.87rem;
-    margin-bottom:14px;
+    font-size: .87rem;
+    margin-bottom: 14px;
 }
 #page-local-saipa-setup .spwiz-s8 {
-    white-space:normal;
-    max-width:200px;
-    text-align:right;
+    white-space: normal;
+    max-width: 200px;
+    text-align: right;
 }
 #page-local-saipa-setup .spwiz-s9 {
-    font-size:.72rem;
+    font-size: .72rem;
 }
 #page-local-saipa-setup .spwiz-s10 {
-    border-color:#0d6efd;
+    border-color: #0d6efd;
 }
 #page-local-saipa-setup .spwiz-s11 {
-    background:#e7f1ff;
-    color:#084298;
-    border-bottom:1px solid #b6d4fe;
+    background: #e7f1ff;
+    color: #084298;
+    border-bottom: 1px solid #b6d4fe;
 }
 #page-local-saipa-setup .spwiz-s12 {
-    font-size:.85rem;
-    margin-bottom:14px;
-    color:#495057;
+    font-size: .85rem;
+    margin-bottom: 14px;
+    color: #495057;
 }
 #page-local-saipa-setup .spwiz-s13 {
-    font-size:.84rem;
+    font-size: .84rem;
 }
 #page-local-saipa-setup .spwiz-s14 {
-    font-size:.82rem;
+    font-size: .82rem;
 }
 #page-local-saipa-setup .spwiz-s15 {
-    font-size:.95rem;
+    font-size: .95rem;
 }
 #page-local-saipa-setup .spwiz-s16 {
-    font-size:.83rem;
+    font-size: .83rem;
 }
 #page-local-saipa-setup .spwiz-s17 {
-    font-size:.75rem;
-    letter-spacing:.05em;
-    margin-bottom:10px;
+    font-size: .75rem;
+    letter-spacing: .05em;
+    margin-bottom: 10px;
 }
 #page-local-saipa-setup .spwiz-s18 {
-    max-width:160px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    direction:rtl;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
 }
 
 /* Status page (status.php, templates/status_page.mustache; MMR-462 #12). */
@@ -699,37 +699,37 @@
 
 /* Former inline styles of help_advisor.mustache (Marketplace review, inline styles to styles.css). */
 #page-local-saipa-help .saipa-hl1 {
-    max-width:860px;
-    margin:0 auto;
+    max-width: 860px;
+    margin: 0 auto;
 }
 #page-local-saipa-help .saipa-hl2 {
-    font-size:2.5rem;
-    margin-right:0.75rem;
+    font-size: 2.5rem;
+    margin-right: 0.75rem;
 }
 
 /* Former inline styles of teacher_dashboard.mustache (Marketplace review, inline styles to styles.css). */
 #page-local-saipa-teacher .saipa-td1 {
-    font-size:0.75rem;
+    font-size: 0.75rem;
 }
 #page-local-saipa-teacher .saipa-td2 {
-    font-size:1.5rem;
+    font-size: 1.5rem;
 }
 #page-local-saipa-teacher .saipa-td3 {
-    height:520px;
-    overflow-y:auto;
-    background:#f8f9fa;
+    height: 520px;
+    overflow-y: auto;
+    background: #f8f9fa;
 }
 
 /* Former inline styles of advisor_dashboard.mustache (Marketplace review, inline styles to styles.css). */
 #page-local-saipa-advisor .saipa-ad1 {
-    font-size:0.8rem;
+    font-size: 0.8rem;
 }
 #page-local-saipa-advisor .saipa-ad2 {
-    min-height:100px;
+    min-height: 100px;
 }
 #page-local-saipa-advisor .saipa-ad3 {
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    margin-right:8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin-right: 8px;
 }
