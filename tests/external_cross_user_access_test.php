@@ -133,6 +133,8 @@ final class external_cross_user_access_test extends \advanced_testcase {
     public function test_get_student_features_counts_only_this_course(): void {
         // The visits are read through the site's log reader; PHPUnit starts with no log store enabled.
         set_config('enabled_stores', 'logstore_standard', 'tool_log');
+        // Write each event at once: a buffered event would be flushed during the reset after the test.
+        set_config('buffersize', 0, 'logstore_standard');
         get_log_manager(true);
         $this->log_event($this->student->id, $this->course->id, '\core\event\course_viewed', 'viewed');
         $this->log_event($this->student->id, $this->course->id, '\core\event\course_viewed', 'viewed');
